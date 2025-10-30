@@ -72,7 +72,9 @@ def setup_cfg(args):
 
 def save_checkpoint(args, epoch, local_weights, local_acc, neighbor_acc):
     dataset = args.dataset_config_file.split('/')[-1].split('.')[0]
-    save_filename = os.path.join(os.getcwd(), f'checkpoints/{dataset}/{args.factorization}_{args.rank}_{args.noise}_{args.seed}.pth.tar')
+    save_dir = os.path.join(os.getcwd(), f'checkpoints/{dataset}')
+    os.makedirs(save_dir, exist_ok=True)  # 创建目录
+    save_filename = os.path.join(save_dir, f'{args.factorization}_{args.rank}_{args.noise}_{args.seed}.pth.tar')
     state = {
         "epoch": epoch + 1,
         "local_weights": local_weights,
@@ -185,42 +187,56 @@ def main(args):
                     local_weights_u[idx] = copy.deepcopy(local_weight['prompt_learner.local_u_ctx'])
                     local_weights_v[idx] = copy.deepcopy(local_weight['prompt_learner.local_v_ctx'])
 
-        # test
-        print("------------local test start-------------")
-        local_trainer.set_model_mode("eval")
-        results_local, results_neighbor = [], []
-        for idx in idxs_users:
-            local_weights[idx]['prompt_learner.global_ctx'] = local_weights_g[idx]
-            if args.factorization in ['fedotp', 'dplora', 'dpfpl']:
-                local_weights[idx]['prompt_learner.local_ctx'] = local_weights_l[idx]
-            if args.factorization in ['fedpgp', 'dplora', 'dpfpl']:
-                local_weights[idx]['prompt_learner.local_u_ctx'] = local_weights_u[idx]
-                local_weights[idx]['prompt_learner.local_v_ctx'] = local_weights_v[idx]
+        # test - 降低测试频率：1-90轮每10轮测试1次，91-100轮每2轮测试1次
+        should_test = False
+        if epoch < 90:
+            # 1-90轮：每10轮测试1次（epoch 0, 10, 20, ..., 80, 90）
+            should_test = (epoch % 10 == 0)
+        else:
+            # 91-100轮：每2轮测试1次（epoch 90, 92, 94, 96, 98, 100）
+            # 注意：epoch是0-based，所以91-100轮对应epoch 90-99
+            should_test = ((epoch - 90) % 2 == 0)
 
-            local_trainer.model.load_state_dict(local_weights[idx], strict=False)
+        if should_test:
+            print("------------local test start-------------")
+            local_trainer.set_model_mode("eval")
+            results_local, results_neighbor = [], []
+            for idx in idxs_users:
+                local_weights[idx]['prompt_learner.global_ctx'] = local_weights_g[idx]
+                if args.factorization in ['fedotp', 'dplora', 'dpfpl']:
+                    local_weights[idx]['prompt_learner.local_ctx'] = local_weights_l[idx]
+                if args.factorization in ['fedpgp', 'dplora', 'dpfpl']:
+                    local_weights[idx]['prompt_learner.local_u_ctx'] = local_weights_u[idx]
+                    local_weights[idx]['prompt_learner.local_v_ctx'] = local_weights_v[idx]
 
-            results_local.append(local_trainer.test(idx=idx, split='local'))
+                local_trainer.model.load_state_dict(local_weights[idx], strict=False)
+
+                results_local.append(local_trainer.test(idx=idx, split='local'))
+                if not dirichlet:
+                    results_neighbor.append(local_trainer.test(idx=idx, split='neighbor'))
+
+            local_acc, neighbor_acc = [], []
+            for k in range(len(results_local)):
+                local_acc.append(results_local[k][0])
+                if not dirichlet:
+                    neighbor_acc.append(results_neighbor[k][0])
+            local_acc_list.append(sum(local_acc)/len(local_acc))
+            print(f"Global test local acc:", sum(local_acc)/len(local_acc))
             if not dirichlet:
-                results_neighbor.append(local_trainer.test(idx=idx, split='neighbor'))
+                neighbor_acc_list.append(sum(neighbor_acc)/len(neighbor_acc))
+                print(f"Global test neighbor acc:", sum(neighbor_acc)/len(neighbor_acc))
+            print("------------local test finish-------------")
+            print(f"Epoch: {epoch}/{max_epoch}\tfinished batch : {batch}/{max_batch}")
 
-        local_acc, neighbor_acc = [], []
-        for k in range(len(results_local)):
-            local_acc.append(results_local[k][0])
-            if not dirichlet:
-                neighbor_acc.append(results_neighbor[k][0])
-        local_acc_list.append(sum(local_acc)/len(local_acc))
-        print(f"Global test local acc:", sum(local_acc)/len(local_acc))
-        if not dirichlet:
-            neighbor_acc_list.append(sum(neighbor_acc)/len(neighbor_acc))
-            print(f"Global test neighbor acc:", sum(neighbor_acc)/len(neighbor_acc))
-        print("------------local test finish-------------")
-        print(f"Epoch: {epoch}/{max_epoch}\tfinished batch : {batch}/{max_batch}")
-
-        # save checkpoint
-        save_checkpoint(args, epoch, local_weights, local_acc_list, neighbor_acc_list)
-        dataset_name = args.dataset_config_file.split('/')[-1].split('.')[0]
-        pickle.dump([local_acc_list, neighbor_acc_list],
-                    open(os.path.join(os.getcwd(), f'outputs/{dataset_name}/acc_{args.factorization}_{args.rank}_{args.noise}_{args.seed}.pkl'), 'wb'))
+            # save checkpoint
+            save_checkpoint(args, epoch, local_weights, local_acc_list, neighbor_acc_list)
+            dataset_name = args.dataset_config_file.split('/')[-1].split('.')[0]
+            output_dir = os.path.join(os.getcwd(), f'outputs/{dataset_name}')
+            os.makedirs(output_dir, exist_ok=True)  # 创建目录
+            pickle.dump([local_acc_list, neighbor_acc_list],
+                        open(os.path.join(output_dir, f'acc_{args.factorization}_{args.rank}_{args.noise}_{args.seed}.pkl'), 'wb'))
+        else:
+            print(f"Epoch: {epoch}/{max_epoch}\tfinished batch : {batch}/{max_batch} (skip test)")
 
     print("maximum test local acc:", max(local_acc_list))
     print("mean of local acc:",np.mean(local_acc_list[-5:]))
