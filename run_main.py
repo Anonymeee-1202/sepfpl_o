@@ -1,38 +1,140 @@
 import os
 from datasets import download_standard_datasets
 
-def run(root, dataset, users, factorization, rank, noise, seed):
+# ==================== 配置参数 ====================
+root = '/home/liuxin25/dataset'  # 数据集路径
+users = 10  # 客户端数量
+
+# 实验配置 - 用于测试个性化和泛化能力
+EXPERIMENT_CONFIG = {
+    'seed_list': [1],
+    'dataset_list': ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101'],
+    'factorization_list': ['sepfpl', 'dpfpl', 'fedpgp', 'promptfl', 'fedotp'],  # 测试的方法
+    'noise_list': [0.0, 0.01, 0.05, 0.1, 0.2, 0.4],  # 差分隐私噪声级别
+    'rank': 8,  # 矩阵分解的秩
+    'num_terminals': 2,  # 并行终端数量
+}
+
+
+# ==================== 核心功能函数 ====================
+def run(root, dataset, users, factorization, rank, noise, seed, gpus=None):
+    """运行单个实验任务"""
     dataset_yaml = f'configs/datasets/{dataset}.yaml'
-    os.system(f'bash srun_main.sh {root} {dataset_yaml} {users} {factorization} {rank} {noise} {seed}')
-
-# variables
-# seed_list = [1, 2, 3]
-# seed_list = [1]
-# dataset_list = ['caltech101', 'oxford_pets', 'oxford_flowers']
-# factorization_list = ['dpfpl', 'fedpgp', 'dplora', 'promptfl', 'fedotp']  # 可选择的方法
-# rank_list = [1, 2, 4, 8]
-# noise_list = [0.0, 0.01, 0.05, 0.1, 0.2, 0.4]
-
-root = '/home/liuxin25/dataset' # change to your dataset path
-users = 10
+    prefix = f"CUDA_VISIBLE_DEVICES={gpus} " if gpus else ""
+    gpu_arg = f" {gpus}" if gpus else ""
+    os.system(f'{prefix}bash srun_main.sh {root}/{dataset} {dataset_yaml} {users} {factorization} {rank} {noise} {seed}{gpu_arg}')
 
 
-def test_generalization_and_personalization():
-    seed_list = [1]
-    dataset_list = ['caltech101', 'oxford_pets', 'oxford_flowers']
-    factorization_list = ['dpfpl', 'fedpgp', 'promptfl', 'fedotp']  # 可选择的方法
-    noise_list = [0.0, 0.01, 0.05, 0.1, 0.2, 0.4]
-    for seed in seed_list:
-        for dataset in dataset_list:
-            for factorization in factorization_list:
-                    for noise in noise_list:
-                        run(root, dataset, users, factorization, 8, noise, seed)
+def generate_task_commands(config):
+    """生成所有任务的命令列表（不带GPU信息，GPU在terminal级别分配）"""
+    tasks = []
+    for seed in config['seed_list']:
+        for factorization in config['factorization_list']:
+            for dataset in config['dataset_list']:
+                for noise in config['noise_list']:
+                    task_cmd = f'bash srun_main.sh {root} configs/datasets/{dataset}.yaml {users} {factorization} {config["rank"]} {noise} {seed}'
+                    tasks.append(task_cmd)
+    return tasks
 
-def test_1():
-    run(root, 'caltech101', users, 'dpfpl', 8, 0.0, 1)
 
-def download_datasets(target_root):
-    download_standard_datasets(target_root)
+def save_task_files(tasks, config, gpus=None):
+    """将任务保存到文件，按终端分配；每个terminal分配到一张GPU"""
+    # 解析GPU列表
+    gpu_list = None
+    if gpus:
+        gpu_list = [x.strip() for x in str(gpus).split(',') if x.strip() != '']
+        if len(gpu_list) == 0:
+            gpu_list = None
+    
+    os.makedirs('tasks', exist_ok=True)
+    # 清理已有的任务脚本
+    removed = 0
+    for fname in os.listdir('tasks'):
+        if fname.endswith('.sh'):
+            try:
+                os.remove(os.path.join('tasks', fname))
+                removed += 1
+            except OSError:
+                pass
+    if removed:
+        print(f"🧹 Removed {removed} old task files in ./tasks/")
+    
+    # 保存完整任务列表
+    task_file = 'tasks/task_list.sh'
+    with open(task_file, 'w') as f:
+        f.write('#!/bin/bash\n')
+        f.write(f'# Total tasks: {len(tasks)}\n\n')
+        for i, task in enumerate(tasks, 1):
+            f.write(f'# Task {i}/{len(tasks)}\n')
+            f.write(f'{task}\n\n')
+    os.chmod(task_file, 0o755)
+    
+    # 分配到不同终端的任务文件
+    num_terminals = config['num_terminals']
+    tasks_per_terminal = (len(tasks) + num_terminals - 1) // num_terminals
+    
+    for terminal_id in range(num_terminals):
+        # 为每个terminal分配一张GPU（如果提供了多卡）
+        assigned_gpu = None
+        if gpu_list is not None:
+            assigned_gpu = gpu_list[terminal_id % len(gpu_list)]
+        
+        terminal_file = f'tasks/terminal_{terminal_id}.sh'
+        start_idx = terminal_id * tasks_per_terminal
+        end_idx = min((terminal_id + 1) * tasks_per_terminal, len(tasks))
+        
+        with open(terminal_file, 'w') as f:
+            f.write('#!/bin/bash\n')
+            f.write(f'# Terminal {terminal_id + 1} tasks')
+            if assigned_gpu is not None:
+                f.write(f' (GPU {assigned_gpu})')
+            f.write('\n\n')
+            for task in tasks[start_idx:end_idx]:
+                # 为任务添加GPU前缀和参数
+                if assigned_gpu is not None:
+                    prefix = f"CUDA_VISIBLE_DEVICES={assigned_gpu} "
+                    gpu_arg = f" {assigned_gpu}"
+                    # 为任务命令添加GPU信息
+                    task_with_gpu = f'{prefix}{task}{gpu_arg}'
+                    f.write(f'{task_with_gpu}\n')
+                else:
+                    f.write(f'{task}\n')
+        
+        os.chmod(terminal_file, 0o755)
+        gpu_info = f" (GPU {assigned_gpu})" if assigned_gpu is not None else ""
+        print(f"✅ Created {terminal_file} with tasks {start_idx+1}-{end_idx}{gpu_info}")
+
+
+# ==================== 实验相关函数 ====================
+def test_generalization_and_personalization(gpus=None):
+    """顺序执行个性化和泛化性测试"""
+    tasks = generate_task_commands(EXPERIMENT_CONFIG)
+    # 如果有GPU，为所有任务添加GPU信息
+    if gpus:
+        gpu_list = [x.strip() for x in str(gpus).split(',') if x.strip() != '']
+        if len(gpu_list) == 1:
+            prefix = f"CUDA_VISIBLE_DEVICES={gpu_list[0]} "
+            gpu_arg = f" {gpu_list[0]}"
+            tasks = [f'{prefix}{task}{gpu_arg}' if not task.startswith('CUDA_VISIBLE_DEVICES') else task for task in tasks]
+    for task in tasks:
+        os.system(task)
+
+
+def generate_task_list(gpus=None):
+    """生成任务列表文件，用于多终端并行执行"""
+    tasks = generate_task_commands(EXPERIMENT_CONFIG)
+    save_task_files(tasks, EXPERIMENT_CONFIG, gpus=gpus)
+    
+    print(f"\n📊 Total tasks: {len(tasks)}")
+    print(f"📁 Task files created in ./tasks/")
+    print(f"🚀 To run all tasks in one terminal: bash tasks/task_list.sh")
+    print(f"🚀 To run in parallel terminals:")
+    for terminal_id in range(EXPERIMENT_CONFIG['num_terminals']):
+        print(f"   Terminal {terminal_id + 1}: bash tasks/terminal_{terminal_id}.sh")
+
+
+def download_datasets(base_root, dataset_name):
+    download_standard_datasets(base_root, dataset_name)
 
 
 if __name__ == "__main__":
@@ -40,15 +142,26 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Run DP-FPL experiments")
     parser.add_argument("--test_generalization_and_personalization", action="store_true", help="运行个性化与泛化性测试批处理")
-    parser.add_argument("--test1", action="store_true", help="运行单个测试: Caltech101 + DP-FPL + rank=8 + noise=0.0 + seed=1")
+    parser.add_argument("--single-test", action="store_true", help="运行单个测试: Caltech101 + DP-FPL + rank=8 + noise=0.0 + seed=1")
     parser.add_argument("--download", action="store_true", help="下载 Caltech101、OxfordPets、OxfordFlowers 到 root 目录")
+    parser.add_argument("--generate-tasks", action="store_true", help="生成任务列表文件，用于多终端并行执行")
+    parser.add_argument("--gpus", type=str, default=None, help="指定可见显卡，如 '0' 或 '0,1'")
     args = parser.parse_args()
 
     if args.download:
-        download_datasets(root)
+        download_datasets(root, EXPERIMENT_CONFIG['dataset_list'])
+    elif args.generate_tasks:
+        generate_task_list(gpus=args.gpus)
     elif args.test_generalization_and_personalization:
-        test_generalization_and_personalization()
-    elif args.test1:
-        test_1()
+        test_generalization_and_personalization(gpus=args.gpus)
+    elif args.single_test:
+        run(root, 'food101', users, 'dpfpl', 8, 0.0, 1, gpus=args.gpus)
+        # 'dataset_list': ['caltech101', 'oxford_pets', 'oxford_flowers', 'food101']
+        # 'factorization_list': ['sepfpl', 'dpfpl', 'fedpgp', 'promptfl', 'fedotp'] # 测试的方法
     else:
-        print("未指定操作。使用 --download 下载数据集，--test 运行测试批处理，或 --test1 运行单个测试。")
+        print("未指定操作。")
+        print("可用选项:")
+        print("  --download: 下载数据集")
+        print("  --generate-tasks: 生成任务列表文件") 
+        print("  --test_generalization_and_personalization: 运行测试批处理")
+        print("  --single-test: 运行单个测试")

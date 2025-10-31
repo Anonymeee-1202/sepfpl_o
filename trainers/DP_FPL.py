@@ -114,18 +114,22 @@ class PromptLearner(nn.Module):
         self.factorization = cfg.FACTORIZATION
         self.rank = cfg.RANK
         assert cfg_imsize == clip_imsize, f"cfg_imsize ({cfg_imsize}) must equal to clip_imsize ({clip_imsize})"
-
-        # global context vector
+        # ========== 新增 cluster prompt 参数初始化（仅sepfpl启用） ==========
+        if self.factorization == 'sepfpl':
+            cluster_ctx_vectors = torch.empty(n_ctx, ctx_dim, dtype=dtype)
+            nn.init.normal_(cluster_ctx_vectors, std=0.02)
+            self.cluster_ctx = nn.Parameter(cluster_ctx_vectors)
+        # ========== 原有 global/local/uv prompt 初始化保持不变 ==========
         global_ctx_vectors = torch.empty(n_ctx, ctx_dim, dtype=dtype) # n_ctx = 16, ctx_dim = 512
         nn.init.normal_(global_ctx_vectors, std=0.02)
         self.global_ctx = nn.Parameter(global_ctx_vectors)
 
         # local u and v context vectors
-        if self.factorization in ['fedotp', 'dplora', 'dpfpl']:
+        if self.factorization in ['fedotp', 'dplora', 'dpfpl', 'sepfpl']:
             local_ctx_vectors = torch.empty(n_ctx, ctx_dim, dtype=dtype) # n_ctx = 16, ctx_dim = 512
             nn.init.normal_(local_ctx_vectors, std=0.02)
             self.local_ctx = nn.Parameter(local_ctx_vectors)
-        if self.factorization in ['fedpgp', 'dplora', 'dpfpl']:
+        if self.factorization in ['fedpgp', 'dplora', 'dpfpl', 'sepfpl']:
             local_u_ctx_vectors = torch.empty(n_ctx, self.rank, dtype=dtype)
             nn.init.normal_(local_u_ctx_vectors, std=0.02)
             self.local_u_ctx = nn.Parameter(local_u_ctx_vectors)
@@ -156,6 +160,7 @@ class PromptLearner(nn.Module):
         self.name_lens = name_lens
 
     def forward(self):
+        # 原有分支保持不变
         if self.factorization == 'promptfl':
             client_ctx = self.global_ctx
         elif self.factorization == 'fedotp':
@@ -170,10 +175,15 @@ class PromptLearner(nn.Module):
                 client_ctx = self.global_ctx + torch.matmul(self.local_u_ctx, self.local_v_ctx)
             elif self.factorization == 'dpfpl':
                 client_ctx = self.global_ctx + torch.matmul(self.local_u_ctx, self.local_v_ctx) + residual
-
+            elif self.factorization == 'sepfpl':
+                client_ctx = self.global_ctx + torch.matmul(self.local_u_ctx, self.local_v_ctx) + residual
+            else:
+                client_ctx = self.global_ctx
+        # 仅在sepfpl时叠加cluster_ctx
+        if getattr(self, 'cluster_ctx', None) is not None and self.factorization == 'sepfpl':
+            client_ctx = client_ctx + self.cluster_ctx
         if client_ctx.dim() == 2:
             client_ctx = client_ctx.unsqueeze(0).expand(self.n_cls, -1, -1)
-
         client_prompt = torch.cat(
             [
                 self.token_prefix,
@@ -182,7 +192,6 @@ class PromptLearner(nn.Module):
             ],
             dim=1,
         )
-
         return client_prompt
 
 
@@ -308,6 +317,16 @@ class DP_FPL(TrainerX):
                     param_dict['prompt_learner.local_v_ctx'].grad *= scale
                 noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
                 param_dict['prompt_learner.local_v_ctx'].grad += noise
+            # ========== 新增：cluster_ctx通道的裁剪与加噪 ==========
+            if self.cfg.FACTORIZATION == 'sepfpl' and 'prompt_learner.cluster_ctx' in param_dict and param_dict['prompt_learner.cluster_ctx'].grad is not None:
+                grad = param_dict['prompt_learner.cluster_ctx'].grad.data
+                norm = grad.norm(2)
+                if norm > self.cfg.NORM_THRESH:
+                    scale = self.cfg.NORM_THRESH / norm
+                    scale[scale>1] = 1
+                    param_dict['prompt_learner.cluster_ctx'].grad *= scale
+                noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
+                param_dict['prompt_learner.cluster_ctx'].grad += noise
 
         if self.cfg.FACTORIZATION in ['dplora', 'dpfpl']:
             full_grad = compute_full_grad(param_dict['prompt_learner.local_u_ctx'], param_dict['prompt_learner.local_v_ctx'], self.dtype)
@@ -320,6 +339,26 @@ class DP_FPL(TrainerX):
         }
 
         return loss_summary
+
+    def train_forward(self, idx=-1, train_iter=None):
+        """重写train_forward方法，添加带前缀的loss_summary输出"""
+        self.set_model_mode("train")
+        batch = next(train_iter)
+        loss_summary = self.forward_pass(batch)
+        
+        # 构建前缀：[数据集_模型_模型参数_noise]
+        # 获取数据集名称（统一转为小写，与配置文件路径一致）
+        try:
+            dataset_name = str(self.cfg.DATASET.NAME).lower() if self.cfg.DATASET.NAME else 'unknown'
+        except (AttributeError, KeyError):
+            dataset_name = 'unknown'
+        
+        factorization = getattr(self.cfg, 'FACTORIZATION', 'unknown')
+        rank = getattr(self.cfg, 'RANK', 'unknown')
+        noise = getattr(self.cfg, 'NOISE', 'unknown')
+        
+        prefix = f"[{dataset_name}_{factorization}_{rank}_{noise}]"
+        print(f'{prefix} Loss summary:', loss_summary)
 
     def backward_pass(self, avg_global_gradient):
         # update global gradient
