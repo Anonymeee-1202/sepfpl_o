@@ -22,7 +22,7 @@ def run(root, dataset, users, factorization, rank, noise, seed, gpus=None):
     dataset_yaml = f'configs/datasets/{dataset}.yaml'
     prefix = f"CUDA_VISIBLE_DEVICES={gpus} " if gpus else ""
     gpu_arg = f" {gpus}" if gpus else ""
-    os.system(f'{prefix}bash srun_main.sh {root}/{dataset} {dataset_yaml} {users} {factorization} {rank} {noise} {seed}{gpu_arg}')
+    os.system(f'{prefix}bash srun_main.sh {root} {dataset_yaml} {users} {factorization} {rank} {noise} {seed}{gpu_arg}')
 
 
 def generate_task_commands(config):
@@ -134,7 +134,14 @@ def generate_task_list(gpus=None):
 
 
 def download_datasets(base_root, dataset_name):
-    download_standard_datasets(base_root, dataset_name)
+    # 支持传入单个字符串或列表
+    if dataset_name is None:
+        dataset_list = None
+    elif isinstance(dataset_name, list):
+        dataset_list = dataset_name
+    else:
+        dataset_list = [dataset_name]
+    download_standard_datasets(base_root, dataset_list)
 
 
 if __name__ == "__main__":
@@ -149,14 +156,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.download:
-        download_datasets(root, EXPERIMENT_CONFIG['dataset_list'])
+        # download_datasets(root, EXPERIMENT_CONFIG['dataset_list'])
+        download_datasets(root, ['oxford_flowers'])
     elif args.generate_tasks:
         generate_task_list(gpus=args.gpus)
     elif args.test_generalization_and_personalization:
         test_generalization_and_personalization(gpus=args.gpus)
     elif args.single_test:
-        run(root, 'food101', users, 'dpfpl', 8, 0.0, 1, gpus=args.gpus)
-        # 'dataset_list': ['caltech101', 'oxford_pets', 'oxford_flowers', 'food101']
+        run(root, 'oxford_flowers', users, 'dpfpl', 8, 0.0, 1, gpus=args.gpus)
+        # 'dataset_list': ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101']
         # 'factorization_list': ['sepfpl', 'dpfpl', 'fedpgp', 'promptfl', 'fedotp'] # 测试的方法
     else:
         print("未指定操作。")

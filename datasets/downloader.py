@@ -1,20 +1,20 @@
 import os
-import time
 from urllib.error import URLError
+import json
 
 
-def download_standard_datasets(base_root: str, dataset_list) -> None:
+def download_standard_datasets(base_root: str, dataset_list: list = None) -> None:
     """
     根据 dataset_list 下载数据集到 base_root：
-    - caltech101 (Caltech-101)
+    - caltech-101 (Caltech-101)
     - oxford_pets (Oxford-IIIT Pet)
     - oxford_flowers (Oxford Flowers 102)
-    - food101 (Food-101)
+    - food-101 (Food-101)
 
     参数:
         base_root: 数据集保存的根目录
-        dataset_list: 要下载的数据集列表，可以是字符串（单个数据集）或列表（多个数据集）
-    
+        dataset_list: 要下载的数据集列表，默认为 None（下载所有默认数据集）
+
     依赖 torchvision。
     """
     os.makedirs(base_root, exist_ok=True)
@@ -24,66 +24,98 @@ def download_standard_datasets(base_root: str, dataset_list) -> None:
         print("未安装 torchvision，请先执行: pip install torchvision")
         raise e
 
-    # 标准化 dataset_list 为列表格式
-    if isinstance(dataset_list, str):
-        dataset_list = [dataset_list]
-    elif dataset_list is None:
-        # 如果未指定，下载所有默认数据集
-        dataset_list = ['caltech101', 'oxford_pets', 'oxford_flowers', 'food101']
+    # 如果未指定，使用默认数据集列表
+    if dataset_list is None:
+        dataset_list = ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101']
 
     print(f"下载目标目录: {base_root}")
     print(f"将下载数据集: {', '.join(dataset_list)}")
 
-    # 数据集名称到下载函数的映射
-    dataset_downloaders = {
-        'caltech-101': ('Caltech101', tvd.Caltech101),
-        'oxford_pets': ('Oxford-IIIT Pet', tvd.OxfordIIITPet),
-        'oxford_flowers': ('Flowers102', tvd.Flowers102),
-        'food-101': ('Food-101', tvd.Food101),
+    # 统一配置：显示名、下载器、可能的原始目录名（用于重命名）
+    registry = {
+        'caltech-101': {
+            'name': 'Caltech101',
+            'downloader': tvd.Caltech101,
+            'candidates': ['caltech101', 'Caltech101', 'caltech-101'],
+        },
+        'oxford_pets': {
+            'name': 'Oxford-IIIT Pet',
+            'downloader': tvd.OxfordIIITPet,
+            'candidates': ['oxford-iiit-pet', 'OxfordIIITPet', 'oxford_pets'],
+        },
+        'oxford_flowers': {
+            'name': 'Flowers102',
+            'downloader': tvd.Flowers102,
+            'candidates': ['flowers-102', 'Flowers102', 'oxford_flowers'],
+        },
+        'food-101': {
+            'name': 'Food-101',
+            'downloader': tvd.Food101,
+            'candidates': ['food-101', 'Food101', 'food101'],
+        },
     }
 
-    # 根据 dataset_list 下载指定的数据集
-    for dataset_key in dataset_list:
-        dataset_key_normalized = dataset_key.lower().strip()
-        if dataset_key_normalized in dataset_downloaders:
-            name, downloader = dataset_downloaders[dataset_key_normalized]
-            # 为每个数据集创建单独的子目录：base_root/dataset
-            dataset_dir = os.path.join(base_root, dataset_key_normalized)
-            os.makedirs(dataset_dir, exist_ok=True)
-            
-            # 添加重试机制处理SSL错误
-            max_retries = 3
-            retry_delay = 5  # 秒
-            success = False
-            
-            for attempt in range(1, max_retries + 1):
+    def ensure_standard_dir(standard_key: str) -> bool:
+        """若标准目录已存在或可通过候选名重命名得到，返回 True（表示无需下载）。"""
+        target_dir = os.path.join(base_root, standard_key)
+        if os.path.isdir(target_dir):
+            return True
+        for cand in registry[standard_key]['candidates']:
+            cand_path = os.path.join(base_root, cand)
+            if os.path.isdir(cand_path):
                 try:
-                    if attempt > 1:
-                        print(f"第 {attempt} 次尝试下载 {name} ...")
-                    else:
-                        print(f"下载 {name} 到 {dataset_dir} ...")
-                    downloader(root=dataset_dir, download=True)
-                    print(f"{name} 下载完成")
-                    success = True
+                    print(f"检测到已下载的目录，重命名 {cand_path} -> {target_dir}")
+                    os.rename(cand_path, target_dir)
+                    return True
+                except Exception as re:
+                    print(f"⚠️  预重命名失败: {re}")
                     break
-                except (URLError, Exception) as e:
-                    error_msg = str(e)
-                    if "SSL" in error_msg or "EOF" in error_msg:
-                        if attempt < max_retries:
-                            print(f"⚠️  SSL/网络错误: {error_msg}")
-                            print(f"等待 {retry_delay} 秒后重试 ({attempt}/{max_retries})...")
-                            time.sleep(retry_delay)
-                            retry_delay *= 2  # 指数退避
-                        else:
-                            print(f"❌ {name} 下载失败（已重试 {max_retries} 次）: {error_msg}")
-                            print(f"   提示：这通常是网络连接问题，可以稍后手动重试")
-                    else:
-                        print(f"❌ {name} 下载失败: {error_msg}")
-                        break
-            
-            if not success:
-                print(f"💡 建议：检查网络连接或稍后手动下载 {name}")
-        else:
-            print(f"⚠️  未知数据集: {dataset_key}，跳过")
+        return False
+
+    def post_setup(standard_key: str) -> None:
+        """下载后数据集特定的补全逻辑。"""
+        if standard_key == 'oxford_flowers':
+            ds_dir = os.path.join(base_root, standard_key)
+            # 生成 cat_to_name.json（若不存在）
+            cat_file = os.path.join(ds_dir, 'cat_to_name.json')
+            if not os.path.isfile(cat_file):
+                try:
+                    mapping = {str(i): f"class_{i}" for i in range(1, 103)}
+                    with open(cat_file, 'w') as f:
+                        json.dump(mapping, f)
+                    print(f"已生成 {cat_file} (占位名称)")
+                except Exception as e:
+                    print(f"⚠️  生成 cat_to_name.json 失败: {e}")
+
+    for key in dataset_list:
+        standard_key = key.lower().strip()
+        if standard_key not in registry:
+            print(f"⚠️  未知数据集: {key}，跳过")
+            continue
+
+        # 若已存在（或可预重命名得到），跳过下载
+        if ensure_standard_dir(standard_key):
+            print(f"✅ 检测到已存在的数据集目录，跳过下载: {os.path.join(base_root, standard_key)}")
+            post_setup(standard_key)
+            continue
+
+        name = registry[standard_key]['name']
+        downloader = registry[standard_key]['downloader']
+
+        print(f"下载 {name} 到 {base_root} ...")
+        try:
+            downloader(root=base_root, download=True)
+            print(f"{name} 下载完成")
+        except (URLError, Exception) as e:
+            print(f"❌ {name} 下载失败: {e}")
+            continue
+
+        # 下载后再次尝试标准化目录名
+        if ensure_standard_dir(standard_key):
+            post_setup(standard_key)
+            continue
+
+        # 若仍未找到可重命名的目录，提示手动检查
+        print(f"⚠️  未找到可重命名到标准目录的源目录，请检查: {name}")
 
 
