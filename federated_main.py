@@ -9,27 +9,9 @@ import math
 import copy
 import pickle
 import numpy as np
+import time
 
-from privacy.scheduler import ClientRDPState, compute_round_privacy_params, update_rdp_states_after_round
-
-# ========== 占位：动态隐私参数调度 ==========
-def set_privacy_params(num_users, round_idx, rho_base=1.0, tau=-1, rho_conserve=0.5, total_rounds=100):
-    # tau默认取总轮数的一半
-    if tau is None or tau < 0:
-        tau = max(1, total_rounds // 2)
-    # ρ调度：前半程rho_conserve，后半程rho_base
-    rho = np.full(num_users, rho_base, dtype=np.float32)
-    if round_idx < tau:
-        rho = np.full(num_users, min(rho_base, rho_conserve), dtype=np.float32)
-    # 简化：eta_i=1，C_i=1；计算eta_hmean
-    eta_i = np.ones(num_users, dtype=np.float32)
-    eta_hmean = 1.0 / (np.mean(1.0 / eta_i))
-    C_i = np.ones(num_users, dtype=np.float32)
-    # 独立泊松采样
-    sampled = [i for i in range(num_users) if np.random.rand() < rho[i]]
-    if len(sampled) == 0:
-        sampled = [np.random.randint(0, num_users)]
-    return rho, C_i, eta_i, float(eta_hmean), sampled
+ 
 
 def extend_cfg(cfg, args):
     """
@@ -143,9 +125,7 @@ def main(args):
     local_trainer = build_trainer(cfg)
     initial_weights = copy.deepcopy(local_trainer.model.state_dict())
 
-    # RDP states per client（仅sepfpl使用，其他算法忽略）
-    rdp_states = [ClientRDPState(eps_rem_alpha=1.0) for _ in range(args.num_users)]  # 默认每客户端初始RDP预算=1.0（可参数化）
-    rdp_alpha = 10.0  # 默认RDP阶数（可参数化）
+    # sepfpl 模式使用简化采样和裁剪参数
 
     # ========== 新增：为每个客户端初始化cluster_ctx到local_weights中（仅sepfpl） ==========
     try:
@@ -167,27 +147,33 @@ def main(args):
         return
     if args.noise > 0:
         std = local_trainer.std / cfg.DATASET.USERS
+    
+    # 初始化epoch时间跟踪
+    epoch_times = []  # 存储每个已完成epoch的用时
+    
     for epoch in range(start_epoch, max_epoch): # global communication loop
         idxs_users = list(range(0,cfg.DATASET.USERS))
+        
+        # 显示已完成epoch的时间统计和剩余时间估算
+        if epoch > start_epoch and len(epoch_times) > 0:
+            avg_epoch_time = np.mean(epoch_times)
+            last_epoch_time = epoch_times[-1]
+            remaining_epochs = max_epoch - epoch
+            estimated_remaining_time = avg_epoch_time * remaining_epochs
+            print(f"------------已完成 {epoch - start_epoch} 个epoch | 平均用时: {avg_epoch_time:.2f}s | 上一个epoch: {last_epoch_time:.2f}s | 预计剩余时间: {estimated_remaining_time:.2f}s ({estimated_remaining_time/60:.1f}分钟)-------------")
+        
         print("------------local train start epoch:", epoch, "-------------")
+        # 记录epoch开始时间
+        epoch_start_time = time.time()
+        # 重置epoch计时器
+        local_trainer.reset_epoch_timer()
+        
+        # 更新sepfpl的增量式隐私预算分配（如果启用）
+        if args.factorization == 'sepfpl' and hasattr(local_trainer, 'update_std_for_round'):
+            local_trainer.update_std_for_round(epoch)
 
-        # Poisson subsampling（sepfpl时走隐私调度，否则全采样）
-        if args.factorization == 'sepfpl':
-            tau = args.sepfpl_tau if hasattr(args, 'sepfpl_tau') else -1
-            rho_conserve = args.sepfpl_rho_conserve if hasattr(args, 'sepfpl_rho_conserve') else 0.5
-            rho_vec, C_vec, eta_vec, eta_hmean, sampled_users = compute_round_privacy_params(
-                num_users=cfg.DATASET.USERS,
-                round_idx=epoch,
-                total_rounds=max_epoch,
-                rho_base=args.rho_base,
-                tau=tau,
-                rho_conserve=rho_conserve,
-                C_avg=args.c_avg,
-                alpha=rdp_alpha,
-                client_states=rdp_states,
-            )
-        else:
-            sampled_users = idxs_users
+        # 全采样
+        sampled_users = idxs_users
 
         # create data iters
         data_iters = []
@@ -207,7 +193,7 @@ def main(args):
                     local_trainer.model.load_state_dict(initial_weights, strict=False)
                 else:
                     local_trainer.model.load_state_dict(local_weights[idx], strict=False)
-                local_trainer.train_forward(idx=idx, train_iter=data_iters[idx])
+                local_trainer.train_forward(idx=idx, train_iter=data_iters[idx], current_batch=batch, total_batches=max_batch)
 
                 local_weight = local_trainer.model.state_dict()
                 global_gradients[idx] = local_trainer.model.prompt_learner.global_ctx.grad.data
@@ -226,44 +212,9 @@ def main(args):
                     else:
                         cluster_grads[idx] = torch.zeros_like(local_trainer.model.prompt_learner.cluster_ctx.data)
 
-            # ========== sepfpl：对采样用户进行 per-client 裁剪与加噪（全局与cluster通道） ==========
+            # average global gradient
             if args.factorization == 'sepfpl':
-                N = float(cfg.DATASET.USERS)
-                # 全局通道：clip到C_i并加入局部噪声 std=(C_i*eta_i)/sqrt(N)
-                for i in sampled_users:
-                    if global_gradients[i] is None:
-                        continue
-                    gi = global_gradients[i]
-                    # clip
-                    Ci = float(C_vec[i]) * args.c_avg
-                    norm = gi.norm(2)
-                    if norm > 0 and norm > Ci:
-                        gi = gi * (Ci / norm)
-                    # noise
-                    ei = float(eta_vec[i])
-                    local_std = (Ci * ei) / math.sqrt(N)
-                    if local_std > 0:
-                        gi = gi + torch.normal(0, local_std, size=gi.shape, device=gi.device)
-                    global_gradients[i] = gi
-                # cluster通道：clip到C_i并加入局部噪声（若有梯度）
-                if cluster_grads is not None:
-                    for i in sampled_users:
-                        if cluster_grads[i] is None:
-                            continue
-                        gi = cluster_grads[i]
-                        Ci = float(C_vec[i]) * args.c_avg
-                        norm = gi.norm(2)
-                        if norm > 0 and norm > Ci:
-                            gi = gi * (Ci / norm)
-                        ei = float(eta_vec[i])
-                        local_std = (Ci * ei) / math.sqrt(N)
-                        if local_std > 0:
-                            gi = gi + torch.normal(0, local_std, size=gi.shape, device=gi.device)
-                        cluster_grads[i] = gi
-
-            # average global gradient（含补偿噪声：sepfpl路径不变总噪声占位）
-            if args.factorization == 'sepfpl':
-                # 构建逐用户全局梯度（未采样用户：零更新+补偿噪声）
+                # 构建逐用户全局梯度（加权平均）
                 per_user_global = []
                 data_sizes = []
                 for i in idxs_users:
@@ -273,16 +224,7 @@ def main(args):
                     except Exception:
                         ds_len = 1
                     data_sizes.append(max(1, ds_len))
-                    if i in sampled_users:
-                        per_user_global.append(global_gradients[i])
-                    else:
-                        shape = global_gradients[0].shape
-                        device = global_gradients[0].device
-                        comp = torch.zeros(shape, device=device)
-                        comp_std = (args.c_avg * eta_hmean) / math.sqrt(cfg.DATASET.USERS)
-                        if comp_std > 0:
-                            comp += torch.normal(0, comp_std, size=shape, device=device)
-                        per_user_global.append(comp)
+                    per_user_global.append(global_gradients[i])
                 # 归一化权重并加权平均
                 total_size = float(sum(data_sizes))
                 weights = [s / total_size for s in data_sizes]
@@ -342,18 +284,13 @@ def main(args):
             if args.factorization == 'sepfpl':
                 try:
                     from hcse.encoding_tree import PartitionTree, compute_gradient_similarity_matrix_torch, aggregate_gradients_by_encoding_tree
-                    # 未采样用户：零更新+补偿噪声（占位）
+                    # 处理缺失的cluster梯度
                     for i in range(len(cluster_grads)):
                         if cluster_grads[i] is None:
                             if 'prompt_learner.cluster_ctx' in local_trainer.model.state_dict():
                                 zshape = local_trainer.model.prompt_learner.cluster_ctx.data.shape
                                 device = local_trainer.model.prompt_learner.cluster_ctx.data.device
-                                z = torch.zeros(zshape, device=device)
-                                # 使用与全局通道一致的补偿噪声std
-                                comp_std = (args.c_avg * eta_hmean) / math.sqrt(cfg.DATASET.USERS)
-                                if comp_std > 0:
-                                    z += torch.normal(0, comp_std, size=zshape, device=device)
-                                cluster_grads[i] = z
+                                cluster_grads[i] = torch.zeros(zshape, device=device)
                             else:
                                 cluster_grads[i] = torch.zeros_like(local_trainer.model.prompt_learner.global_ctx.data)
                     sim_mat = compute_gradient_similarity_matrix_torch(cluster_grads, normalize=True)
@@ -382,19 +319,14 @@ def main(args):
                 except Exception as e:
                     print(f"[HCSE] 聚类与聚合出现异常，跳过本步: {e}")
 
-            # 轮末更新RDP预算（仅sepfpl）
-            if args.factorization == 'sepfpl':
-                update_rdp_states_after_round(
-                    sampled_users=sampled_users,
-                    alpha=rdp_alpha,
-                    rho_i=rho_vec,
-                    eta_i=eta_vec,
-                    client_states=rdp_states,
-                )
+            # sepfpl 路径不再维护RDP预算状态
 
         # test（保持原有频率与输出）
         should_test = False
-        if epoch < 90:
+        if max_epoch < 20:
+            # 如果round总数小于20，只在最后1个epoch测试
+            should_test = (epoch == max_epoch - 1)
+        elif epoch < 90:
             should_test = (epoch % 10 == 0)
         else:
             should_test = ((epoch - 90) % 2 == 0)
@@ -441,6 +373,12 @@ def main(args):
                         open(os.path.join(output_dir, f'acc_{args.factorization}_{args.rank}_{args.noise}_{args.seed}.pkl'), 'wb'))
         else:
             print(f"Epoch: {epoch}/{max_epoch}\tfinished batch : {batch}/{max_batch} (skip test)")
+        
+        # 记录epoch用时
+        epoch_end_time = time.time()
+        epoch_duration = epoch_end_time - epoch_start_time
+        epoch_times.append(epoch_duration)
+        print(f"------------epoch {epoch} 完成，用时: {epoch_duration:.2f}s-------------")
 
     print("maximum test local acc:", max(local_acc_list))
     print("mean of local acc:",np.mean(local_acc_list[-5:]))
@@ -450,7 +388,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--round', type=int, default=100, help="number of communication round")
+    parser.add_argument('--round', type=int, default=10, help="number of communication round")
     parser.add_argument('--num-users', type=int, default=10, help="number of users")
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
     parser.add_argument('--train-batch-size', type=int, default=32, help="number of trainer batch size")
@@ -475,7 +413,7 @@ if __name__ == "__main__":
     # parameters of learnable prompts
     parser.add_argument('--n_ctx', type=int, default=16, help="number of text encoder of text prompts")
     # sepfpl-specific optional params
-    parser.add_argument('--sepfpl-topk', type=int, default=5, help='top-k neighbors for HCSE graph sparsification (sepfpl only)')
+    parser.add_argument('--sepfpl-topk', type=int, default=8, help='top-k neighbors for HCSE graph sparsification (sepfpl only)')
     parser.add_argument('--sepfpl-lr-c', type=float, default=None, help='learning rate for cluster prompt updates (defaults to OPTIM.LR)')
     parser.add_argument('--rho-base', type=float, default=1.0, help='base Poisson sampling rate for sepfpl (default 1.0)')
     parser.add_argument('--c-avg', type=float, default=1.0, help='global clipping hyperparam C_avg for compensation noise (sepfpl only)')

@@ -11,6 +11,7 @@ from clip import clip
 from clip.simple_tokenizer import SimpleTokenizer as _Tokenizer
 
 import math
+import time
 
 _tokenizer = _Tokenizer()
 
@@ -259,16 +260,79 @@ class DP_FPL(TrainerX):
         self.register_model("prompt_learner", self.model.prompt_learner, self.optim, self.sched)
 
         # differential privacy parameters
-        max_batch = 0
+        max_batch_size = 0
+        total_batches_per_round = 0
         for idx in range(0, cfg.DATASET.USERS):
-            max_batch = max(max_batch, self.dm.fed_train_loader_x_dict[idx].batch_size)
+            max_batch_size = max(max_batch_size, self.dm.fed_train_loader_x_dict[idx].batch_size)
+            total_batches_per_round = max(total_batches_per_round, len(self.dm.fed_train_loader_x_dict[idx]))
         if cfg.NOISE > 0:
-            q = 1 # random sampling
-            delta = 1e-5 # delta
-            steps = cfg.OPTIM.ROUND # number of gaussian applications
-            sigma = q * math.sqrt(steps * math.log(1/delta)) / cfg.NOISE
-            sensitivity = cfg.NORM_THRESH / max_batch # sensitivity
-            self.std = sigma * sensitivity
+            # ========== RDP (Rényi Differential Privacy) 实现 ==========
+            # 从配置读取RDP参数
+            rdp_alpha = getattr(cfg, 'RDP_ALPHA', 2.0)  # RDP阶数，默认2.0
+            # 使用cfg.NOISE作为每个batch的RDP预算
+            rdp_eps_per_batch = cfg.NOISE
+            
+            # 使用RDP计算噪声标准差
+            # 对于高斯机制: ε_α = α / (2 * σ^2)
+            # 反推: σ = sqrt(α / (2 * ε_α))
+            rdp_sigma = math.sqrt(rdp_alpha / (2.0 * rdp_eps_per_batch))
+            sensitivity = cfg.NORM_THRESH / max_batch_size  # 敏感度
+            self.std = rdp_sigma * sensitivity
+                        
+            # ========== sepfpl隐私预算分配实现 ==========
+            if cfg.FACTORIZATION == 'sepfpl':
+                # 从配置读取参数
+                rdp_p = getattr(cfg, 'RDP_P', 2.0)  # 分配参数p，默认2.0
+                total_rounds = cfg.OPTIM.ROUND  # 总轮数
+                
+                # 通过cfg.NOISE计算总预算
+                # 总预算 = cfg.NOISE * ROUND * batch的数量
+                rdp_eps_tot = rdp_eps_per_batch * total_rounds * total_batches_per_round
+                
+                # 预计算所有轮次的隐私预算分配
+                # ε_t = ε_tot * (t^p) / (sum_{j=1}^T j^p)
+                # 计算分母: sum_{j=1}^T j^p
+                denominator = sum(j ** rdp_p for j in range(1, total_rounds + 1))
+                
+                # 预计算每轮的隐私预算和噪声标准差
+                self.rdp_eps_per_batch_list = []
+                self.std_per_batch_list = []
+                
+                for t in range(1, total_rounds + 1):
+                    # 计算第t轮的隐私预算
+                    eps_t = rdp_eps_tot * (t ** rdp_p) / denominator
+                    self.rdp_eps_per_batch_list.append(eps_t)
+                    
+                    # 计算对应的噪声标准差: σ = sqrt(α / (2 * ε_α))
+                    sigma_t = math.sqrt(rdp_alpha / (2.0 * eps_t))
+                    std_t = sigma_t * sensitivity
+                    self.std_per_batch_list.append(std_t)
+                
+                # 初始化第一轮的噪声标准差
+                self.std = self.std_per_batch_list[0]
+                
+        
+        # 初始化epoch开始时间跟踪
+        self.epoch_start_time = None
+    
+    def update_std_for_round(self, round_idx):
+        """根据当前轮次更新噪声标准差
+        Args:
+            round_idx: 当前轮次（从0开始）
+        """
+        if hasattr(self, 'std_per_batch_list') and self.std_per_batch_list is not None:
+            if 0 <= round_idx < len(self.std_per_batch_list):
+                self.std = self.std_per_batch_list[round_idx]
+                # 只在每10轮或关键轮次打印信息
+                if hasattr(self, 'rdp_eps_per_batch_list') and (round_idx == 0 or (round_idx + 1) % 10 == 0 or round_idx == len(self.std_per_batch_list) - 1):
+                    print(f"[RDP-sepfpl] 轮次 {round_idx + 1}: ε={self.rdp_eps_per_batch_list[round_idx]:.6f}, std={self.std:.6f}")
+            else:
+                print(f"[RDP-sepfpl] 警告: 轮次 {round_idx + 1} 超出范围，使用最后一轮的标准差")
+                self.std = self.std_per_batch_list[-1]
+    
+    def reset_epoch_timer(self):
+        """重置epoch开始时间，应该在每个epoch开始时调用"""
+        self.epoch_start_time = time.time()
 
     def forward_pass(self, batch):
         image, label = self.parse_batch_train(batch)
@@ -340,11 +404,22 @@ class DP_FPL(TrainerX):
 
         return loss_summary
 
-    def train_forward(self, idx=-1, train_iter=None):
+    def train_forward(self, idx=-1, train_iter=None, current_batch=0, total_batches=0):
         """重写train_forward方法，添加带前缀的loss_summary输出"""
         self.set_model_mode("train")
+        
         batch = next(train_iter)
         loss_summary = self.forward_pass(batch)
+        
+        # 计算时间信息
+        elapsed_time = time.time() - self.epoch_start_time if self.epoch_start_time else 0
+        if total_batches > 0 and elapsed_time > 0:
+            avg_time_per_batch = elapsed_time / (current_batch + 1)
+            remaining_batches = total_batches - (current_batch + 1)
+            remaining_time = avg_time_per_batch * remaining_batches
+            time_info = f"已用时间: {elapsed_time:.2f}s, 剩余时间: {remaining_time:.2f}s"
+        else:
+            time_info = f"已用时间: {elapsed_time:.2f}s"
         
         # 构建前缀：[数据集_模型_模型参数_noise]
         # 获取数据集名称（统一转为小写，与配置文件路径一致）
@@ -358,7 +433,8 @@ class DP_FPL(TrainerX):
         noise = getattr(self.cfg, 'NOISE', 'unknown')
         
         prefix = f"[{dataset_name}_{factorization}_{rank}_{noise}]"
-        print(f'{prefix} Loss summary:', loss_summary)
+        batch_info = f"batch {current_batch + 1}/{total_batches}" if total_batches > 0 else f"batch {current_batch + 1}"
+        print(f'{prefix} {batch_info} | {time_info} :', loss_summary)
 
     def backward_pass(self, avg_global_gradient):
         # update global gradient

@@ -29,9 +29,9 @@ def generate_task_commands(config):
     """生成所有任务的命令列表（不带GPU信息，GPU在terminal级别分配）"""
     tasks = []
     for seed in config['seed_list']:
-        for factorization in config['factorization_list']:
+        for noise in config['noise_list']:
             for dataset in config['dataset_list']:
-                for noise in config['noise_list']:
+                for factorization in config['factorization_list']:
                     task_cmd = f'bash srun_main.sh {root} configs/datasets/{dataset}.yaml {users} {factorization} {config["rank"]} {noise} {seed}'
                     tasks.append(task_cmd)
     return tasks
@@ -69,40 +69,52 @@ def save_task_files(tasks, config, gpus=None):
             f.write(f'{task}\n\n')
     os.chmod(task_file, 0o755)
     
-    # 分配到不同终端的任务文件
+    # 分配到不同终端的任务文件（使用轮询方式）
     num_terminals = config['num_terminals']
-    tasks_per_terminal = (len(tasks) + num_terminals - 1) // num_terminals
     
+    # 首先为每个terminal分配GPU（如果提供了多卡）
+    terminal_gpus = {}
     for terminal_id in range(num_terminals):
-        # 为每个terminal分配一张GPU（如果提供了多卡）
-        assigned_gpu = None
         if gpu_list is not None:
-            assigned_gpu = gpu_list[terminal_id % len(gpu_list)]
-        
+            terminal_gpus[terminal_id] = gpu_list[terminal_id % len(gpu_list)]
+        else:
+            terminal_gpus[terminal_id] = None
+    
+    # 使用轮询方式分配任务到各个terminal
+    terminal_tasks = [[] for _ in range(num_terminals)]
+    for task_idx, task in enumerate(tasks):
+        terminal_id = task_idx % num_terminals  # 轮询分配
+        terminal_tasks[terminal_id].append((task_idx + 1, task))  # 保存任务索引和任务
+    
+    # 为每个terminal写入任务文件
+    for terminal_id in range(num_terminals):
+        assigned_gpu = terminal_gpus[terminal_id]
         terminal_file = f'tasks/terminal_{terminal_id}.sh'
-        start_idx = terminal_id * tasks_per_terminal
-        end_idx = min((terminal_id + 1) * tasks_per_terminal, len(tasks))
         
         with open(terminal_file, 'w') as f:
             f.write('#!/bin/bash\n')
             f.write(f'# Terminal {terminal_id + 1} tasks')
             if assigned_gpu is not None:
                 f.write(f' (GPU {assigned_gpu})')
-            f.write('\n\n')
-            for task in tasks[start_idx:end_idx]:
+            f.write(f' - Total: {len(terminal_tasks[terminal_id])} tasks\n\n')
+            
+            for task_idx, task in terminal_tasks[terminal_id]:
+                f.write(f'# Task {task_idx}/{len(tasks)}\n')
                 # 为任务添加GPU前缀和参数
                 if assigned_gpu is not None:
                     prefix = f"CUDA_VISIBLE_DEVICES={assigned_gpu} "
                     gpu_arg = f" {assigned_gpu}"
                     # 为任务命令添加GPU信息
                     task_with_gpu = f'{prefix}{task}{gpu_arg}'
-                    f.write(f'{task_with_gpu}\n')
+                    f.write(f'{task_with_gpu}\n\n')
                 else:
-                    f.write(f'{task}\n')
+                    f.write(f'{task}\n\n')
         
         os.chmod(terminal_file, 0o755)
         gpu_info = f" (GPU {assigned_gpu})" if assigned_gpu is not None else ""
-        print(f"✅ Created {terminal_file} with tasks {start_idx+1}-{end_idx}{gpu_info}")
+        task_indices = [idx for idx, _ in terminal_tasks[terminal_id]]
+        print(f"✅ Created {terminal_file} with {len(terminal_tasks[terminal_id])} tasks {gpu_info}")
+        print(f"   Task indices: {task_indices[:5]}{'...' if len(task_indices) > 5 else ''}")
 
 
 # ==================== 实验相关函数 ====================
@@ -163,7 +175,7 @@ if __name__ == "__main__":
     elif args.test_generalization_and_personalization:
         test_generalization_and_personalization(gpus=args.gpus)
     elif args.single_test:
-        run(root, 'oxford_flowers', users, 'dpfpl', 8, 0.0, 1, gpus=args.gpus)
+        run(root, 'food-101', users, 'dpfpl', 8, 0.0, 1, gpus=args.gpus)
         # 'dataset_list': ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101']
         # 'factorization_list': ['sepfpl', 'dpfpl', 'fedpgp', 'promptfl', 'fedotp'] # 测试的方法
     else:
