@@ -1,5 +1,6 @@
 import os
 from datasets import download_standard_datasets
+from utils.logger import get_logger
 
 # ==================== 配置参数 ====================
 root = '/home/liuxin25/dataset'  # 数据集路径
@@ -39,6 +40,8 @@ def generate_task_commands(config):
 
 def save_task_files(tasks, config, gpus=None):
     """将任务保存到文件，按终端分配；每个terminal分配到一张GPU"""
+    logger = get_logger('dp-fpl', log_dir='logs', log_to_file=True, log_to_console=True)
+    
     # 解析GPU列表
     gpu_list = None
     if gpus:
@@ -57,7 +60,7 @@ def save_task_files(tasks, config, gpus=None):
             except OSError:
                 pass
     if removed:
-        print(f"🧹 Removed {removed} old task files in ./tasks/")
+        logger.info(f"🧹 Removed {removed} old task files in ./tasks/")
     
     # 保存完整任务列表
     task_file = 'tasks/task_list.sh'
@@ -113,8 +116,8 @@ def save_task_files(tasks, config, gpus=None):
         os.chmod(terminal_file, 0o755)
         gpu_info = f" (GPU {assigned_gpu})" if assigned_gpu is not None else ""
         task_indices = [idx for idx, _ in terminal_tasks[terminal_id]]
-        print(f"✅ Created {terminal_file} with {len(terminal_tasks[terminal_id])} tasks {gpu_info}")
-        print(f"   Task indices: {task_indices[:5]}{'...' if len(task_indices) > 5 else ''}")
+        logger.info(f"✅ Created {terminal_file} with {len(terminal_tasks[terminal_id])} tasks {gpu_info}")
+        logger.info(f"   Task indices: {task_indices[:5]}{'...' if len(task_indices) > 5 else ''}")
 
 
 # ==================== 实验相关函数 ====================
@@ -134,15 +137,17 @@ def test_generalization_and_personalization(gpus=None):
 
 def generate_task_list(gpus=None):
     """生成任务列表文件，用于多终端并行执行"""
+    logger = get_logger('dp-fpl', log_dir='logs', log_to_file=True, log_to_console=True)
+    
     tasks = generate_task_commands(EXPERIMENT_CONFIG)
     save_task_files(tasks, EXPERIMENT_CONFIG, gpus=gpus)
     
-    print(f"\n📊 Total tasks: {len(tasks)}")
-    print(f"📁 Task files created in ./tasks/")
-    print(f"🚀 To run all tasks in one terminal: bash tasks/task_list.sh")
-    print(f"🚀 To run in parallel terminals:")
+    logger.info(f"\n📊 Total tasks: {len(tasks)}")
+    logger.info(f"📁 Task files created in ./tasks/")
+    logger.info(f"🚀 To run all tasks in one terminal: bash tasks/task_list.sh")
+    logger.info(f"🚀 To run in parallel terminals:")
     for terminal_id in range(EXPERIMENT_CONFIG['num_terminals']):
-        print(f"   Terminal {terminal_id + 1}: bash tasks/terminal_{terminal_id}.sh")
+        logger.info(f"   Terminal {terminal_id + 1}: bash tasks/terminal_{terminal_id}.sh")
 
 
 def download_datasets(base_root, dataset_name):
@@ -179,9 +184,10 @@ if __name__ == "__main__":
         # 'dataset_list': ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101']
         # 'factorization_list': ['sepfpl', 'dpfpl', 'fedpgp', 'promptfl', 'fedotp'] # 测试的方法
     else:
-        print("未指定操作。")
-        print("可用选项:")
-        print("  --download: 下载数据集")
-        print("  --generate-tasks: 生成任务列表文件") 
-        print("  --test_generalization_and_personalization: 运行测试批处理")
-        print("  --single-test: 运行单个测试")
+        logger = get_logger('dp-fpl', log_dir='logs', log_to_file=True, log_to_console=True)
+        logger.info("未指定操作。")
+        logger.info("可用选项:")
+        logger.info("  --download: 下载数据集")
+        logger.info("  --generate-tasks: 生成任务列表文件") 
+        logger.info("  --test_generalization_and_personalization: 运行测试批处理")
+        logger.info("  --single-test: 运行单个测试")

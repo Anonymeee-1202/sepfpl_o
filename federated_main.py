@@ -10,6 +10,7 @@ import copy
 import pickle
 import numpy as np
 import time
+from utils.logger import init_logger_from_args
 
  
 
@@ -100,6 +101,9 @@ def load_checkpoint(args):
 
 
 def main(args):
+    # 初始化日志记录器
+    logger = init_logger_from_args(args, log_dir='logs', log_to_file=True, log_to_console=True)
+    
     cfg = setup_cfg(args)
     if cfg.SEED >= 0:
         set_random_seed(cfg.SEED)
@@ -134,7 +138,7 @@ def main(args):
                 if 'prompt_learner.cluster_ctx' not in local_weights[i]:
                     local_weights[i]['prompt_learner.cluster_ctx'] = copy.deepcopy(initial_weights['prompt_learner.cluster_ctx'])
     except Exception as e:
-        print(f"[Init] cluster_ctx 初始化失败（可忽略首轮由后续流程写入）：{e}")
+        logger.warning(f"[Init] cluster_ctx 初始化失败（可忽略首轮由后续流程写入）：{e}")
 
     # Training
     start_epoch = 0
@@ -142,7 +146,7 @@ def main(args):
     local_acc_list, neighbor_acc_list, = [], []
     if args.resume == 'True':
         start_epoch, local_weights, local_acc_list, neighbor_acc_list = load_checkpoint(args)
-        print('Resume from epoch', start_epoch)
+        logger.info(f'Resume from epoch {start_epoch}')
     if start_epoch == max_epoch - 1:
         return
     if args.noise > 0:
@@ -160,9 +164,9 @@ def main(args):
             last_epoch_time = epoch_times[-1]
             remaining_epochs = max_epoch - epoch
             estimated_remaining_time = avg_epoch_time * remaining_epochs
-            print(f"------------已完成 {epoch - start_epoch} 个epoch | 平均用时: {avg_epoch_time:.2f}s | 上一个epoch: {last_epoch_time:.2f}s | 预计剩余时间: {estimated_remaining_time:.2f}s ({estimated_remaining_time/60:.1f}分钟)-------------")
+            logger.info(f"------------已完成 {epoch - start_epoch} 个epoch | 平均用时: {avg_epoch_time:.2f}s | 上一个epoch: {last_epoch_time:.2f}s | 预计剩余时间: {estimated_remaining_time:.2f}s ({estimated_remaining_time/60:.1f}分钟)-------------")
         
-        print("------------local train start epoch:", epoch, "-------------")
+        logger.info(f"------------local train start epoch: {epoch} -------------")
         # 记录epoch开始时间
         epoch_start_time = time.time()
         # 重置epoch计时器
@@ -317,7 +321,7 @@ def main(args):
                             updated = local_weights[idx]['prompt_learner.cluster_ctx'] - eta_c * aggregated_cluster_grads[idx]
                             local_weights[idx]['prompt_learner.cluster_ctx'] = updated.detach().clone()
                 except Exception as e:
-                    print(f"[HCSE] 聚类与聚合出现异常，跳过本步: {e}")
+                    logger.warning(f"[HCSE] 聚类与聚合出现异常，跳过本步: {e}")
 
             # sepfpl 路径不再维护RDP预算状态
 
@@ -332,7 +336,7 @@ def main(args):
             should_test = ((epoch - 90) % 2 == 0)
 
         if should_test:
-            print("------------local test start-------------")
+            logger.info("------------local test start-------------")
             local_trainer.set_model_mode("eval")
             results_local, results_neighbor = [], []
             for idx in idxs_users:
@@ -357,12 +361,12 @@ def main(args):
                 if not dirichlet:
                     neighbor_acc.append(results_neighbor[k][0])
             local_acc_list.append(sum(local_acc)/len(local_acc))
-            print(f"Global test local acc:", sum(local_acc)/len(local_acc))
+            logger.info(f"Global test local acc: {sum(local_acc)/len(local_acc)}")
             if not dirichlet:
                 neighbor_acc_list.append(sum(neighbor_acc)/len(neighbor_acc))
-                print(f"Global test neighbor acc:", sum(neighbor_acc)/len(neighbor_acc))
-            print("------------local test finish-------------")
-            print(f"Epoch: {epoch}/{max_epoch}\tfinished batch : {batch}/{max_batch}")
+                logger.info(f"Global test neighbor acc: {sum(neighbor_acc)/len(neighbor_acc)}")
+            logger.info("------------local test finish-------------")
+            logger.info(f"Epoch: {epoch}/{max_epoch}\tfinished batch : {batch}/{max_batch}")
 
             # save checkpoint（保持）
             save_checkpoint(args, epoch, local_weights, local_acc_list, neighbor_acc_list)
@@ -372,19 +376,19 @@ def main(args):
             pickle.dump([local_acc_list, neighbor_acc_list],
                         open(os.path.join(output_dir, f'acc_{args.factorization}_{args.rank}_{args.noise}_{args.seed}.pkl'), 'wb'))
         else:
-            print(f"Epoch: {epoch}/{max_epoch}\tfinished batch : {batch}/{max_batch} (skip test)")
+            logger.info(f"Epoch: {epoch}/{max_epoch}\tfinished batch : {batch}/{max_batch} (skip test)")
         
         # 记录epoch用时
         epoch_end_time = time.time()
         epoch_duration = epoch_end_time - epoch_start_time
         epoch_times.append(epoch_duration)
-        print(f"------------epoch {epoch} 完成，用时: {epoch_duration:.2f}s-------------")
+        logger.info(f"------------epoch {epoch} 完成，用时: {epoch_duration:.2f}s-------------")
 
-    print("maximum test local acc:", max(local_acc_list))
-    print("mean of local acc:",np.mean(local_acc_list[-5:]))
+    logger.info(f"maximum test local acc: {max(local_acc_list)}")
+    logger.info(f"mean of local acc: {np.mean(local_acc_list[-5:])}")
     if not dirichlet:
-        print("maximum test neighbor acc:", max(neighbor_acc_list))
-        print("mean of neighbor acc:",np.mean(neighbor_acc_list[-5:]))
+        logger.info(f"maximum test neighbor acc: {max(neighbor_acc_list)}")
+        logger.info(f"mean of neighbor acc: {np.mean(neighbor_acc_list[-5:])}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

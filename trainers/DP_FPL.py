@@ -12,6 +12,7 @@ from clip.simple_tokenizer import SimpleTokenizer as _Tokenizer
 
 import math
 import time
+import logging
 
 _tokenizer = _Tokenizer()
 
@@ -234,17 +235,18 @@ class DP_FPL(TrainerX):
         cfg = self.cfg
         classnames = self.dm.dataset.classnames
 
-        print(f"Loading CLIP (backbone: {cfg.MODEL.BACKBONE.NAME})")
+        logger = logging.getLogger('dp-fpl')
+        logger.info(f"Loading CLIP (backbone: {cfg.MODEL.BACKBONE.NAME})")
         clip_model = load_clip_to_cpu(cfg)
         if cfg.TRAINER.DP_FPL.PREC == "fp32" or cfg.TRAINER.DP_FPL.PREC == "amp":
             # CLIP's default precision is fp16
             clip_model.float()
         self.dtype = clip_model.dtype
 
-        print("Building custom CLIP")
+        logger.info("Building custom CLIP")
         self.model = CustomCLIP(cfg, classnames, clip_model)
 
-        print("Turning off gradients in both the image and the text encoder")
+        logger.info("Turning off gradients in both the image and the text encoder")
         for name, param in self.model.named_parameters():
             if "prompt_learner" not in name:
                 param.requires_grad_(False)
@@ -324,10 +326,12 @@ class DP_FPL(TrainerX):
             if 0 <= round_idx < len(self.std_per_batch_list):
                 self.std = self.std_per_batch_list[round_idx]
                 # 只在每10轮或关键轮次打印信息
+                logger = logging.getLogger('dp-fpl')
                 if hasattr(self, 'rdp_eps_per_batch_list') and (round_idx == 0 or (round_idx + 1) % 10 == 0 or round_idx == len(self.std_per_batch_list) - 1):
-                    print(f"[RDP-sepfpl] 轮次 {round_idx + 1}: ε={self.rdp_eps_per_batch_list[round_idx]:.6f}, std={self.std:.6f}")
+                    logger.info(f"[RDP-sepfpl] 轮次 {round_idx + 1}: ε={self.rdp_eps_per_batch_list[round_idx]:.6f}, std={self.std:.6f}")
             else:
-                print(f"[RDP-sepfpl] 警告: 轮次 {round_idx + 1} 超出范围，使用最后一轮的标准差")
+                logger = logging.getLogger('dp-fpl')
+                logger.warning(f"[RDP-sepfpl] 警告: 轮次 {round_idx + 1} 超出范围，使用最后一轮的标准差")
                 self.std = self.std_per_batch_list[-1]
     
     def reset_epoch_timer(self):
@@ -344,18 +348,23 @@ class DP_FPL(TrainerX):
 
         param_dict = dict(self.model.named_parameters())
 
-        # clip gradient and add noise
+        # 梯度裁剪与加噪（差分隐私保护）
         if self.cfg.NOISE > 0:
+            # 裁剪global_ctx梯度
             grad = param_dict['prompt_learner.global_ctx'].grad.data
             norm = grad.norm(2)
             if norm > self.cfg.NORM_THRESH:
                 scale = self.cfg.NORM_THRESH / norm
                 scale[scale>1] = 1
                 param_dict['prompt_learner.global_ctx'].grad *= scale
+            
+            # 根据不同的factorization方法，对相应参数进行裁剪和加噪
             if self.cfg.FACTORIZATION == 'promptfl':
+                # promptfl: 仅对global_ctx加噪
                 noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
                 param_dict['prompt_learner.global_ctx'].grad += noise
             elif self.cfg.FACTORIZATION == 'fedotp':
+                # fedotp: 对local_ctx进行裁剪和加噪
                 grad = param_dict['prompt_learner.local_ctx'].grad.data
                 norm = grad.norm(2)
                 if norm > self.cfg.NORM_THRESH:
@@ -365,6 +374,7 @@ class DP_FPL(TrainerX):
                 noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
                 param_dict['prompt_learner.local_ctx'].grad += noise
             elif self.cfg.FACTORIZATION in ['fedpgp', 'dplora', 'dpfpl']:
+                # fedpgp/dplora/dpfpl: 对local_u_ctx和local_v_ctx进行裁剪和加噪
                 grad = param_dict['prompt_learner.local_u_ctx'].grad.data
                 norm = grad.norm(2)
                 if norm > self.cfg.NORM_THRESH:
@@ -373,6 +383,7 @@ class DP_FPL(TrainerX):
                     param_dict['prompt_learner.local_u_ctx'].grad *= scale
                 noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
                 param_dict['prompt_learner.local_u_ctx'].grad += noise
+                # 处理local_v_ctx
                 grad = param_dict['prompt_learner.local_v_ctx'].grad.data
                 norm = grad.norm(2)
                 if norm > self.cfg.NORM_THRESH:
@@ -381,7 +392,8 @@ class DP_FPL(TrainerX):
                     param_dict['prompt_learner.local_v_ctx'].grad *= scale
                 noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
                 param_dict['prompt_learner.local_v_ctx'].grad += noise
-            # ========== 新增：cluster_ctx通道的裁剪与加噪 ==========
+            
+            # sepfpl: 对cluster_ctx进行裁剪和加噪
             if self.cfg.FACTORIZATION == 'sepfpl' and 'prompt_learner.cluster_ctx' in param_dict and param_dict['prompt_learner.cluster_ctx'].grad is not None:
                 grad = param_dict['prompt_learner.cluster_ctx'].grad.data
                 norm = grad.norm(2)
@@ -434,7 +446,8 @@ class DP_FPL(TrainerX):
         
         prefix = f"[{dataset_name}_{factorization}_{rank}_{noise}]"
         batch_info = f"batch {current_batch + 1}/{total_batches}" if total_batches > 0 else f"batch {current_batch + 1}"
-        print(f'{prefix} {batch_info} | {time_info} :', loss_summary)
+        logger = logging.getLogger('dp-fpl')
+        logger.info(f'{prefix} {batch_info} | {time_info} : {loss_summary}')
 
     def backward_pass(self, avg_global_gradient):
         # update global gradient
