@@ -111,9 +111,19 @@ def init_logger_from_args(args=None, log_dir='logs', log_to_file=True, log_to_co
         elif hasattr(args, 'dataset') and args.dataset:
             dataset_name = args.dataset
         
-        name = f'dp-fpl-{dataset_name}'
+        # 提取参数信息，参考 federated_main.py 中的命名规则：acc_{factorization}_{rank}_{noise}_{seed}
+        factorization = getattr(args, 'factorization', 'unknown')
+        rank = getattr(args, 'rank', 'unknown')
+        noise = getattr(args, 'noise', 'unknown')
+        seed = getattr(args, 'seed', 'unknown')
+        
+        # 构建日志名称：{dataset_name}_{factorization}_{rank}_{noise}_{seed}
+        # 与 pickle 文件命名规则保持一致
+        name = f'{dataset_name}_{factorization}_{rank}_{noise}_{seed}'
     else:
-        name = 'dp-fpl'
+        name = 'unknown'
     
-    return get_logger(name, log_dir, logging.INFO, log_to_file, log_to_console)
+    # 使用setup_logger而不是get_logger，确保每次都能创建新的logger（支持不同的factorization）
+    # 注意：由于setup_logger会在文件名中添加时间戳，所以即使name相同，每次运行也会创建新的日志文件
+    return setup_logger(name, log_dir, logging.INFO, log_to_file, log_to_console)
 
