@@ -13,14 +13,38 @@ from clip.simple_tokenizer import SimpleTokenizer as _Tokenizer
 import math
 import time
 import logging
+from utils.logger import get_logger
 
 _tokenizer = _Tokenizer()
 
 
 def load_clip_to_cpu(cfg):
+    import os
     backbone_name = cfg.MODEL.BACKBONE.NAME
     url = clip._MODELS[backbone_name]
-    model_path = clip._download(url)
+    
+    # 优先检查是否指定了模型文件路径
+    if hasattr(cfg.MODEL.BACKBONE, 'PATH') and cfg.MODEL.BACKBONE.PATH:
+        model_path = cfg.MODEL.BACKBONE.PATH
+        if os.path.isfile(model_path):
+            from utils.logger import get_logger
+            logger = get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
+            logger.info(f"使用指定的模型路径: {model_path}")
+        else:
+            raise FileNotFoundError(f"指定的模型文件不存在: {model_path}")
+    else:
+        # 检查是否指定了下载缓存目录
+        cache_dir = None
+        if hasattr(cfg.MODEL.BACKBONE, 'CACHE_DIR') and cfg.MODEL.BACKBONE.CACHE_DIR:
+            cache_dir = cfg.MODEL.BACKBONE.CACHE_DIR
+        elif os.environ.get('CLIP_CACHE_DIR'):
+            cache_dir = os.environ.get('CLIP_CACHE_DIR')
+        
+        # 如果指定了缓存目录，使用该目录下载
+        if cache_dir:
+            model_path = clip._download(url, root=cache_dir)
+        else:
+            model_path = clip._download(url)
 
     try:
         # loading JIT archive
@@ -235,18 +259,36 @@ class DP_FPL(TrainerX):
         cfg = self.cfg
         classnames = self.dm.dataset.classnames
 
-        logger = logging.getLogger('dp-fpl')
-        logger.info(f"Loading CLIP (backbone: {cfg.MODEL.BACKBONE.NAME})")
+        # 初始化logger，供类中其他方法使用
+        # 参照 logger.py 中的命名规则：{dataset_name}_{factorization}_{rank}_{noise}_{seed}
+        # 从 cfg 中提取信息
+        try:
+            dataset_name = str(cfg.DATASET.NAME).lower() if cfg.DATASET.NAME else 'unknown'
+        except (AttributeError, KeyError):
+            dataset_name = 'unknown'
+        
+        factorization = getattr(cfg, 'FACTORIZATION', 'unknown')
+        rank = getattr(cfg, 'RANK', 'unknown')
+        noise = getattr(cfg, 'NOISE', 'unknown')
+        seed = getattr(cfg, 'SEED', 'unknown')
+        
+        # 构建日志名称：{dataset_name}_{factorization}_{rank}_{noise}_{seed}
+        logger_name = f'{dataset_name}_{factorization}_{rank}_{noise}_{seed}'
+        # 使用 get_logger 获取已配置的 logger，如果没有则创建默认配置
+        # log_to_file=False 因为文件日志已由 init_logger_from_args 在 federated_main.py 中创建
+        self.logger = get_logger(logger_name, log_dir='logs', log_to_file=False, log_to_console=True)
+        
+        self.logger.info(f"Loading CLIP (backbone: {cfg.MODEL.BACKBONE.NAME})")
         clip_model = load_clip_to_cpu(cfg)
         if cfg.TRAINER.DP_FPL.PREC == "fp32" or cfg.TRAINER.DP_FPL.PREC == "amp":
             # CLIP's default precision is fp16
             clip_model.float()
         self.dtype = clip_model.dtype
 
-        logger.info("Building custom CLIP")
+        self.logger.info("Building custom CLIP")
         self.model = CustomCLIP(cfg, classnames, clip_model)
 
-        logger.info("Turning off gradients in both the image and the text encoder")
+        self.logger.info("Turning off gradients in both the image and the text encoder")
         for name, param in self.model.named_parameters():
             if "prompt_learner" not in name:
                 param.requires_grad_(False)
@@ -284,7 +326,7 @@ class DP_FPL(TrainerX):
             # ========== sepfpl隐私预算分配实现 ==========
             if cfg.FACTORIZATION == 'sepfpl':
                 # 从配置读取参数
-                rdp_p = getattr(cfg, 'RDP_P', 2.0)  # 分配参数p，默认2.0
+                rdp_p = getattr(cfg, 'RDP_P', 1.2)  # 分配参数p，默认2.0
                 total_rounds = cfg.OPTIM.ROUND  # 总轮数
                 
                 # 通过cfg.NOISE计算总预算
@@ -326,11 +368,17 @@ class DP_FPL(TrainerX):
             if 0 <= round_idx < len(self.std_per_batch_list):
                 self.std = self.std_per_batch_list[round_idx]
                 # 只在每10轮或关键轮次打印信息
-                logger = logging.getLogger('dp-fpl')
                 if hasattr(self, 'rdp_eps_per_batch_list') and (round_idx == 0 or (round_idx + 1) % 10 == 0 or round_idx == len(self.std_per_batch_list) - 1):
+                    logger = getattr(self, 'logger', None)
+                    if logger is None:
+                        # 如果 logger 未初始化，使用默认名称
+                        logger = get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
                     logger.info(f"[RDP-sepfpl] 轮次 {round_idx + 1}: ε={self.rdp_eps_per_batch_list[round_idx]:.6f}, std={self.std:.6f}")
             else:
-                logger = logging.getLogger('dp-fpl')
+                logger = getattr(self, 'logger', None)
+                if logger is None:
+                    # 如果 logger 未初始化，使用默认名称
+                    logger = get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
                 logger.warning(f"[RDP-sepfpl] 警告: 轮次 {round_idx + 1} 超出范围，使用最后一轮的标准差")
                 self.std = self.std_per_batch_list[-1]
     
@@ -417,37 +465,19 @@ class DP_FPL(TrainerX):
         return loss_summary
 
     def train_forward(self, idx=-1, train_iter=None, current_batch=0, total_batches=0):
-        """重写train_forward方法，添加带前缀的loss_summary输出"""
+        """重写train_forward方法，添加loss_summary输出"""
         self.set_model_mode("train")
         
         batch = next(train_iter)
         loss_summary = self.forward_pass(batch)
         
-        # 计算时间信息
-        elapsed_time = time.time() - self.epoch_start_time if self.epoch_start_time else 0
-        if total_batches > 0 and elapsed_time > 0:
-            avg_time_per_batch = elapsed_time / (current_batch + 1)
-            remaining_batches = total_batches - (current_batch + 1)
-            remaining_time = avg_time_per_batch * remaining_batches
-            time_info = f"已用时间: {elapsed_time:.2f}s, 剩余时间: {remaining_time:.2f}s"
-        else:
-            time_info = f"已用时间: {elapsed_time:.2f}s"
-        
-        # 构建前缀：[数据集_模型_模型参数_noise]
-        # 获取数据集名称（统一转为小写，与配置文件路径一致）
-        try:
-            dataset_name = str(self.cfg.DATASET.NAME).lower() if self.cfg.DATASET.NAME else 'unknown'
-        except (AttributeError, KeyError):
-            dataset_name = 'unknown'
-        
-        factorization = getattr(self.cfg, 'FACTORIZATION', 'unknown')
-        rank = getattr(self.cfg, 'RANK', 'unknown')
-        noise = getattr(self.cfg, 'NOISE', 'unknown')
-        
-        prefix = f"[{dataset_name}_{factorization}_{rank}_{noise}]"
+        client_info = f"client {idx}" if idx >= 0 else "client unknown"
         batch_info = f"batch {current_batch + 1}/{total_batches}" if total_batches > 0 else f"batch {current_batch + 1}"
-        logger = logging.getLogger('dp-fpl')
-        logger.info(f'{prefix} {batch_info} | {time_info} : {loss_summary}')
+        logger = getattr(self, 'logger', None)
+        if logger is None:
+            # 如果 logger 未初始化，使用默认名称
+            logger = get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
+        logger.info(f'{client_info} | {batch_info} : {loss_summary}')
 
     def backward_pass(self, avg_global_gradient):
         # update global gradient

@@ -27,6 +27,9 @@ def extend_cfg(cfg, args):
     # Differential privacy param
     cfg.NORM_THRESH = args.norm_thresh
     cfg.NOISE = args.noise
+    # RDP (Rényi Differential Privacy) parameters
+    cfg.RDP_ALPHA = getattr(args, 'rdp_alpha', 2.0)  # RDP阶数，默认2.0
+    cfg.RDP_P = getattr(args, 'rdp_p', 2.0)  # sepfpl隐私预算分配参数p，默认2.0
 
     # Config for DP_FPL
     cfg.TRAINER.NAME = 'DP_FPL'
@@ -54,6 +57,15 @@ def extend_cfg(cfg, args):
     cfg.OPTIM.LR = args.lr # learning rate
 
     cfg.MODEL.BACKBONE.PRETRAINED = True
+    # Optional CLIP model path and cache directory
+    if not hasattr(cfg.MODEL.BACKBONE, 'PATH'):
+        cfg.MODEL.BACKBONE.PATH = None
+    if not hasattr(cfg.MODEL.BACKBONE, 'CACHE_DIR'):
+        cfg.MODEL.BACKBONE.CACHE_DIR = None
+    if hasattr(args, 'clip_model_path') and args.clip_model_path:
+        cfg.MODEL.BACKBONE.PATH = args.clip_model_path
+    if hasattr(args, 'clip_cache_dir') and args.clip_cache_dir:
+        cfg.MODEL.BACKBONE.CACHE_DIR = args.clip_cache_dir
 
     cfg.SEED = args.seed
 
@@ -323,7 +335,6 @@ def main(args):
                 except Exception as e:
                     logger.warning(f"[HCSE] 聚类与聚合出现异常，跳过本步: {e}")
 
-            # sepfpl 路径不再维护RDP预算状态
 
         # test（保持原有频率与输出）
         should_test = False
@@ -392,7 +403,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--round', type=int, default=10, help="number of communication round")
+    parser.add_argument('--round', type=int, default=5, help="number of communication round")
     parser.add_argument('--num-users', type=int, default=10, help="number of users")
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
     parser.add_argument('--train-batch-size', type=int, default=32, help="number of trainer batch size")
@@ -404,6 +415,8 @@ if __name__ == "__main__":
     parser.add_argument('--rank', type=int, default=8, help='matrix factorization rank')
     parser.add_argument('--norm-thresh', type=float, default=10.0, help='clipping norm threshold')
     parser.add_argument('--noise', type=float, default=0.0, help='differential privacy noise scale')
+    parser.add_argument('--rdp-alpha', type=float, default=2.0, help='RDP (Rényi Differential Privacy) order alpha, default 2.0')
+    parser.add_argument('--rdp-p', type=float, default=2.0, help='RDP privacy budget allocation parameter p for sepfpl, default 2.0')
 
     # parameters of datasets
     # caltech101, oxford_flowers, oxford_pets, food101 and dtd
@@ -418,13 +431,7 @@ if __name__ == "__main__":
     parser.add_argument('--n_ctx', type=int, default=16, help="number of text encoder of text prompts")
     # sepfpl-specific optional params
     parser.add_argument('--sepfpl-topk', type=int, default=8, help='top-k neighbors for HCSE graph sparsification (sepfpl only)')
-    parser.add_argument('--sepfpl-lr-c', type=float, default=None, help='learning rate for cluster prompt updates (defaults to OPTIM.LR)')
-    parser.add_argument('--rho-base', type=float, default=1.0, help='base Poisson sampling rate for sepfpl (default 1.0)')
-    parser.add_argument('--c-avg', type=float, default=1.0, help='global clipping hyperparam C_avg for compensation noise (sepfpl only)')
-    parser.add_argument('--sepfpl-tau', type=int, default=-1, help='transition round tau (default: half of total rounds)')
-    parser.add_argument('--sepfpl-rho-conserve', type=float, default=0.5, help='rho in conservation phase (< rho_base)')
-    # Note: use '--rho-base' and '--sepfpl-rho-conserve' above; remove unused/duplicate args
-    parser.add_argument('--sepfpl-c-avg', type=float, default=None, help='global clipping hyperparam C_avg (defaults to NORM_THRESH)')
+    parser.add_argument('--sepfpl-lr-c', type=float, default=0.001, help='learning rate for cluster prompt updates (defaults to OPTIM.LR)')
 
     # parameters of path
     parser.add_argument("--root", type=str, default="/datasets", help="path to dataset")
@@ -432,6 +439,9 @@ if __name__ == "__main__":
     parser.add_argument("--dataset-config-file", type=str, default="configs/datasets/cifar100.yaml", help="path to config file for dataset setup")
     parser.add_argument("--resume", type=str, default="False", help="resume training or not")
     parser.add_argument('--gpus', type=str, default=None, help="指定可见显卡，如 '0' 或 '0,1'")
+    # Optional CLIP model parameters
+    parser.add_argument('--clip-model-path', type=str, default=None, help='path to local CLIP model file (optional)')
+    parser.add_argument('--clip-cache-dir', type=str, default=None, help='directory to cache/download CLIP models (optional)')
 
     args = parser.parse_args()
     # 在任何CUDA调用前设置可见显卡

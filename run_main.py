@@ -1,6 +1,5 @@
 import os
 from datasets import download_standard_datasets
-from utils.logger import get_logger
 
 # ==================== 配置参数 ====================
 root = '/home/liuxin25/dataset'  # 数据集路径
@@ -18,30 +17,29 @@ EXPERIMENT_CONFIG = {
 
 
 # ==================== 核心功能函数 ====================
-def run(root, dataset, users, factorization, rank, noise, seed, gpus=None):
+def run(root, dataset, users, factorization, rank, noise, seed, round=10, gpus=None):
     """运行单个实验任务"""
     dataset_yaml = f'configs/datasets/{dataset}.yaml'
     prefix = f"CUDA_VISIBLE_DEVICES={gpus} " if gpus else ""
     gpu_arg = f" {gpus}" if gpus else ""
-    os.system(f'{prefix}bash srun_main.sh {root} {dataset_yaml} {users} {factorization} {rank} {noise} {seed}{gpu_arg}')
+    os.system(f'{prefix}bash srun_main.sh {root} {dataset_yaml} {users} {factorization} {rank} {noise} {seed} {round}{gpu_arg}')
 
 
 def generate_task_commands(config):
     """生成所有任务的命令列表（不带GPU信息，GPU在terminal级别分配）"""
     tasks = []
+    round_num = config.get('round', 3)  # 默认10轮
     for seed in config['seed_list']:
         for noise in config['noise_list']:
             for dataset in config['dataset_list']:
                 for factorization in config['factorization_list']:
-                    task_cmd = f'bash srun_main.sh {root} configs/datasets/{dataset}.yaml {users} {factorization} {config["rank"]} {noise} {seed}'
+                    task_cmd = f'bash srun_main.sh {root} configs/datasets/{dataset}.yaml {users} {factorization} {config["rank"]} {noise} {seed} {round_num}'
                     tasks.append(task_cmd)
     return tasks
 
 
 def save_task_files(tasks, config, gpus=None):
     """将任务保存到文件，按终端分配；每个terminal分配到一张GPU"""
-    logger = get_logger('dp-fpl', log_dir='logs', log_to_file=True, log_to_console=True)
-    
     # 解析GPU列表
     gpu_list = None
     if gpus:
@@ -60,7 +58,7 @@ def save_task_files(tasks, config, gpus=None):
             except OSError:
                 pass
     if removed:
-        logger.info(f"🧹 Removed {removed} old task files in ./tasks/")
+        print(f"🧹 Removed {removed} old task files in ./tasks/")
     
     # 保存完整任务列表
     task_file = 'tasks/task_list.sh'
@@ -116,8 +114,8 @@ def save_task_files(tasks, config, gpus=None):
         os.chmod(terminal_file, 0o755)
         gpu_info = f" (GPU {assigned_gpu})" if assigned_gpu is not None else ""
         task_indices = [idx for idx, _ in terminal_tasks[terminal_id]]
-        logger.info(f"✅ Created {terminal_file} with {len(terminal_tasks[terminal_id])} tasks {gpu_info}")
-        logger.info(f"   Task indices: {task_indices[:5]}{'...' if len(task_indices) > 5 else ''}")
+        print(f"✅ Created {terminal_file} with {len(terminal_tasks[terminal_id])} tasks {gpu_info}")
+        print(f"   Task indices: {task_indices[:5]}{'...' if len(task_indices) > 5 else ''}")
 
 
 # ==================== 实验相关函数 ====================
@@ -137,17 +135,15 @@ def test_generalization_and_personalization(gpus=None):
 
 def generate_task_list(gpus=None):
     """生成任务列表文件，用于多终端并行执行"""
-    logger = get_logger('dp-fpl', log_dir='logs', log_to_file=True, log_to_console=True)
-    
     tasks = generate_task_commands(EXPERIMENT_CONFIG)
     save_task_files(tasks, EXPERIMENT_CONFIG, gpus=gpus)
     
-    logger.info(f"\n📊 Total tasks: {len(tasks)}")
-    logger.info(f"📁 Task files created in ./tasks/")
-    logger.info(f"🚀 To run all tasks in one terminal: bash tasks/task_list.sh")
-    logger.info(f"🚀 To run in parallel terminals:")
+    print(f"\n📊 Total tasks: {len(tasks)}")
+    print(f"📁 Task files created in ./tasks/")
+    print(f"🚀 To run all tasks in one terminal: bash tasks/task_list.sh")
+    print(f"🚀 To run in parallel terminals:")
     for terminal_id in range(EXPERIMENT_CONFIG['num_terminals']):
-        logger.info(f"   Terminal {terminal_id + 1}: bash tasks/terminal_{terminal_id}.sh")
+        print(f"   Terminal {terminal_id + 1}: bash tasks/terminal_{terminal_id}.sh")
 
 
 def download_datasets(base_root, dataset_name):
@@ -165,11 +161,11 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Run DP-FPL experiments")
-    parser.add_argument("--test_generalization_and_personalization", action="store_true", help="运行个性化与泛化性测试批处理")
-    parser.add_argument("--single-test", action="store_true", help="运行单个测试: Caltech101 + DP-FPL + rank=8 + noise=0.0 + seed=1")
-    parser.add_argument("--download", action="store_true", help="下载 Caltech101、OxfordPets、OxfordFlowers 到 root 目录")
-    parser.add_argument("--generate-tasks", action="store_true", help="生成任务列表文件，用于多终端并行执行")
-    parser.add_argument("--gpus", type=str, default=None, help="指定可见显卡，如 '0' 或 '0,1'")
+    parser.add_argument("-t", "--test_generalization_and_personalization", action="store_true", help="运行个性化与泛化性测试批处理")
+    parser.add_argument("-s", "--single-test", action="store_true", help="运行单个测试")
+    parser.add_argument("-d", "--download", action="store_true", help="下载 Caltech101、OxfordPets、OxfordFlowers 到 root 目录")
+    parser.add_argument("-g", "--generate-tasks", action="store_true", help="生成任务列表文件，用于多终端并行执行")
+    parser.add_argument("--gpus", type=str, default='0,1', help="指定可见显卡，如 '0' 或 '0,1'")
     args = parser.parse_args()
 
     if args.download:
@@ -180,14 +176,17 @@ if __name__ == "__main__":
     elif args.test_generalization_and_personalization:
         test_generalization_and_personalization(gpus=args.gpus)
     elif args.single_test:
-        run(root, 'food-101', users, 'dpfpl', 8, 0.0, 1, gpus=args.gpus)
+        run(root, 'caltech-101', users, 'sepfpl', 8, 0.0, 1, gpus=args.gpus)
+        run(root, 'caltech-101', users, 'dpfpl', 8, 0.0, 1, gpus=args.gpus)
+        run(root, 'caltech-101', users, 'fedpgp', 8, 0.0, 1, gpus=args.gpus)
+        run(root, 'caltech-101', users, 'promptfl', 8, 0.0, 1, gpus=args.gpus)
+        run(root, 'caltech-101', users, 'fedotp', 8, 0.0, 1, gpus=args.gpus)
         # 'dataset_list': ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101']
         # 'factorization_list': ['sepfpl', 'dpfpl', 'fedpgp', 'promptfl', 'fedotp'] # 测试的方法
     else:
-        logger = get_logger('dp-fpl', log_dir='logs', log_to_file=True, log_to_console=True)
-        logger.info("未指定操作。")
-        logger.info("可用选项:")
-        logger.info("  --download: 下载数据集")
-        logger.info("  --generate-tasks: 生成任务列表文件") 
-        logger.info("  --test_generalization_and_personalization: 运行测试批处理")
-        logger.info("  --single-test: 运行单个测试")
+        print("未指定操作。")
+        print("可用选项:")
+        print("  --download: 下载数据集")
+        print("  --generate-tasks: 生成任务列表文件") 
+        print("  --test_generalization_and_personalization: 运行测试批处理")
+        print("  --single-test: 运行单个测试")
