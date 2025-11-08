@@ -9,8 +9,8 @@ dist/
 build/
 
 # Checkpoints and outputs
-checkpoints/
-outputs/
+# checkpoints/
+# outputs/
 
 # Datasets (optional, if you don't want to upload large files)
 # dataset/
@@ -27,5 +27,5 @@ outputs/
 Thumbs.db
 
 # Logs
-*.log
+# *.log
 
