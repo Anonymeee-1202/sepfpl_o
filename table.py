@@ -2,56 +2,120 @@ from prettytable import PrettyTable
 import pickle
 import os
 
-# Variables
-dataset_list = ['caltech101', 'oxford_pets', 'oxford_flowers']
-factorization_list = ['full', 'fedpgp', 'lora', 'dpfpl']
-rank_list = [1, 2, 4, 8]
-noise_list = [0.0, 0.4, 0.2, 0.1]
-seed_list = [1, 2, 3]
-rounds = 100
+
+DEFAULT_DATASET_LIST = ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101']
+DEFAULT_FACTORIZATION_LIST = ['sepfpl', 'dpfpl', 'fedpgp', 'fedotp', 'promptfl']
+DEFAULT_NOISE_LIST = [0.0, 0.01, 0.05, 0.1, 0.2, 0.4]
+DEFAULT_SEED_LIST = [1]
+DEFAULT_RANK_LIST = [8]
+TAIL_EPOCHS = 10
+
+
+def load_config_from_run_main():
+    try:
+        from run_main import EXPERIMENT_CONFIG
+
+        dataset_list = EXPERIMENT_CONFIG.get('dataset_list', DEFAULT_DATASET_LIST)
+        factorization_list = EXPERIMENT_CONFIG.get('factorization_list', DEFAULT_FACTORIZATION_LIST)
+        noise_list = EXPERIMENT_CONFIG.get('noise_list', DEFAULT_NOISE_LIST)
+        seed_list = EXPERIMENT_CONFIG.get('seed_list', DEFAULT_SEED_LIST)
+        rank_value = EXPERIMENT_CONFIG.get('rank', DEFAULT_RANK_LIST[0])
+        rank_list = [rank_value] if not isinstance(rank_value, (list, tuple)) else list(rank_value)
+        return dataset_list, factorization_list, noise_list, seed_list, rank_list
+    except Exception:
+        return (
+            DEFAULT_DATASET_LIST,
+            DEFAULT_FACTORIZATION_LIST,
+            DEFAULT_NOISE_LIST,
+            DEFAULT_SEED_LIST,
+            DEFAULT_RANK_LIST,
+        )
+
+
+dataset_list, factorization_list, noise_list, seed_list, rank_list = load_config_from_run_main()
+
+
+def tail_mean(values, tail=TAIL_EPOCHS):
+    if not values:
+        return 0.0
+    if tail is None or len(values) <= tail:
+        recent = values
+    else:
+        recent = values[-tail:]
+    return round(sum(recent) / len(recent), 3)
+
+
+def load_metrics(file_path):
+    try:
+        with open(file_path, 'rb') as f:
+            data = pickle.load(f)
+    except Exception:
+        return [], []
+
+    if isinstance(data, (list, tuple)):
+        if len(data) >= 2 and isinstance(data[0], list):
+            local_hist = data[0]
+            neighbor_hist = data[1] if len(data) > 1 else []
+        elif len(data) >= 6:
+            local_hist, neighbor_hist = data[0], data[1]
+        else:
+            local_hist, neighbor_hist = [], []
+    elif isinstance(data, dict):
+        local_hist = data.get('local_acc', [])
+        neighbor_hist = data.get('neighbor_acc', [])
+    else:
+        local_hist, neighbor_hist = [], []
+
+    return local_hist or [], neighbor_hist or []
+
 
 def read_data(dataset, factorization, rank, noise):
-    if factorization == 'full':
-        rank = 0
-    all_seeds_local, all_seeds_base = [], []
+    per_seed_local, per_seed_neighbor = [], []
     for seed in seed_list:
-        file_name = os.path.join(os.getcwd(), f'outputs/{dataset}/acc_{factorization}_{rank}_{noise}_{seed}.pkl')
-        if os.path.isfile(file_name):
-            local, base, _, _, _, _ = pickle.load(open(file_name, 'rb'))
-            acc_len = min(rounds, len(local), len(base))
-            local, base = local[acc_len-10:acc_len], base[acc_len-10:acc_len]
-            all_seeds_local.append(sum(local) / len(local))
-            all_seeds_base.append(sum(base) / len(base))
-    if len(all_seeds_local) == 0:
-        local = 0
-    else:
-        local = round(sum(all_seeds_local) / len(all_seeds_local), 3)
-    if len(all_seeds_base) == 0:
-        base = 0
-    else:
-        base = round(sum(all_seeds_base) / len(all_seeds_base), 3)
-    return (local, base)
+        file_name = os.path.join(
+            os.getcwd(), f'outputs/{dataset}/acc_{factorization}_{rank}_{noise}_{seed}.pkl'
+        )
+        if not os.path.isfile(file_name):
+            continue
 
-# read all schemes
+        local_hist, neighbor_hist = load_metrics(file_name)
+        if local_hist:
+            per_seed_local.append(tail_mean(local_hist))
+        if neighbor_hist:
+            per_seed_neighbor.append(tail_mean(neighbor_hist))
+
+    local_mean = round(sum(per_seed_local) / len(per_seed_local), 3) if per_seed_local else 0.0
+    neighbor_mean = (
+        round(sum(per_seed_neighbor) / len(per_seed_neighbor), 3) if per_seed_neighbor else 0.0
+    )
+    return local_mean, neighbor_mean
+
+
 def read_scheme(dataset, rank, noise):
-    local_list, base_list = [], []
+    local_list, neighbor_list = [], []
     for factorization in factorization_list:
-        local, base = read_data(dataset, factorization, rank, noise)
+        local, neighbor = read_data(dataset, factorization, rank, noise)
         local_list.append(local)
-        base_list.append(base)
-    return local_list, base_list
+        neighbor_list.append(neighbor)
+    return local_list, neighbor_list
 
-# Make tables
+
 for dataset in dataset_list:
-    local1 = PrettyTable(['rank', 'noise', 'full', 'fedpgp', 'lora', 'dpfpl'])
-    base1 = PrettyTable(['rank', 'noise', 'full', 'fedpgp', 'lora', 'dpfpl'])
+    headers = ['rank', 'noise'] + factorization_list
+    local_table = PrettyTable(headers)
+    neighbor_table = PrettyTable(headers)
+
     for rank in rank_list:
-        for i in range(len(noise_list)):
-            local_list, base_list = read_scheme(dataset, rank, noise_list[i])
-            local1.add_row([rank, noise_list[i], local_list[0], local_list[1], local_list[2], local_list[3]])
-            base1.add_row([rank, noise_list[i], base_list[0], base_list[1], base_list[2], base_list[3]])
+        for noise in noise_list:
+            local_list, neighbor_list = read_scheme(dataset, rank, noise)
+            local_row = [rank, noise] + local_list
+            neighbor_row = [rank, noise] + neighbor_list
+            local_table.add_row(local_row)
+            neighbor_table.add_row(neighbor_row)
+
     print(f'========== {dataset} local accuracy ==========')
-    print(local1)
-    print(f'========== {dataset} base accuracy ==========')
-    print(base1)
+    print(local_table)
+    print(f'========== {dataset} neighbor accuracy ==========')
+    print(neighbor_table)
     print('\n\n')
+
