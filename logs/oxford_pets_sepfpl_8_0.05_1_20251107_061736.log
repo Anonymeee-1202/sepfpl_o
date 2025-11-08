@@ -1,0 +1,20 @@
+2025-11-07 06:17:36 - oxford_pets_sepfpl_8_0.05_1 - INFO - 日志文件已创建: logs/oxford_pets_sepfpl_8_0.05_1_20251107_061736.log
+2025-11-07 06:17:39 - oxford_pets_sepfpl_8_0.05_1 - INFO - ------------local train start epoch: 0 -------------
+2025-11-07 06:17:46 - oxford_pets_sepfpl_8_0.05_1 - INFO - Epoch: 0/3	finished batch : 1/2 (skip test)
+2025-11-07 06:17:46 - oxford_pets_sepfpl_8_0.05_1 - INFO - ------------epoch 0 完成，用时: 6.53s-------------
+2025-11-07 06:17:46 - oxford_pets_sepfpl_8_0.05_1 - INFO - ------------已完成 1 个epoch | 平均用时: 6.53s | 上一个epoch: 6.53s | 预计剩余时间: 13.06s (0.2分钟)-------------
+2025-11-07 06:17:46 - oxford_pets_sepfpl_8_0.05_1 - INFO - ------------local train start epoch: 1 -------------
+2025-11-07 06:17:51 - oxford_pets_sepfpl_8_0.05_1 - INFO - Epoch: 1/3	finished batch : 1/2 (skip test)
+2025-11-07 06:17:51 - oxford_pets_sepfpl_8_0.05_1 - INFO - ------------epoch 1 完成，用时: 5.14s-------------
+2025-11-07 06:17:51 - oxford_pets_sepfpl_8_0.05_1 - INFO - ------------已完成 2 个epoch | 平均用时: 5.84s | 上一个epoch: 5.14s | 预计剩余时间: 5.84s (0.1分钟)-------------
+2025-11-07 06:17:51 - oxford_pets_sepfpl_8_0.05_1 - INFO - ------------local train start epoch: 2 -------------
+2025-11-07 06:17:56 - oxford_pets_sepfpl_8_0.05_1 - INFO - ------------local test start-------------
+2025-11-07 06:22:59 - oxford_pets_sepfpl_8_0.05_1 - INFO - Global test local acc: 81.24336684801091
+2025-11-07 06:22:59 - oxford_pets_sepfpl_8_0.05_1 - INFO - Global test neighbor acc: 78.80554135866275
+2025-11-07 06:22:59 - oxford_pets_sepfpl_8_0.05_1 - INFO - ------------local test finish-------------
+2025-11-07 06:22:59 - oxford_pets_sepfpl_8_0.05_1 - INFO - Epoch: 2/3	finished batch : 1/2
+2025-11-07 06:22:59 - oxford_pets_sepfpl_8_0.05_1 - INFO - ------------epoch 2 完成，用时: 308.49s-------------
+2025-11-07 06:22:59 - oxford_pets_sepfpl_8_0.05_1 - INFO - maximum test local acc: 81.24336684801091
+2025-11-07 06:22:59 - oxford_pets_sepfpl_8_0.05_1 - INFO - mean of local acc: 81.24336684801091
+2025-11-07 06:22:59 - oxford_pets_sepfpl_8_0.05_1 - INFO - maximum test neighbor acc: 78.80554135866275
+2025-11-07 06:22:59 - oxford_pets_sepfpl_8_0.05_1 - INFO - mean of neighbor acc: 78.80554135866275

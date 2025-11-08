@@ -1,0 +1,20 @@
+2025-11-07 04:47:56 - food-101_dpfpl_8_0.05_1 - INFO - 日志文件已创建: logs/food-101_dpfpl_8_0.05_1_20251107_044756.log
+2025-11-07 04:48:00 - food-101_dpfpl_8_0.05_1 - INFO - ------------local train start epoch: 0 -------------
+2025-11-07 04:56:00 - food-101_dpfpl_8_0.05_1 - INFO - Epoch: 0/3	finished batch : 155/156 (skip test)
+2025-11-07 04:56:00 - food-101_dpfpl_8_0.05_1 - INFO - ------------epoch 0 完成，用时: 479.96s-------------
+2025-11-07 04:56:00 - food-101_dpfpl_8_0.05_1 - INFO - ------------已完成 1 个epoch | 平均用时: 479.96s | 上一个epoch: 479.96s | 预计剩余时间: 959.91s (16.0分钟)-------------
+2025-11-07 04:56:00 - food-101_dpfpl_8_0.05_1 - INFO - ------------local train start epoch: 1 -------------
+2025-11-07 05:03:51 - food-101_dpfpl_8_0.05_1 - INFO - Epoch: 1/3	finished batch : 155/156 (skip test)
+2025-11-07 05:03:51 - food-101_dpfpl_8_0.05_1 - INFO - ------------epoch 1 完成，用时: 471.26s-------------
+2025-11-07 05:03:51 - food-101_dpfpl_8_0.05_1 - INFO - ------------已完成 2 个epoch | 平均用时: 475.61s | 上一个epoch: 471.26s | 预计剩余时间: 475.61s (7.9分钟)-------------
+2025-11-07 05:03:51 - food-101_dpfpl_8_0.05_1 - INFO - ------------local train start epoch: 2 -------------
+2025-11-07 05:11:32 - food-101_dpfpl_8_0.05_1 - INFO - ------------local test start-------------
+2025-11-07 05:53:59 - food-101_dpfpl_8_0.05_1 - INFO - Global test local acc: 67.9939393939394
+2025-11-07 05:53:59 - food-101_dpfpl_8_0.05_1 - INFO - Global test neighbor acc: 68.25971509971508
+2025-11-07 05:53:59 - food-101_dpfpl_8_0.05_1 - INFO - ------------local test finish-------------
+2025-11-07 05:53:59 - food-101_dpfpl_8_0.05_1 - INFO - Epoch: 2/3	finished batch : 155/156
+2025-11-07 05:53:59 - food-101_dpfpl_8_0.05_1 - INFO - ------------epoch 2 完成，用时: 3007.30s-------------
+2025-11-07 05:53:59 - food-101_dpfpl_8_0.05_1 - INFO - maximum test local acc: 67.9939393939394
+2025-11-07 05:53:59 - food-101_dpfpl_8_0.05_1 - INFO - mean of local acc: 67.9939393939394
+2025-11-07 05:53:59 - food-101_dpfpl_8_0.05_1 - INFO - maximum test neighbor acc: 68.25971509971508
+2025-11-07 05:53:59 - food-101_dpfpl_8_0.05_1 - INFO - mean of neighbor acc: 68.25971509971508

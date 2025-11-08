@@ -1,0 +1,20 @@
+2025-11-07 16:41:06 - food-101_fedotp_8_0.2_1 - INFO - 日志文件已创建: logs/food-101_fedotp_8_0.2_1_20251107_164106.log
+2025-11-07 16:41:10 - food-101_fedotp_8_0.2_1 - INFO - ------------local train start epoch: 0 -------------
+2025-11-07 16:48:13 - food-101_fedotp_8_0.2_1 - INFO - Epoch: 0/3	finished batch : 155/156 (skip test)
+2025-11-07 16:48:13 - food-101_fedotp_8_0.2_1 - INFO - ------------epoch 0 完成，用时: 423.04s-------------
+2025-11-07 16:48:13 - food-101_fedotp_8_0.2_1 - INFO - ------------已完成 1 个epoch | 平均用时: 423.04s | 上一个epoch: 423.04s | 预计剩余时间: 846.07s (14.1分钟)-------------
+2025-11-07 16:48:13 - food-101_fedotp_8_0.2_1 - INFO - ------------local train start epoch: 1 -------------
+2025-11-07 16:55:18 - food-101_fedotp_8_0.2_1 - INFO - Epoch: 1/3	finished batch : 155/156 (skip test)
+2025-11-07 16:55:18 - food-101_fedotp_8_0.2_1 - INFO - ------------epoch 1 完成，用时: 425.48s-------------
+2025-11-07 16:55:18 - food-101_fedotp_8_0.2_1 - INFO - ------------已完成 2 个epoch | 平均用时: 424.26s | 上一个epoch: 425.48s | 预计剩余时间: 424.26s (7.1分钟)-------------
+2025-11-07 16:55:18 - food-101_fedotp_8_0.2_1 - INFO - ------------local train start epoch: 2 -------------
+2025-11-07 17:02:23 - food-101_fedotp_8_0.2_1 - INFO - ------------local test start-------------
+2025-11-07 17:39:28 - food-101_fedotp_8_0.2_1 - INFO - Global test local acc: 81.35151515151516
+2025-11-07 17:39:28 - food-101_fedotp_8_0.2_1 - INFO - Global test neighbor acc: 81.38888888888889
+2025-11-07 17:39:28 - food-101_fedotp_8_0.2_1 - INFO - ------------local test finish-------------
+2025-11-07 17:39:28 - food-101_fedotp_8_0.2_1 - INFO - Epoch: 2/3	finished batch : 155/156
+2025-11-07 17:39:28 - food-101_fedotp_8_0.2_1 - INFO - ------------epoch 2 完成，用时: 2650.34s-------------
+2025-11-07 17:39:28 - food-101_fedotp_8_0.2_1 - INFO - maximum test local acc: 81.35151515151516
+2025-11-07 17:39:28 - food-101_fedotp_8_0.2_1 - INFO - mean of local acc: 81.35151515151516
+2025-11-07 17:39:28 - food-101_fedotp_8_0.2_1 - INFO - maximum test neighbor acc: 81.38888888888889
+2025-11-07 17:39:28 - food-101_fedotp_8_0.2_1 - INFO - mean of neighbor acc: 81.38888888888889

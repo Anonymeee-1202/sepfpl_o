@@ -1,0 +1,20 @@
+2025-11-07 17:50:57 - oxford_pets_fedpgp_8_0.4_1 - INFO - 日志文件已创建: logs/oxford_pets_fedpgp_8_0.4_1_20251107_175057.log
+2025-11-07 17:51:00 - oxford_pets_fedpgp_8_0.4_1 - INFO - ------------local train start epoch: 0 -------------
+2025-11-07 17:51:05 - oxford_pets_fedpgp_8_0.4_1 - INFO - Epoch: 0/3	finished batch : 1/2 (skip test)
+2025-11-07 17:51:05 - oxford_pets_fedpgp_8_0.4_1 - INFO - ------------epoch 0 完成，用时: 5.51s-------------
+2025-11-07 17:51:05 - oxford_pets_fedpgp_8_0.4_1 - INFO - ------------已完成 1 个epoch | 平均用时: 5.51s | 上一个epoch: 5.51s | 预计剩余时间: 11.03s (0.2分钟)-------------
+2025-11-07 17:51:05 - oxford_pets_fedpgp_8_0.4_1 - INFO - ------------local train start epoch: 1 -------------
+2025-11-07 17:51:10 - oxford_pets_fedpgp_8_0.4_1 - INFO - Epoch: 1/3	finished batch : 1/2 (skip test)
+2025-11-07 17:51:10 - oxford_pets_fedpgp_8_0.4_1 - INFO - ------------epoch 1 完成，用时: 4.99s-------------
+2025-11-07 17:51:10 - oxford_pets_fedpgp_8_0.4_1 - INFO - ------------已完成 2 个epoch | 平均用时: 5.25s | 上一个epoch: 4.99s | 预计剩余时间: 5.25s (0.1分钟)-------------
+2025-11-07 17:51:10 - oxford_pets_fedpgp_8_0.4_1 - INFO - ------------local train start epoch: 2 -------------
+2025-11-07 17:51:15 - oxford_pets_fedpgp_8_0.4_1 - INFO - ------------local test start-------------
+2025-11-07 17:55:52 - oxford_pets_fedpgp_8_0.4_1 - INFO - Global test local acc: 40.614844454896556
+2025-11-07 17:55:52 - oxford_pets_fedpgp_8_0.4_1 - INFO - Global test neighbor acc: 39.507912910585084
+2025-11-07 17:55:52 - oxford_pets_fedpgp_8_0.4_1 - INFO - ------------local test finish-------------
+2025-11-07 17:55:52 - oxford_pets_fedpgp_8_0.4_1 - INFO - Epoch: 2/3	finished batch : 1/2
+2025-11-07 17:55:52 - oxford_pets_fedpgp_8_0.4_1 - INFO - ------------epoch 2 完成，用时: 281.73s-------------
+2025-11-07 17:55:52 - oxford_pets_fedpgp_8_0.4_1 - INFO - maximum test local acc: 40.614844454896556
+2025-11-07 17:55:52 - oxford_pets_fedpgp_8_0.4_1 - INFO - mean of local acc: 40.614844454896556
+2025-11-07 17:55:52 - oxford_pets_fedpgp_8_0.4_1 - INFO - maximum test neighbor acc: 39.507912910585084
+2025-11-07 17:55:52 - oxford_pets_fedpgp_8_0.4_1 - INFO - mean of neighbor acc: 39.507912910585084
