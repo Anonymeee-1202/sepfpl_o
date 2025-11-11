@@ -12,7 +12,6 @@ import numpy as np
 import time
 from utils.logger import init_logger_from_args
 
- 
 
 def extend_cfg(cfg, args):
     """
@@ -29,7 +28,7 @@ def extend_cfg(cfg, args):
     cfg.NOISE = args.noise
     # RDP (Rényi Differential Privacy) parameters
     cfg.RDP_ALPHA = getattr(args, 'rdp_alpha', 2.0)  # RDP阶数，默认2.0
-    cfg.RDP_P = getattr(args, 'rdp_p', 2.0)  # sepfpl隐私预算分配参数p，默认2.0
+    cfg.RDP_P = getattr(args, 'rdp_p', 1.1)  # sepfpl隐私预算分配参数p，默认2.0
 
     # Config for DP_FPL
     cfg.TRAINER.NAME = 'DP_FPL'
@@ -127,23 +126,17 @@ def main(args):
     if args.dataset_config_file.split('/')[-1].split('.')[0] in ['cifar10', 'cifar100']:
         dirichlet = True
 
-    global_gradients = [{} for i in range(args.num_users)]
-    local_weights = [{} for i in range(args.num_users)]
-    local_weights_g = [[] for i in range(args.num_users)]
-    local_weights_l = [[] for i in range(args.num_users)]
-    local_weights_u = [[] for i in range(args.num_users)]
-    local_weights_v = [[] for i in range(args.num_users)]
-
-    # ========== 初始化全局、cluster、local三个prompt参数结构 ==========
-    cluster_prompt_weights = [{} for i in range(args.num_users)]
-    # 其余weights保持local_weights用法
+    global_gradients = [None for _ in range(args.num_users)]
+    local_weights = [{} for _ in range(args.num_users)]
+    local_weights_g = [None for _ in range(args.num_users)]
+    local_weights_l = [None for _ in range(args.num_users)]
+    local_weights_u = [None for _ in range(args.num_users)]
+    local_weights_v = [None for _ in range(args.num_users)]
 
     local_trainer = build_trainer(cfg)
     initial_weights = copy.deepcopy(local_trainer.model.state_dict())
 
-    # sepfpl 模式使用简化采样和裁剪参数
-
-    # ========== 新增：为每个客户端初始化cluster_ctx到local_weights中（仅sepfpl） ==========
+    # sepfpl：首轮为各客户端预填聚类提示参数，若失败由后续流程覆盖
     try:
         if args.factorization == 'sepfpl' and 'prompt_learner.cluster_ctx' in initial_weights:
             for i in range(args.num_users):
@@ -164,32 +157,45 @@ def main(args):
     if args.noise > 0:
         std = local_trainer.std / cfg.DATASET.USERS
     
-    # 初始化epoch时间跟踪
-    epoch_times = []  # 存储每个已完成epoch的用时
-    
+    # 统计单轮最大批次数，用于进度条估计
+    train_loaders = getattr(local_trainer, "fed_train_loader_x_dict", {})
+    if train_loaders:
+        max_batches_per_epoch = max(len(loader) for loader in train_loaders.values())
+    else:
+        max_batches_per_epoch = 0
+    # 维护提示参数名称到对应缓冲区的映射，便于统一读写逻辑
+    key_to_buffer = {'prompt_learner.global_ctx': local_weights_g}
+    if args.factorization in ['fedotp', 'dplora', 'dpfpl', 'sepfpl']:
+        key_to_buffer['prompt_learner.local_ctx'] = local_weights_l
+    if args.factorization in ['fedpgp', 'dplora', 'dpfpl', 'sepfpl']:
+        key_to_buffer['prompt_learner.local_u_ctx'] = local_weights_u
+        key_to_buffer['prompt_learner.local_v_ctx'] = local_weights_v
+    if args.factorization == 'sepfpl':
+        key_to_buffer['prompt_learner.cluster_ctx'] = [
+            copy.deepcopy(local_weights[i]['prompt_learner.cluster_ctx'])
+            if 'prompt_learner.cluster_ctx' in local_weights[i] else None
+            for i in range(args.num_users)
+        ]
+
+    def get_prompt_default(key, idx):
+        """根据提示参数名称返回默认权重，用于覆盖缺失值。"""
+        if key == 'prompt_learner.global_ctx':
+            return initial_weights['prompt_learner.global_ctx']
+        fallback = local_weights[idx].get('prompt_learner.global_ctx', initial_weights['prompt_learner.global_ctx'])
+        return initial_weights.get(key, fallback)
+
     for epoch in range(start_epoch, max_epoch): # global communication loop
         idxs_users = list(range(0,cfg.DATASET.USERS))
         
-        # 显示已完成epoch的时间统计和剩余时间估算
-        if epoch > start_epoch and len(epoch_times) > 0:
-            avg_epoch_time = np.mean(epoch_times)
-            last_epoch_time = epoch_times[-1]
-            remaining_epochs = max_epoch - epoch
-            estimated_remaining_time = avg_epoch_time * remaining_epochs
-            logger.info(f"------------已完成 {epoch - start_epoch} 个epoch | 平均用时: {avg_epoch_time:.2f}s | 上一个epoch: {last_epoch_time:.2f}s | 预计剩余时间: {estimated_remaining_time:.2f}s ({estimated_remaining_time/60:.1f}分钟)-------------")
-        
-        logger.info(f"------------local train start epoch: {epoch} -------------")
-        # 记录epoch开始时间
-        epoch_start_time = time.time()
         # 重置epoch计时器
         local_trainer.reset_epoch_timer()
+        epoch_start_time = time.time()
+        train_acc_sum = 0.0
+        train_acc_count = 0
         
         # 更新sepfpl的增量式隐私预算分配（如果启用）
         if args.factorization == 'sepfpl' and hasattr(local_trainer, 'update_std_for_round'):
             local_trainer.update_std_for_round(epoch)
-
-        # 全采样
-        sampled_users = idxs_users
 
         # create data iters
         data_iters = []
@@ -197,31 +203,33 @@ def main(args):
             local_trainer.set_model_mode("train")
             loader = local_trainer.fed_train_loader_x_dict[idx]
             data_iters.append(iter(loader))
-        max_batch = len(loader)
+        max_batch = max_batches_per_epoch
 
         # loop through batches
         for batch in range(0, max_batch):
             local_trainer.set_model_mode("train")
-            # 收集每客户端的cluster梯度与global梯度（仅sepfpl & sampled users）
+            # 按客户端收集梯度信息，供全局聚合与聚类阶段使用
             cluster_grads = [None for _ in idxs_users] if args.factorization == 'sepfpl' else None
-            for idx in sampled_users:
+            for idx in idxs_users:
                 if epoch == 0:
                     local_trainer.model.load_state_dict(initial_weights, strict=False)
                 else:
                     local_trainer.model.load_state_dict(local_weights[idx], strict=False)
-                local_trainer.train_forward(idx=idx, train_iter=data_iters[idx], current_batch=batch, total_batches=max_batch)
+                loss_summary = local_trainer.train_forward(idx=idx, train_iter=data_iters[idx], current_batch=batch, total_batches=max_batch)
+                if loss_summary is not None and 'acc' in loss_summary:
+                    train_acc_sum += loss_summary['acc']
+                    train_acc_count += 1
 
                 local_weight = local_trainer.model.state_dict()
-                global_gradients[idx] = local_trainer.model.prompt_learner.global_ctx.grad.data
-                local_weights_g[idx] = copy.deepcopy(local_weight['prompt_learner.global_ctx'])
-                if args.factorization in ['fedotp', 'dplora', 'dpfpl', 'sepfpl']:
-                    if 'prompt_learner.local_ctx' in local_weight:
-                        local_weights_l[idx] = copy.deepcopy(local_weight['prompt_learner.local_ctx'])
-                if args.factorization in ['fedpgp', 'dplora', 'dpfpl', 'sepfpl']:
-                    if 'prompt_learner.local_u_ctx' in local_weight:
-                        local_weights_u[idx] = copy.deepcopy(local_weight['prompt_learner.local_u_ctx'])
-                    if 'prompt_learner.local_v_ctx' in local_weight:
-                        local_weights_v[idx] = copy.deepcopy(local_weight['prompt_learner.local_v_ctx'])
+                grad_global = local_trainer.model.prompt_learner.global_ctx.grad
+                if grad_global is not None:
+                    global_gradients[idx] = grad_global.data.clone()
+                else:
+                    global_gradients[idx] = torch.zeros_like(local_trainer.model.prompt_learner.global_ctx.data)
+                for key, buffer in key_to_buffer.items():
+                    if buffer is None or key not in local_weight:
+                        continue
+                    buffer[idx] = copy.deepcopy(local_weight[key])
                 if args.factorization == 'sepfpl' and 'prompt_learner.cluster_ctx' in local_weight:
                     if local_trainer.model.prompt_learner.cluster_ctx.grad is not None:
                         cluster_grads[idx] = local_trainer.model.prompt_learner.cluster_ctx.grad.data.clone()
@@ -230,18 +238,15 @@ def main(args):
 
             # average global gradient
             if args.factorization == 'sepfpl':
-                # 构建逐用户全局梯度（加权平均）
                 per_user_global = []
                 data_sizes = []
                 for i in idxs_users:
-                    # 获取各客户端数据规模（使用对应DataLoader的dataset长度）
                     try:
                         ds_len = len(local_trainer.fed_train_loader_x_dict[i].dataset)
                     except Exception:
                         ds_len = 1
                     data_sizes.append(max(1, ds_len))
                     per_user_global.append(global_gradients[i])
-                # 归一化权重并加权平均
                 total_size = float(sum(data_sizes))
                 weights = [s / total_size for s in data_sizes]
                 avg_global_gradient = sum(w * g for w, g in zip(weights, per_user_global))
@@ -253,54 +258,32 @@ def main(args):
 
             # backward and update
             for idx in idxs_users:
-                # 确保为未采样或未初始化的客户端填充上一轮或初始权重
-                if not isinstance(local_weights_g[idx], torch.Tensor):
-                    local_weights_g[idx] = copy.deepcopy(
-                        local_weights[idx].get('prompt_learner.global_ctx', initial_weights['prompt_learner.global_ctx'])
+                for key, buffer in key_to_buffer.items():
+                    should_handle = (
+                        key == 'prompt_learner.global_ctx'
+                        or key in local_weights[idx]
+                        or key in initial_weights
                     )
-                local_weights[idx]['prompt_learner.global_ctx'] = local_weights_g[idx]
-
-                if args.factorization in ['fedotp', 'dplora', 'dpfpl', 'sepfpl']:
-                    if 'prompt_learner.local_ctx' in local_weights[idx]:
-                        if not isinstance(local_weights_l[idx], torch.Tensor):
-                            local_weights_l[idx] = copy.deepcopy(
-                                local_weights[idx].get('prompt_learner.local_ctx', initial_weights.get('prompt_learner.local_ctx', local_weights[idx]['prompt_learner.global_ctx']))
-                            )
-                        local_weights[idx]['prompt_learner.local_ctx'] = local_weights_l[idx]
-
-                if args.factorization in ['fedpgp', 'dplora', 'dpfpl', 'sepfpl']:
-                    if 'prompt_learner.local_u_ctx' in local_weights[idx]:
-                        if not isinstance(local_weights_u[idx], torch.Tensor):
-                            local_weights_u[idx] = copy.deepcopy(
-                                local_weights[idx].get('prompt_learner.local_u_ctx', initial_weights.get('prompt_learner.local_u_ctx', local_weights[idx]['prompt_learner.global_ctx']))
-                            )
-                        local_weights[idx]['prompt_learner.local_u_ctx'] = local_weights_u[idx]
-                    if 'prompt_learner.local_v_ctx' in local_weights[idx]:
-                        if not isinstance(local_weights_v[idx], torch.Tensor):
-                            local_weights_v[idx] = copy.deepcopy(
-                                local_weights[idx].get('prompt_learner.local_v_ctx', initial_weights.get('prompt_learner.local_v_ctx', local_weights[idx]['prompt_learner.global_ctx']))
-                            )
-                        local_weights[idx]['prompt_learner.local_v_ctx'] = local_weights_v[idx]
+                    if not should_handle or buffer is None:
+                        continue
+                    if not isinstance(buffer[idx], torch.Tensor):
+                        buffer[idx] = copy.deepcopy(get_prompt_default(key, idx))
+                    local_weights[idx][key] = buffer[idx]
                 local_trainer.model.load_state_dict(local_weights[idx], strict=False)
                 local_trainer.train_backward(avg_global_gradient=avg_global_gradient)
 
                 local_weight = local_trainer.model.state_dict()
-                local_weights_g[idx] = copy.deepcopy(local_weight['prompt_learner.global_ctx'])
-                if args.factorization in ['fedotp', 'dplora', 'dpfpl', 'sepfpl'] and 'prompt_learner.local_ctx' in local_weight:
-                    local_weights_l[idx] = copy.deepcopy(local_weight['prompt_learner.local_ctx'])
-                if args.factorization in ['fedpgp', 'dplora', 'dpfpl', 'sepfpl']:
-                    if 'prompt_learner.local_u_ctx' in local_weight:
-                        local_weights_u[idx] = copy.deepcopy(local_weight['prompt_learner.local_u_ctx'])
-                    if 'prompt_learner.local_v_ctx' in local_weight:
-                        local_weights_v[idx] = copy.deepcopy(local_weight['prompt_learner.local_v_ctx'])
-                if args.factorization == 'sepfpl' and 'prompt_learner.cluster_ctx' in local_weight:
-                    local_weights[idx]['prompt_learner.cluster_ctx'] = copy.deepcopy(local_weight['prompt_learner.cluster_ctx'])
+                for key, buffer in key_to_buffer.items():
+                    if buffer is None or key not in local_weight:
+                        continue
+                    copied = copy.deepcopy(local_weight[key])
+                    buffer[idx] = copied
+                    local_weights[idx][key] = copied
 
-            # 基于cluster梯度的结构熵聚类与簇内聚合（sepfpl）
+            # sepfpl：基于结构熵树对簇梯度进行聚合并同步写回
             if args.factorization == 'sepfpl':
                 try:
                     from hcse.encoding_tree import PartitionTree, compute_gradient_similarity_matrix_torch, aggregate_gradients_by_encoding_tree
-                    # 处理缺失的cluster梯度
                     for i in range(len(cluster_grads)):
                         if cluster_grads[i] is None:
                             if 'prompt_learner.cluster_ctx' in local_trainer.model.state_dict():
@@ -331,35 +314,37 @@ def main(args):
                         if 'prompt_learner.cluster_ctx' in local_weights[idx]:
                             eta_c = args.sepfpl_lr_c if hasattr(args, 'sepfpl_lr_c') and args.sepfpl_lr_c is not None else cfg.OPTIM.LR
                             updated = local_weights[idx]['prompt_learner.cluster_ctx'] - eta_c * aggregated_cluster_grads[idx]
-                            local_weights[idx]['prompt_learner.cluster_ctx'] = updated.detach().clone()
+                            detached = updated.detach().clone()
+                            local_weights[idx]['prompt_learner.cluster_ctx'] = detached
+                            if key_to_buffer.get('prompt_learner.cluster_ctx') is not None:
+                                key_to_buffer['prompt_learner.cluster_ctx'][idx] = detached
                 except Exception as e:
                     logger.warning(f"[HCSE] 聚类与聚合出现异常，跳过本步: {e}")
-
 
         # test（保持原有频率与输出）
         should_test = False
         if max_epoch < 20:
             # 如果round总数小于20，只在最后1个epoch测试
             should_test = (epoch == max_epoch - 1)
-        elif epoch < 90:
-            should_test = (epoch % 10 == 0)
         else:
-            should_test = ((epoch - 90) % 2 == 0)
+            # 当round数 >= 20，仅在最后 x = n/10 个 epoch 进行测试
+            last_epochs = max(1, math.ceil(max_epoch / 10))
+            should_test = (epoch >= max_epoch - last_epochs)
 
         if should_test:
             logger.info("------------local test start-------------")
             local_trainer.set_model_mode("eval")
             results_local, results_neighbor = [], []
             for idx in idxs_users:
-                local_weights[idx]['prompt_learner.global_ctx'] = local_weights_g[idx]
-                if args.factorization in ['fedotp', 'dplora', 'dpfpl', 'sepfpl'] and 'prompt_learner.local_ctx' in local_weights[idx]:
-                    local_weights[idx]['prompt_learner.local_ctx'] = local_weights_l[idx]
-                if args.factorization in ['fedpgp', 'dplora', 'dpfpl', 'sepfpl']:
-                    if 'prompt_learner.local_u_ctx' in local_weights[idx]:
-                        local_weights[idx]['prompt_learner.local_u_ctx'] = local_weights_u[idx]
-                    if 'prompt_learner.local_v_ctx' in local_weights[idx]:
-                        local_weights[idx]['prompt_learner.local_v_ctx'] = local_weights_v[idx]
-                # sepfpl时个性化cluster_ctx已在上方写回，这里只需加载
+                for key, buffer in key_to_buffer.items():
+                    if buffer is None:
+                        continue
+                    value = buffer[idx]
+                    if value is None:
+                        continue
+                    if key != 'prompt_learner.global_ctx' and key not in local_weights[idx]:
+                        continue
+                    local_weights[idx][key] = value
                 local_trainer.model.load_state_dict(local_weights[idx], strict=False)
 
                 results_local.append(local_trainer.test(idx=idx, split='local'))
@@ -377,7 +362,6 @@ def main(args):
                 neighbor_acc_list.append(sum(neighbor_acc)/len(neighbor_acc))
                 logger.info(f"Global test neighbor acc: {sum(neighbor_acc)/len(neighbor_acc)}")
             logger.info("------------local test finish-------------")
-            logger.info(f"Epoch: {epoch}/{max_epoch}\tfinished batch : {batch}/{max_batch}")
 
             # save checkpoint（保持）
             save_checkpoint(args, epoch, local_weights, local_acc_list, neighbor_acc_list)
@@ -386,15 +370,11 @@ def main(args):
             os.makedirs(output_dir, exist_ok=True)
             pickle.dump([local_acc_list, neighbor_acc_list],
                         open(os.path.join(output_dir, f'acc_{args.factorization}_{args.rank}_{args.noise}_{args.seed}.pkl'), 'wb'))
-        else:
-            logger.info(f"Epoch: {epoch}/{max_epoch}\tfinished batch : {batch}/{max_batch} (skip test)")
         
-        # 记录epoch用时
-        epoch_end_time = time.time()
-        epoch_duration = epoch_end_time - epoch_start_time
-        epoch_times.append(epoch_duration)
-        logger.info(f"------------epoch {epoch} 完成，用时: {epoch_duration:.2f}s-------------")
-
+        epoch_duration = time.time() - epoch_start_time
+        avg_train_acc = (train_acc_sum / train_acc_count) if train_acc_count > 0 else 0.0
+        logger.info(f"[Epoch {epoch + 1}/{max_epoch}] 训练耗时: {epoch_duration:.2f}s, 平均训练准确率: {avg_train_acc:.2f}")
+        
     logger.info(f"maximum test local acc: {max(local_acc_list)}")
     logger.info(f"mean of local acc: {np.mean(local_acc_list[-5:])}")
     if not dirichlet:
@@ -403,7 +383,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--round', type=int, default=5, help="number of communication round")
+    parser.add_argument('--round', type=int, default=20, help="number of communication round")
     parser.add_argument('--num-users', type=int, default=10, help="number of users")
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
     parser.add_argument('--train-batch-size', type=int, default=32, help="number of trainer batch size")
@@ -416,7 +396,7 @@ if __name__ == "__main__":
     parser.add_argument('--norm-thresh', type=float, default=10.0, help='clipping norm threshold')
     parser.add_argument('--noise', type=float, default=0.0, help='differential privacy noise scale')
     parser.add_argument('--rdp-alpha', type=float, default=2.0, help='RDP (Rényi Differential Privacy) order alpha, default 2.0')
-    parser.add_argument('--rdp-p', type=float, default=2.0, help='RDP privacy budget allocation parameter p for sepfpl, default 2.0')
+    parser.add_argument('--rdp-p', type=float, default=1.1, help='RDP privacy budget allocation parameter p for sepfpl, default 2.0')
 
     # parameters of datasets
     # caltech101, oxford_flowers, oxford_pets, food101 and dtd

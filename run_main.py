@@ -8,33 +8,40 @@ users = 10  # 客户端数量
 # 实验配置 - 用于测试个性化和泛化能力
 EXPERIMENT_CONFIG = {
     'seed_list': [1],
-    'dataset_list': ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101'],
-    'factorization_list': ['sepfpl', 'dpfpl', 'fedpgp', 'promptfl', 'fedotp'],  # 测试的方法
-    'noise_list': [0.0, 0.01, 0.05, 0.1, 0.2, 0.4],  # 差分隐私噪声级别
+    'dataset_list': ['caltech-101', 'oxford_pets', 'oxford_flowers'], # 'food-101'
+    'factorization_list': ['promptfl', 'fedotp', 'fedpgp', 'dpfpl', 'sepfpl'],  # 测试的方法
+    'noise_list': [0.0, 0.4, 0.2, 0.1, 0.05, 0.01],  # 差分隐私噪声级别
     'rank': 8,  # 矩阵分解的秩
     'num_terminals': 2,  # 并行终端数量
+    'partition_list': ['noniid-labeldir'],
+    'round': 30,  # 通信轮数
 }
 
 
 # ==================== 核心功能函数 ====================
-def run(root, dataset, users, factorization, rank, noise, seed, round=10, gpus=None):
+def run(root, dataset, users, factorization, rank, noise, seed, partition='noniid-labeldir', round=10, gpus=None):
     """运行单个实验任务"""
     dataset_yaml = f'configs/datasets/{dataset}.yaml'
     prefix = f"CUDA_VISIBLE_DEVICES={gpus} " if gpus else ""
     gpu_arg = f" {gpus}" if gpus else ""
-    os.system(f'{prefix}bash srun_main.sh {root} {dataset_yaml} {users} {factorization} {rank} {noise} {seed} {round}{gpu_arg}')
+    os.system(f'{prefix}bash srun_main.sh {root} {dataset_yaml} {users} {factorization} {rank} {noise} {seed} {partition} {round}{gpu_arg}')
 
 
 def generate_task_commands(config):
     """生成所有任务的命令列表（不带GPU信息，GPU在terminal级别分配）"""
     tasks = []
-    round_num = config.get('round', 3)  # 默认10轮
+    round_num = config.get('round', 20)  # 默认10轮
+    partition_list = config.get('partition_list') or [config.get('partition', 'noniid-labeldir')]
     for seed in config['seed_list']:
-        for noise in config['noise_list']:
-            for dataset in config['dataset_list']:
+        for dataset in config['dataset_list']:
+            for noise in config['noise_list']:
                 for factorization in config['factorization_list']:
-                    task_cmd = f'bash srun_main.sh {root} configs/datasets/{dataset}.yaml {users} {factorization} {config["rank"]} {noise} {seed} {round_num}'
-                    tasks.append(task_cmd)
+                    for partition in partition_list:
+                        task_cmd = (
+                            f'bash srun_main.sh {root} configs/datasets/{dataset}.yaml {users} '
+                            f'{factorization} {config["rank"]} {noise} {seed} {partition} {round_num}'
+                        )
+                        tasks.append(task_cmd)
     return tasks
 
 
@@ -166,7 +173,13 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--download", action="store_true", help="下载 Caltech101、OxfordPets、OxfordFlowers 到 root 目录")
     parser.add_argument("-g", "--generate-tasks", action="store_true", help="生成任务列表文件，用于多终端并行执行")
     parser.add_argument("--gpus", type=str, default='0,1', help="指定可见显卡，如 '0' 或 '0,1'")
+    parser.add_argument("--partition", type=str, default=None, help="指定数据划分策略，如 'homo'、'noniid-labeldir'")
     args = parser.parse_args()
+
+    if args.partition:
+        EXPERIMENT_CONFIG['partition_list'] = [args.partition]
+
+    default_partition = EXPERIMENT_CONFIG['partition_list'][0]
 
     if args.download:
         # download_datasets(root, EXPERIMENT_CONFIG['dataset_list'])
@@ -176,11 +189,8 @@ if __name__ == "__main__":
     elif args.test_generalization_and_personalization:
         test_generalization_and_personalization(gpus=args.gpus)
     elif args.single_test:
-        run(root, 'caltech-101', users, 'sepfpl', 8, 0.0, 1, gpus=args.gpus)
-        run(root, 'caltech-101', users, 'dpfpl', 8, 0.0, 1, gpus=args.gpus)
-        run(root, 'caltech-101', users, 'fedpgp', 8, 0.0, 1, gpus=args.gpus)
-        run(root, 'caltech-101', users, 'promptfl', 8, 0.0, 1, gpus=args.gpus)
-        run(root, 'caltech-101', users, 'fedotp', 8, 0.0, 1, gpus=args.gpus)
+        for factorization in ['dpfpl']: #'fedpgp', 'promptfl'
+            run(root, 'oxford_flowers', users, factorization, 8, 0.0, 1, round=3, partition=default_partition, gpus=0)
         # 'dataset_list': ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101']
         # 'factorization_list': ['sepfpl', 'dpfpl', 'fedpgp', 'promptfl', 'fedotp'] # 测试的方法
     else:

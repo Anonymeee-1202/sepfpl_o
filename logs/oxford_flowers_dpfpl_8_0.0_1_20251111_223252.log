@@ -1,0 +1,6 @@
+2025-11-11 22:32:52 - oxford_flowers_dpfpl_8_0.0_1 - INFO - 日志文件已创建: logs/oxford_flowers_dpfpl_8_0.0_1_20251111_223252.log
+2025-11-11 22:32:52 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Loading CLIP (backbone: ViT-B/16)
+2025-11-11 22:32:56 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Building custom CLIP
+2025-11-11 22:32:56 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Turning off gradients in both the image and the text encoder
+2025-11-11 22:33:23 - oxford_flowers_dpfpl_8_0.0_1 - INFO - [Epoch 1/10] 训练耗时: 26.55s, 平均训练准确率: 8.12
+2025-11-11 22:33:48 - oxford_flowers_dpfpl_8_0.0_1 - INFO - [Epoch 2/10] 训练耗时: 24.93s, 平均训练准确率: 53.26

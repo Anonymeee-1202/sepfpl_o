@@ -13,7 +13,7 @@ from clip.simple_tokenizer import SimpleTokenizer as _Tokenizer
 import math
 import time
 import logging
-from utils.logger import get_logger
+from utils.logger import get_logger, get_global_logger
 
 _tokenizer = _Tokenizer()
 
@@ -27,8 +27,7 @@ def load_clip_to_cpu(cfg):
     if hasattr(cfg.MODEL.BACKBONE, 'PATH') and cfg.MODEL.BACKBONE.PATH:
         model_path = cfg.MODEL.BACKBONE.PATH
         if os.path.isfile(model_path):
-            from utils.logger import get_logger
-            logger = get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
+            logger = get_global_logger() or get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
             logger.info(f"使用指定的模型路径: {model_path}")
         else:
             raise FileNotFoundError(f"指定的模型文件不存在: {model_path}")
@@ -145,6 +144,7 @@ class PromptLearner(nn.Module):
             cluster_ctx_vectors = torch.empty(n_ctx, ctx_dim, dtype=dtype)
             nn.init.normal_(cluster_ctx_vectors, std=0.02)
             self.cluster_ctx = nn.Parameter(cluster_ctx_vectors)
+        
         # ========== 原有 global/local/uv prompt 初始化保持不变 ==========
         global_ctx_vectors = torch.empty(n_ctx, ctx_dim, dtype=dtype) # n_ctx = 16, ctx_dim = 512
         nn.init.normal_(global_ctx_vectors, std=0.02)
@@ -274,9 +274,10 @@ class DP_FPL(TrainerX):
         
         # 构建日志名称：{dataset_name}_{factorization}_{rank}_{noise}_{seed}
         logger_name = f'{dataset_name}_{factorization}_{rank}_{noise}_{seed}'
-        # 使用 get_logger 获取已配置的 logger，如果没有则创建默认配置
-        # log_to_file=False 因为文件日志已由 init_logger_from_args 在 federated_main.py 中创建
-        self.logger = get_logger(logger_name, log_dir='logs', log_to_file=False, log_to_console=True)
+        # 优先使用全局logger，如未初始化则按配置创建并注册
+        self.logger = get_global_logger()
+        if self.logger is None:
+            self.logger = get_logger(logger_name, log_dir='logs', log_to_file=False, log_to_console=True)
         
         self.logger.info(f"Loading CLIP (backbone: {cfg.MODEL.BACKBONE.NAME})")
         clip_model = load_clip_to_cpu(cfg)
@@ -326,7 +327,7 @@ class DP_FPL(TrainerX):
             # ========== sepfpl隐私预算分配实现 ==========
             if cfg.FACTORIZATION == 'sepfpl':
                 # 从配置读取参数
-                rdp_p = getattr(cfg, 'RDP_P', 1.2)  # 分配参数p，默认2.0
+                rdp_p = getattr(cfg, 'RDP_P', 1.1)  # 分配参数p，默认2.0
                 total_rounds = cfg.OPTIM.ROUND  # 总轮数
                 
                 # 通过cfg.NOISE计算总预算
@@ -371,14 +372,13 @@ class DP_FPL(TrainerX):
                 if hasattr(self, 'rdp_eps_per_batch_list') and (round_idx == 0 or (round_idx + 1) % 10 == 0 or round_idx == len(self.std_per_batch_list) - 1):
                     logger = getattr(self, 'logger', None)
                     if logger is None:
-                        # 如果 logger 未初始化，使用默认名称
-                        logger = get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
+                        logger = get_global_logger() or get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
                     logger.info(f"[RDP-sepfpl] 轮次 {round_idx + 1}: ε={self.rdp_eps_per_batch_list[round_idx]:.6f}, std={self.std:.6f}")
             else:
                 logger = getattr(self, 'logger', None)
                 if logger is None:
                     # 如果 logger 未初始化，使用默认名称
-                    logger = get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
+                    logger = get_global_logger() or get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
                 logger.warning(f"[RDP-sepfpl] 警告: 轮次 {round_idx + 1} 超出范围，使用最后一轮的标准差")
                 self.std = self.std_per_batch_list[-1]
     
@@ -411,6 +411,7 @@ class DP_FPL(TrainerX):
                 # promptfl: 仅对global_ctx加噪
                 noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
                 param_dict['prompt_learner.global_ctx'].grad += noise
+            
             elif self.cfg.FACTORIZATION == 'fedotp':
                 # fedotp: 对local_ctx进行裁剪和加噪
                 grad = param_dict['prompt_learner.local_ctx'].grad.data
@@ -421,7 +422,8 @@ class DP_FPL(TrainerX):
                     param_dict['prompt_learner.local_ctx'].grad *= scale
                 noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
                 param_dict['prompt_learner.local_ctx'].grad += noise
-            elif self.cfg.FACTORIZATION in ['fedpgp', 'dplora', 'dpfpl']:
+            
+            elif self.cfg.FACTORIZATION in ['fedpgp', 'dplora', 'dpfpl', 'sepfpl']:
                 # fedpgp/dplora/dpfpl: 对local_u_ctx和local_v_ctx进行裁剪和加噪
                 grad = param_dict['prompt_learner.local_u_ctx'].grad.data
                 norm = grad.norm(2)
@@ -452,7 +454,7 @@ class DP_FPL(TrainerX):
                 noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
                 param_dict['prompt_learner.cluster_ctx'].grad += noise
 
-        if self.cfg.FACTORIZATION in ['dplora', 'dpfpl']:
+        if self.cfg.FACTORIZATION in ['dplora', 'dpfpl', 'sepfpl']:
             full_grad = compute_full_grad(param_dict['prompt_learner.local_u_ctx'], param_dict['prompt_learner.local_v_ctx'], self.dtype)
             full_grad = full_grad.type(self.dtype)
             param_dict['prompt_learner.local_ctx'].grad = full_grad
@@ -475,9 +477,9 @@ class DP_FPL(TrainerX):
         batch_info = f"batch {current_batch + 1}/{total_batches}" if total_batches > 0 else f"batch {current_batch + 1}"
         logger = getattr(self, 'logger', None)
         if logger is None:
-            # 如果 logger 未初始化，使用默认名称
-            logger = get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
-        logger.info(f'{client_info} | {batch_info} : {loss_summary}')
+            logger = get_global_logger() or get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
+        # logger.info(f'{client_info} | {batch_info} : {loss_summary}')
+        return loss_summary
 
     def backward_pass(self, avg_global_gradient):
         # update global gradient

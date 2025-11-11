@@ -1,0 +1,155 @@
+2025-11-11 22:35:23 - oxford_flowers_dpfpl_8_0.0_1 - INFO - 日志文件已创建: logs/oxford_flowers_dpfpl_8_0.0_1_20251111_223523.log
+2025-11-11 22:35:23 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Loading CLIP (backbone: ViT-B/16)
+2025-11-11 22:35:27 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Building custom CLIP
+2025-11-11 22:35:27 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Turning off gradients in both the image and the text encoder
+2025-11-11 22:35:55 - oxford_flowers_dpfpl_8_0.0_1 - INFO - [Epoch 1/3] 训练耗时: 27.44s, 平均训练准确率: 8.12
+2025-11-11 22:36:20 - oxford_flowers_dpfpl_8_0.0_1 - INFO - [Epoch 2/3] 训练耗时: 25.29s, 平均训练准确率: 53.26
+2025-11-11 22:36:45 - oxford_flowers_dpfpl_8_0.0_1 - INFO - ------------local test start-------------
+2025-11-11 22:36:45 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client0 local set
+2025-11-11 22:36:48 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 269
+* correct: 167
+* accuracy: 62.1%
+* error: 37.9%
+* macro_f1: 62.0%
+2025-11-11 22:36:48 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client0 neighbor set
+2025-11-11 22:37:07 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 2,194
+* correct: 1,578
+* accuracy: 71.9%
+* error: 28.1%
+* macro_f1: 65.4%
+2025-11-11 22:37:07 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client1 local set
+2025-11-11 22:37:10 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 339
+* correct: 257
+* accuracy: 75.8%
+* error: 24.2%
+* macro_f1: 77.0%
+2025-11-11 22:37:10 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client1 neighbor set
+2025-11-11 22:37:28 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 2,124
+* correct: 1,478
+* accuracy: 69.6%
+* error: 30.4%
+* macro_f1: 64.0%
+2025-11-11 22:37:28 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client2 local set
+2025-11-11 22:37:30 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 223
+* correct: 175
+* accuracy: 78.5%
+* error: 21.5%
+* macro_f1: 73.2%
+2025-11-11 22:37:30 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client2 neighbor set
+2025-11-11 22:37:50 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 2,240
+* correct: 1,563
+* accuracy: 69.8%
+* error: 30.2%
+* macro_f1: 63.8%
+2025-11-11 22:37:50 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client3 local set
+2025-11-11 22:37:52 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 211
+* correct: 161
+* accuracy: 76.3%
+* error: 23.7%
+* macro_f1: 73.0%
+2025-11-11 22:37:52 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client3 neighbor set
+2025-11-11 22:38:11 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 2,252
+* correct: 1,566
+* accuracy: 69.5%
+* error: 30.5%
+* macro_f1: 63.9%
+2025-11-11 22:38:11 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client4 local set
+2025-11-11 22:38:13 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 178
+* correct: 135
+* accuracy: 75.8%
+* error: 24.2%
+* macro_f1: 85.2%
+2025-11-11 22:38:13 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client4 neighbor set
+2025-11-11 22:38:33 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 2,285
+* correct: 1,583
+* accuracy: 69.3%
+* error: 30.7%
+* macro_f1: 62.0%
+2025-11-11 22:38:33 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client5 local set
+2025-11-11 22:38:35 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 262
+* correct: 200
+* accuracy: 76.3%
+* error: 23.7%
+* macro_f1: 72.9%
+2025-11-11 22:38:35 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client5 neighbor set
+2025-11-11 22:38:55 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 2,201
+* correct: 1,518
+* accuracy: 69.0%
+* error: 31.0%
+* macro_f1: 62.7%
+2025-11-11 22:38:55 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client6 local set
+2025-11-11 22:38:57 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 223
+* correct: 119
+* accuracy: 53.4%
+* error: 46.6%
+* macro_f1: 59.8%
+2025-11-11 22:38:57 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client6 neighbor set
+2025-11-11 22:39:16 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 2,240
+* correct: 1,584
+* accuracy: 70.7%
+* error: 29.3%
+* macro_f1: 63.4%
+2025-11-11 22:39:16 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client7 local set
+2025-11-11 22:39:18 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 234
+* correct: 171
+* accuracy: 73.1%
+* error: 26.9%
+* macro_f1: 78.8%
+2025-11-11 22:39:18 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client7 neighbor set
+2025-11-11 22:39:38 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 2,229
+* correct: 1,529
+* accuracy: 68.6%
+* error: 31.4%
+* macro_f1: 61.0%
+2025-11-11 22:39:38 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client8 local set
+2025-11-11 22:39:39 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 205
+* correct: 156
+* accuracy: 76.1%
+* error: 23.9%
+* macro_f1: 74.0%
+2025-11-11 22:39:39 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client8 neighbor set
+2025-11-11 22:39:59 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 2,258
+* correct: 1,551
+* accuracy: 68.7%
+* error: 31.3%
+* macro_f1: 62.5%
+2025-11-11 22:39:59 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client9 local set
+2025-11-11 22:40:02 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 319
+* correct: 234
+* accuracy: 73.4%
+* error: 26.6%
+* macro_f1: 70.3%
+2025-11-11 22:40:02 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Evaluate on the client9 neighbor set
+2025-11-11 22:40:21 - oxford_flowers_dpfpl_8_0.0_1 - INFO - => result
+* total: 2,144
+* correct: 1,454
+* accuracy: 67.8%
+* error: 32.2%
+* macro_f1: 61.7%
+2025-11-11 22:40:21 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Global test local acc: 72.07421669033751
+2025-11-11 22:40:21 - oxford_flowers_dpfpl_8_0.0_1 - INFO - Global test neighbor acc: 69.48869770188706
+2025-11-11 22:40:21 - oxford_flowers_dpfpl_8_0.0_1 - INFO - ------------local test finish-------------
+2025-11-11 22:40:21 - oxford_flowers_dpfpl_8_0.0_1 - INFO - [Epoch 3/3] 训练耗时: 240.99s, 平均训练准确率: 67.78
+2025-11-11 22:40:21 - oxford_flowers_dpfpl_8_0.0_1 - INFO - maximum test local acc: 72.07421669033751
+2025-11-11 22:40:21 - oxford_flowers_dpfpl_8_0.0_1 - INFO - mean of local acc: 72.07421669033751
+2025-11-11 22:40:21 - oxford_flowers_dpfpl_8_0.0_1 - INFO - maximum test neighbor acc: 69.48869770188706
+2025-11-11 22:40:21 - oxford_flowers_dpfpl_8_0.0_1 - INFO - mean of neighbor acc: 69.48869770188706

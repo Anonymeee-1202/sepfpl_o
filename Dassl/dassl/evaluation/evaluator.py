@@ -5,6 +5,7 @@ import torch
 from sklearn.metrics import f1_score, confusion_matrix
 
 from .build import EVALUATOR_REGISTRY
+from utils.logger import get_logger, get_global_logger
 
 
 class EvaluatorBase:
@@ -64,7 +65,7 @@ class Classification(EvaluatorBase):
                 matches_i = int(matches[i].item())
                 self._per_class_res[label].append(matches_i)
 
-    def evaluate(self):
+    def evaluate(self, logger=None):
         results = OrderedDict()
         acc = 100.0 * self._correct / self._total
         err = 100.0 - acc
@@ -80,20 +81,27 @@ class Classification(EvaluatorBase):
         results["error_rate"] = err
         results["macro_f1"] = macro_f1
 
-        print(
-            "=> result\n"
-            f"* total: {self._total:,}\n"
-            f"* correct: {self._correct:,}\n"
-            f"* accuracy: {acc:.1f}%\n"
-            f"* error: {err:.1f}%\n"
-            f"* macro_f1: {macro_f1:.1f}%"
+        if logger is None:
+            logger = getattr(self, "logger", None)
+        if logger is None:
+            logger = get_global_logger()
+        if logger is None:
+            name = getattr(self.cfg, "LOGGER_NAME", "dp-fpl")
+            logger = get_logger(name, log_dir='logs', log_to_file=False, log_to_console=True)
+        logger.info(
+            "=> result | "
+            f"total: {self._total:,} | "
+            f"correct: {self._correct:,} | "
+            f"accuracy: {acc:.1f}% | "
+            f"error: {err:.1f}% | "
+            f"macro_f1: {macro_f1:.1f}%"
         )
 
         if self._per_class_res is not None:
             labels = list(self._per_class_res.keys())
             labels.sort()
 
-            print("=> per-class result")
+            logger.info("=> per-class result")
             accs = []
 
             for label in labels:
@@ -103,14 +111,14 @@ class Classification(EvaluatorBase):
                 total = len(res)
                 acc = 100.0 * correct / total
                 accs.append(acc)
-                print(
+                logger.info(
                     f"* class: {label} ({classname})\t"
                     f"total: {total:,}\t"
                     f"correct: {correct:,}\t"
                     f"acc: {acc:.1f}%"
                 )
             mean_acc = np.mean(accs)
-            print(f"* average: {mean_acc:.1f}%")
+            logger.info(f"* average: {mean_acc:.1f}%")
 
             results["perclass_accuracy"] = mean_acc
 
@@ -120,6 +128,6 @@ class Classification(EvaluatorBase):
             )
             save_path = osp.join(self.cfg.OUTPUT_DIR, "cmat.pt")
             torch.save(cmat, save_path)
-            print(f"Confusion matrix is saved to {save_path}")
+            logger.info(f"Confusion matrix is saved to {save_path}")
 
         return results

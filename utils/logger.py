@@ -64,14 +64,30 @@ def setup_logger(name='dp-fpl', log_dir='logs', log_level=logging.INFO,
     return logger
 
 
-# 全局日志记录器实例
-_logger = None
+_global_logger = None
 
 
-def get_logger(name='dp-fpl', log_dir='logs', log_level=logging.INFO, 
+def set_global_logger(logger: logging.Logger):
+    """
+    注册全局日志记录器，供项目内统一使用。
+    """
+    global _global_logger
+    _global_logger = logger
+    return _global_logger
+
+
+def get_global_logger():
+    """
+    获取已经注册的全局日志记录器，若不存在则返回None。
+    """
+    return _global_logger
+
+
+def get_logger(name='dp-fpl', log_dir='logs', log_level=logging.INFO,
                log_to_file=True, log_to_console=True):
     """
-    获取全局日志记录器（单例模式）
+    获取项目使用的日志记录器。
+    若已注册全局logger，则直接返回全局实例；否则按指定配置创建/获取。
     
     Args:
         name: 日志记录器名称
@@ -83,10 +99,15 @@ def get_logger(name='dp-fpl', log_dir='logs', log_level=logging.INFO,
     Returns:
         logger: 配置好的日志记录器
     """
-    global _logger
-    if _logger is None:
-        _logger = setup_logger(name, log_dir, log_level, log_to_file, log_to_console)
-    return _logger
+    global _global_logger
+    if _global_logger is not None:
+        return _global_logger
+    logger = logging.getLogger(name)
+    if logger.handlers:
+        return logger
+    logger = setup_logger(name, log_dir, log_level, log_to_file, log_to_console)
+    _global_logger = logger
+    return logger
 
 
 def init_logger_from_args(args=None, log_dir='logs', log_to_file=True, log_to_console=True):
@@ -125,5 +146,7 @@ def init_logger_from_args(args=None, log_dir='logs', log_to_file=True, log_to_co
     
     # 使用setup_logger而不是get_logger，确保每次都能创建新的logger（支持不同的factorization）
     # 注意：由于setup_logger会在文件名中添加时间戳，所以即使name相同，每次运行也会创建新的日志文件
-    return setup_logger(name, log_dir, logging.INFO, log_to_file, log_to_console)
+    logger = setup_logger(name, log_dir, logging.INFO, log_to_file, log_to_console)
+    set_global_logger(logger)
+    return logger
 
