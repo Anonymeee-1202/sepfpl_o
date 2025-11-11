@@ -1,6 +1,7 @@
 from prettytable import PrettyTable
 import pickle
 import os
+from statistics import mean, stdev
 
 
 DEFAULT_DATASET_LIST = ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101']
@@ -8,7 +9,7 @@ DEFAULT_FACTORIZATION_LIST = ['sepfpl', 'dpfpl', 'fedpgp', 'fedotp', 'promptfl']
 DEFAULT_NOISE_LIST = [0.0, 0.01, 0.05, 0.1, 0.2, 0.4]
 DEFAULT_SEED_LIST = [1]
 DEFAULT_RANK_LIST = [8]
-TAIL_EPOCHS = 10
+TAIL_EPOCHS = 3
 
 
 def load_config_from_run_main():
@@ -35,14 +36,12 @@ def load_config_from_run_main():
 dataset_list, factorization_list, noise_list, seed_list, rank_list = load_config_from_run_main()
 
 
-def tail_mean(values, tail=TAIL_EPOCHS):
+def tail_values(values, tail=TAIL_EPOCHS):
     if not values:
-        return 0.0
+        return []
     if tail is None or len(values) <= tail:
-        recent = values
-    else:
-        recent = values[-tail:]
-    return round(sum(recent) / len(recent), 3)
+        return list(values)
+    return list(values[-tail:])
 
 
 def load_metrics(file_path):
@@ -69,6 +68,14 @@ def load_metrics(file_path):
     return local_hist or [], neighbor_hist or []
 
 
+def format_stats(values):
+    if not values:
+        return '0.000 ± 0.000'
+    avg = mean(values)
+    std = stdev(values) if len(values) > 1 else 0.0
+    return f'{avg:.2f} ± {std:.2f}'
+
+
 def read_data(dataset, factorization, rank, noise):
     per_seed_local, per_seed_neighbor = [], []
     for seed in seed_list:
@@ -80,15 +87,13 @@ def read_data(dataset, factorization, rank, noise):
 
         local_hist, neighbor_hist = load_metrics(file_name)
         if local_hist:
-            per_seed_local.append(tail_mean(local_hist))
+            per_seed_local.extend(tail_values(local_hist))
         if neighbor_hist:
-            per_seed_neighbor.append(tail_mean(neighbor_hist))
+            per_seed_neighbor.extend(tail_values(neighbor_hist))
 
-    local_mean = round(sum(per_seed_local) / len(per_seed_local), 3) if per_seed_local else 0.0
-    neighbor_mean = (
-        round(sum(per_seed_neighbor) / len(per_seed_neighbor), 3) if per_seed_neighbor else 0.0
-    )
-    return local_mean, neighbor_mean
+    local_stats = format_stats(per_seed_local)
+    neighbor_stats = format_stats(per_seed_neighbor)
+    return local_stats, neighbor_stats
 
 
 def read_scheme(dataset, rank, noise):

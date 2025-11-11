@@ -1721,139 +1721,72 @@ def _normalize_similarity_matrix(similarity_matrix: np.ndarray) -> np.ndarray:
 # 基于编码树的梯度聚合函数
 # ============================================================================
 
-def aggregate_gradients_by_encoding_tree(encoding_tree: 'PartitionTree', 
-                                       global_gradients: List, 
-                                       similarity_matrix: np.ndarray,
-                                       logger=None) -> List:
+def aggregate_gradients_by_encoding_tree(encoding_tree: 'PartitionTree',
+                                         global_gradients: List,
+                                         similarity_matrix: np.ndarray,
+                                         verbose: bool = False) -> List:
     """
-    基于编码树的簇内梯度聚合函数
-    
-    该函数根据编码树的结构信息，将客户端分组到不同的簇中，
-    每个客户端只与其所属簇内的其他客户端进行梯度聚合。
-    聚合权重基于相似度矩阵，并进行归一化处理。
-    
-    Args:
-        encoding_tree: PartitionTree对象，包含编码树结构信息
-        global_gradients: 全局梯度列表，每个元素是一个客户端的梯度
-        similarity_matrix: 相似度矩阵，形状为(num_clients, num_clients)
-        logger: 日志记录器，用于输出聚合过程信息
-    
-    Returns:
-        List: 聚合后的梯度列表，每个元素是一个客户端的聚合梯度
-    
-    Raises:
-        ValueError: 当输入参数无效时
-        RuntimeError: 当聚合过程中出现错误时
-    
-    Example:
-        >>> from hcse.encoding_tree import PartitionTree, aggregate_gradients_by_encoding_tree
-        >>> import torch
-        >>> import numpy as np
-        >>> 
-        >>> # 创建编码树
-        >>> adj_matrix = np.random.rand(10, 10)
-        >>> tree = PartitionTree(adj_matrix)
-        >>> tree.build_encoding_tree(k=2, mode='v2')
-        >>> 
-        >>> # 创建梯度列表
-        >>> gradients = [torch.randn(100) for _ in range(10)]
-        >>> similarity_matrix = np.random.rand(10, 10)
-        >>> 
-        >>> # 执行聚合
-        >>> aggregated_gradients = aggregate_gradients_by_encoding_tree(
-        ...     tree, gradients, similarity_matrix
-        ... )
+    基于编码树对客户端梯度进行簇内聚合，并根据相似度矩阵加权平均。
     """
-    # 输入验证
     if encoding_tree is None:
         raise ValueError("编码树不能为空")
-    
     if not global_gradients:
         raise ValueError("全局梯度列表不能为空")
-    
     if similarity_matrix is None or similarity_matrix.size == 0:
         raise ValueError("相似度矩阵不能为空")
-    
+
+    similarity_matrix = np.asarray(similarity_matrix)
     num_clients = len(global_gradients)
-    if similarity_matrix.shape[0] != num_clients or similarity_matrix.shape[1] != num_clients:
-        raise ValueError(f"相似度矩阵形状 {similarity_matrix.shape} 与客户端数量 {num_clients} 不匹配")
-    
-    try:
-        if logger:
-            logger.info(f"  基于编码树的梯度聚合:")
-        
-        # 检查torch是否可用
-        if torch is None:
-            raise ImportError("PyTorch未安装，无法进行梯度聚合")
-        
-        # 检查编码树是否成功构建
-        if encoding_tree.root_id is None:
-            if logger:
-                logger.warning(f"    编码树根节点为空，返回原始梯度")
-            return global_gradients
-        
-        # 从编码树中提取客户端簇信息
-        root_children = encoding_tree.tree_node[encoding_tree.root_id].children
-        clusters = []
-        
-        for child_id in root_children:
-            child_node = encoding_tree.tree_node[child_id]
-            # 获取该簇包含的客户端ID列表
-            cluster_clients = child_node.partition
-            clusters.append(cluster_clients)
-            if logger:
-                logger.info(f"    簇 {len(clusters)}: 客户端 {cluster_clients}")
-        
-        # 为每个客户端计算基于簇的聚合梯度
-        cluster_aggregated_gradients = []
-        for client_idx in range(num_clients):
-            # 找到该客户端所属的簇
-            client_cluster = None
-            for cluster in clusters:
-                if client_idx in cluster:
-                    client_cluster = cluster
-                    break
-            
-            if client_cluster is not None:
-                # 计算该客户端在簇内的加权平均梯度
-                cluster_gradients = [global_gradients[i] for i in client_cluster]
-                cluster_similarities = []
-                
-                # 获取该客户端与簇内其他客户端的相似度
-                for other_client_idx in client_cluster:
-                    similarity = similarity_matrix[client_idx, other_client_idx]
-                    cluster_similarities.append(similarity)
-                
-                # 归一化相似度作为权重
-                cluster_similarities = np.array(cluster_similarities)
-                if np.sum(cluster_similarities) > 0:
-                    weights = cluster_similarities / np.sum(cluster_similarities)
-                else:
-                    # 如果所有相似度都为0，使用均匀权重
-                    weights = np.ones(len(cluster_similarities)) / len(cluster_similarities)
-                
-                # 计算加权平均梯度
-                weighted_gradient = torch.zeros_like(global_gradients[client_idx])
-                for i, (grad, weight) in enumerate(zip(cluster_gradients, weights)):
-                    weighted_gradient += weight * grad
-                
-                cluster_aggregated_gradients.append(weighted_gradient)
-                
-                if logger:
-                    logger.info(f"    客户端 {client_idx} 簇内聚合完成，簇大小: {len(client_cluster)}, 权重范围: [{np.min(weights):.4f}, {np.max(weights):.4f}]")
-            else:
-                # 如果客户端不在任何簇中，使用原始梯度
-                cluster_aggregated_gradients.append(global_gradients[client_idx])
-                if logger:
-                    logger.warning(f"    客户端 {client_idx} 未找到所属簇，使用原始梯度")
-        
-        if logger:
-            logger.info(f"    簇内梯度聚合完成，共 {len(clusters)} 个簇")
-        
-        return cluster_aggregated_gradients
-        
-    except Exception as e:
-        error_msg = f"簇内梯度聚合过程中出现错误: {e}"
-        if logger:
-            logger.error(f"    {error_msg}")
-        raise RuntimeError(error_msg)
+    if similarity_matrix.shape != (num_clients, num_clients):
+        raise ValueError(
+            f"相似度矩阵形状 {similarity_matrix.shape} 与客户端数量 {num_clients} 不匹配"
+        )
+    if torch is None:
+        raise ImportError("未检测到 PyTorch，无法完成梯度聚合")
+
+    if encoding_tree.root_id is None:
+        if verbose:
+            print("编码树根节点为空，直接返回原始梯度")
+        return global_gradients
+
+    clusters = [
+        list(encoding_tree.tree_node[child_id].partition)
+        for child_id in encoding_tree.tree_node[encoding_tree.root_id].children
+    ]
+    if verbose:
+        print(f"基于编码树的梯度聚合，共 {len(clusters)} 个簇")
+        for idx, cluster in enumerate(clusters, 1):
+            print(f"  簇 {idx}: 客户端 {cluster}")
+
+    aggregated = []
+    for client_idx, grad in enumerate(global_gradients):
+        cluster = next((c for c in clusters if client_idx in c), None)
+        if cluster is None:
+            aggregated.append(grad)
+            if verbose:
+                print(f"  客户端 {client_idx} 未分配到簇，保留原始梯度")
+            continue
+
+        cluster_grads = [global_gradients[i] for i in cluster]
+        sims = similarity_matrix[client_idx, cluster]
+        if sims.sum() <= 0:
+            sims = np.ones_like(sims) / len(sims)
+        else:
+            sims = sims / sims.sum()
+
+        device = cluster_grads[0].device
+        dtype = cluster_grads[0].dtype
+        weights = torch.tensor(sims, device=device, dtype=dtype)
+        weighted_grad = sum(w * g for w, g in zip(weights, cluster_grads))
+        aggregated.append(weighted_grad)
+
+        if verbose:
+            print(
+                f"  客户端 {client_idx} 聚合完成，簇大小 {len(cluster)}，"
+                f"权重范围 [{weights.min().item():.4f}, {weights.max().item():.4f}]"
+            )
+
+    if verbose:
+        print("簇内梯度聚合完成")
+
+    return aggregated
