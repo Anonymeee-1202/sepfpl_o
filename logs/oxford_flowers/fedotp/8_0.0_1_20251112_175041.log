@@ -1,0 +1,52 @@
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - 日志文件已创建: logs/oxford_flowers/fedotp/8_0.0_1_20251112_175041.log
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - Loading trainer: DP_FPL
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - Loading dataset: OxfordFlowers
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - Reading split from /home/liuxin25/dataset/oxford_flowers/split_zhou_OxfordFlowers.json
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - Creating a baseline federated dataset
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - class_num 102
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [90, 54, 31, 35, 55, 72, 92, 42, 95, 84]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 0, output_dict_len: 451
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [74, 0, 1, 80, 27, 20, 77, 50, 66, 45]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 1, output_dict_len: 562
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [44, 82, 14, 32, 52, 70, 28, 51, 10, 21]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 2, output_dict_len: 373
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [33, 75, 5, 48, 87, 98, 23, 69, 62, 7]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 3, output_dict_len: 350
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [17, 18, 60, 34, 11, 58, 86, 13, 41, 30]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 4, output_dict_len: 302
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [24, 71, 56, 76, 37, 6, 53, 79, 97, 39]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 5, output_dict_len: 433
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [47, 65, 36, 91, 3, 63, 59, 9, 96, 64]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 6, output_dict_len: 367
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [94, 88, 99, 61, 19, 25, 4, 16, 8, 46]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 7, output_dict_len: 387
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [26, 2, 93, 85, 29, 22, 100, 67, 68, 38]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 8, output_dict_len: 341
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [83, 15, 12, 81, 43, 73, 78, 40, 101, 57, 89, 49]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 9, output_dict_len: 527
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - Creating a baseline federated dataset
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - class_num 102
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [90, 54, 31, 35, 55, 72, 92, 42, 95, 84]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 0, output_dict_len: 269
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [74, 0, 1, 80, 27, 20, 77, 50, 66, 45]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 1, output_dict_len: 339
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [44, 82, 14, 32, 52, 70, 28, 51, 10, 21]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 2, output_dict_len: 223
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [33, 75, 5, 48, 87, 98, 23, 69, 62, 7]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 3, output_dict_len: 211
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [17, 18, 60, 34, 11, 58, 86, 13, 41, 30]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 4, output_dict_len: 178
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [24, 71, 56, 76, 37, 6, 53, 79, 97, 39]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 5, output_dict_len: 262
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [47, 65, 36, 91, 3, 63, 59, 9, 96, 64]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 6, output_dict_len: 223
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [94, 88, 99, 61, 19, 25, 4, 16, 8, 46]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 7, output_dict_len: 234
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [26, 2, 93, 85, 29, 22, 100, 67, 68, 38]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 8, output_dict_len: 205
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - user class dict total [83, 15, 12, 81, 43, 73, 78, 40, 101, 57, 89, 49]
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - idx: 9, output_dict_len: 319
+2025-11-12 17:50:41 - 8_0.0_1 - INFO - Loading CLIP (backbone: ViT-B/16)
+2025-11-12 17:50:44 - 8_0.0_1 - INFO - Building custom CLIP
+2025-11-12 17:50:44 - 8_0.0_1 - INFO - Turning off gradients in both the image and the text encoder
+2025-11-12 17:51:54 - 8_0.0_1 - INFO - [Epoch 1/30] 训练耗时: 67.46s | 平均训练准确率: 0.24

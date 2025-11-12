@@ -138,15 +138,21 @@ def init_logger_from_args(args=None, log_dir='logs', log_to_file=True, log_to_co
         noise = getattr(args, 'noise', 'unknown')
         seed = getattr(args, 'seed', 'unknown')
         
-        # 构建日志名称：{dataset_name}_{factorization}_{rank}_{noise}_{seed}
-        # 与 pickle 文件命名规则保持一致
-        name = f'{dataset_name}_{factorization}_{rank}_{noise}_{seed}'
+        # 构建日志名称
+        name = f'{rank}_{noise}_{seed}'
     else:
-        name = 'unknown'
+        dataset_name = 'unknown'
+        factorization = 'unknown'
+        rank = 'unknown'
+        noise = 'unknown'
+        seed = 'unknown'
+        name = f'{rank}_{noise}_{seed}'
+
+    dataset_log_dir = os.path.join(log_dir, dataset_name, str(factorization))
     
     # 使用setup_logger而不是get_logger，确保每次都能创建新的logger（支持不同的factorization）
     # 注意：由于setup_logger会在文件名中添加时间戳，所以即使name相同，每次运行也会创建新的日志文件
-    logger = setup_logger(name, log_dir, logging.INFO, log_to_file, log_to_console)
+    logger = setup_logger(name, dataset_log_dir, logging.INFO, log_to_file, log_to_console)
     set_global_logger(logger)
     return logger
 
