@@ -9,7 +9,7 @@ users = 10  # 客户端数量
 EXPERIMENT_CONFIG = {
     'seed_list': [1],
     'dataset_list': ['caltech-101', 'oxford_pets', 'oxford_flowers'], # 'food-101'
-    'factorization_list': ['promptfl', 'fedotp', 'fedpgp', 'dpfpl', 'sepfpl'],  # 测试的方法
+    'factorization_list': ['promptfl', 'fedotp', 'fedpgp', 'dpfpl'],  # 测试的方法 'sepfpl'
     'noise_list': [0.0, 0.4, 0.2, 0.1, 0.05, 0.01],  # 差分隐私噪声级别
     'rank': 8,  # 矩阵分解的秩
     'num_terminals': 2,  # 并行终端数量

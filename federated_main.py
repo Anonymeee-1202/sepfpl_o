@@ -321,20 +321,29 @@ def main(args):
                 except Exception as e:
                     logger.warning(f"[HCSE] 聚类与聚合出现异常，跳过本步: {e}")
 
+        train_stage_end = time.time()
+        train_stage_duration = train_stage_end - epoch_start_time
+        avg_train_acc = (train_acc_sum / train_acc_count) if train_acc_count > 0 else 0.0
+        logger.info(
+            f"[Epoch {epoch + 1}/{max_epoch}] 训练耗时: {train_stage_duration:.2f}s | 平均训练准确率: {avg_train_acc:.2f}"
+        )
+
         # test（保持原有频率与输出）
         should_test = False
         if max_epoch < 20:
-            # 如果round总数小于20，只在最后1个epoch测试
+            # 如果round总数小于20，只在最后1个epoch测试邻居
             should_test = (epoch == max_epoch - 1)
         else:
-            # 当round数 >= 20，仅在最后 x = n/10 个 epoch 进行测试
+            # 当round数 >= 20，仅在最后 x = n/10 个 epoch 进行邻居测试
             last_epochs = max(1, math.ceil(max_epoch / 10))
             should_test = (epoch >= max_epoch - last_epochs)
 
         if should_test:
+            test_start_time = time.time()
             logger.info("------------local test start-------------")
             local_trainer.set_model_mode("eval")
-            results_local, results_neighbor = [], []
+            results_local = []
+            results_neighbor = [] if not dirichlet else None
             for idx in idxs_users:
                 for key, buffer in key_to_buffer.items():
                     if buffer is None:
@@ -348,20 +357,23 @@ def main(args):
                 local_trainer.model.load_state_dict(local_weights[idx], strict=False)
 
                 results_local.append(local_trainer.test(idx=idx, split='local'))
-                if not dirichlet:
+                if results_neighbor is not None:
                     results_neighbor.append(local_trainer.test(idx=idx, split='neighbor'))
 
-            local_acc, neighbor_acc = [], []
-            for k in range(len(results_local)):
-                local_acc.append(results_local[k][0])
-                if not dirichlet:
-                    neighbor_acc.append(results_neighbor[k][0])
-            local_acc_list.append(sum(local_acc)/len(local_acc))
-            logger.info(f"Global test local acc: {sum(local_acc)/len(local_acc)}")
-            if not dirichlet:
-                neighbor_acc_list.append(sum(neighbor_acc)/len(neighbor_acc))
-                logger.info(f"Global test neighbor acc: {sum(neighbor_acc)/len(neighbor_acc)}")
+            local_acc = [res[0] for res in results_local]
+            avg_local_acc = sum(local_acc) / len(local_acc) if local_acc else 0.0
+            local_acc_list.append(avg_local_acc)
+            logger.info(f"Global test local acc: {avg_local_acc:.2f}")
+
+            if results_neighbor is not None:
+                neighbor_acc = [res[0] for res in results_neighbor]
+                avg_neighbor_acc = sum(neighbor_acc) / len(neighbor_acc) if neighbor_acc else 0.0
+                neighbor_acc_list.append(avg_neighbor_acc)
+                logger.info(f"Global test neighbor acc: {avg_neighbor_acc:.2f}")
+
             logger.info("------------local test finish-------------")
+            test_duration = time.time() - test_start_time
+            logger.info(f"[Epoch {epoch + 1}/{max_epoch}] 测试耗时: {test_duration:.2f}s")
 
             # save checkpoint（保持）
             save_checkpoint(args, epoch, local_weights, local_acc_list, neighbor_acc_list)
@@ -370,22 +382,17 @@ def main(args):
             os.makedirs(output_dir, exist_ok=True)
             pickle.dump([local_acc_list, neighbor_acc_list],
                         open(os.path.join(output_dir, f'acc_{args.factorization}_{args.rank}_{args.noise}_{args.seed}.pkl'), 'wb'))
-        
-        epoch_duration = time.time() - epoch_start_time
-        avg_train_acc = (train_acc_sum / train_acc_count) if train_acc_count > 0 else 0.0
-        logger.info(f"[Epoch {epoch + 1}/{max_epoch}] 训练耗时: {epoch_duration:.2f}s, 平均训练准确率: {avg_train_acc:.2f}")
-        
-    logger.info(f"maximum test local acc: {max(local_acc_list)}")
-    logger.info(f"mean of local acc: {np.mean(local_acc_list[-5:])}")
+    logger.info(f"maximum test local acc: {max(local_acc_list):.3f}")
+    logger.info(f"mean of local acc: {np.mean(local_acc_list[-5:]):.3f}")
     if not dirichlet:
-        logger.info(f"maximum test neighbor acc: {max(neighbor_acc_list)}")
-        logger.info(f"mean of neighbor acc: {np.mean(neighbor_acc_list[-5:])}")
+        logger.info(f"maximum test neighbor acc: {max(neighbor_acc_list):.3f}")
+        logger.info(f"mean of neighbor acc: {np.mean(neighbor_acc_list[-5:]):.3f}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--round', type=int, default=20, help="number of communication round")
     parser.add_argument('--num-users', type=int, default=10, help="number of users")
-    parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
+    parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
     parser.add_argument('--train-batch-size', type=int, default=32, help="number of trainer batch size")
     parser.add_argument('--test-batch-size', type=int, default=100, help="number of test batch size")
     parser.add_argument("--seed", type=int, default=1, help="only positive value enables a fixed seed")
@@ -411,7 +418,7 @@ if __name__ == "__main__":
     parser.add_argument('--n_ctx', type=int, default=16, help="number of text encoder of text prompts")
     # sepfpl-specific optional params
     parser.add_argument('--sepfpl-topk', type=int, default=8, help='top-k neighbors for HCSE graph sparsification (sepfpl only)')
-    parser.add_argument('--sepfpl-lr-c', type=float, default=0.001, help='learning rate for cluster prompt updates (defaults to OPTIM.LR)')
+    parser.add_argument('--sepfpl-lr-c', type=float, default=0.0001, help='learning rate for cluster prompt updates (defaults to OPTIM.LR)')
 
     # parameters of path
     parser.add_argument("--root", type=str, default="/datasets", help="path to dataset")

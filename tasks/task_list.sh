@@ -1,273 +1,219 @@
 #!/bin/bash
-# Total tasks: 90
+# Total tasks: 72
 
-# Task 1/90
+# Task 1/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 promptfl 8 0.0 1 noniid-labeldir 30
 
-# Task 2/90
+# Task 2/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 fedotp 8 0.0 1 noniid-labeldir 30
 
-# Task 3/90
+# Task 3/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 fedpgp 8 0.0 1 noniid-labeldir 30
 
-# Task 4/90
+# Task 4/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 dpfpl 8 0.0 1 noniid-labeldir 30
 
-# Task 5/90
-bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 sepfpl 8 0.0 1 noniid-labeldir 30
-
-# Task 6/90
+# Task 5/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 promptfl 8 0.4 1 noniid-labeldir 30
 
-# Task 7/90
+# Task 6/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 fedotp 8 0.4 1 noniid-labeldir 30
 
-# Task 8/90
+# Task 7/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 fedpgp 8 0.4 1 noniid-labeldir 30
 
-# Task 9/90
+# Task 8/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 dpfpl 8 0.4 1 noniid-labeldir 30
 
-# Task 10/90
-bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 sepfpl 8 0.4 1 noniid-labeldir 30
-
-# Task 11/90
+# Task 9/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 promptfl 8 0.2 1 noniid-labeldir 30
 
-# Task 12/90
+# Task 10/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 fedotp 8 0.2 1 noniid-labeldir 30
 
-# Task 13/90
+# Task 11/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 fedpgp 8 0.2 1 noniid-labeldir 30
 
-# Task 14/90
+# Task 12/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 dpfpl 8 0.2 1 noniid-labeldir 30
 
-# Task 15/90
-bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 sepfpl 8 0.2 1 noniid-labeldir 30
-
-# Task 16/90
+# Task 13/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 promptfl 8 0.1 1 noniid-labeldir 30
 
-# Task 17/90
+# Task 14/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 fedotp 8 0.1 1 noniid-labeldir 30
 
-# Task 18/90
+# Task 15/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 fedpgp 8 0.1 1 noniid-labeldir 30
 
-# Task 19/90
+# Task 16/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 dpfpl 8 0.1 1 noniid-labeldir 30
 
-# Task 20/90
-bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 sepfpl 8 0.1 1 noniid-labeldir 30
-
-# Task 21/90
+# Task 17/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 promptfl 8 0.05 1 noniid-labeldir 30
 
-# Task 22/90
+# Task 18/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 fedotp 8 0.05 1 noniid-labeldir 30
 
-# Task 23/90
+# Task 19/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 fedpgp 8 0.05 1 noniid-labeldir 30
 
-# Task 24/90
+# Task 20/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 dpfpl 8 0.05 1 noniid-labeldir 30
 
-# Task 25/90
-bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 sepfpl 8 0.05 1 noniid-labeldir 30
-
-# Task 26/90
+# Task 21/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 promptfl 8 0.01 1 noniid-labeldir 30
 
-# Task 27/90
+# Task 22/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 fedotp 8 0.01 1 noniid-labeldir 30
 
-# Task 28/90
+# Task 23/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 fedpgp 8 0.01 1 noniid-labeldir 30
 
-# Task 29/90
+# Task 24/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 dpfpl 8 0.01 1 noniid-labeldir 30
 
-# Task 30/90
-bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 sepfpl 8 0.01 1 noniid-labeldir 30
-
-# Task 31/90
+# Task 25/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 promptfl 8 0.0 1 noniid-labeldir 30
 
-# Task 32/90
+# Task 26/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 fedotp 8 0.0 1 noniid-labeldir 30
 
-# Task 33/90
+# Task 27/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 fedpgp 8 0.0 1 noniid-labeldir 30
 
-# Task 34/90
+# Task 28/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 dpfpl 8 0.0 1 noniid-labeldir 30
 
-# Task 35/90
-bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 sepfpl 8 0.0 1 noniid-labeldir 30
-
-# Task 36/90
+# Task 29/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 promptfl 8 0.4 1 noniid-labeldir 30
 
-# Task 37/90
+# Task 30/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 fedotp 8 0.4 1 noniid-labeldir 30
 
-# Task 38/90
+# Task 31/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 fedpgp 8 0.4 1 noniid-labeldir 30
 
-# Task 39/90
+# Task 32/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 dpfpl 8 0.4 1 noniid-labeldir 30
 
-# Task 40/90
-bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 sepfpl 8 0.4 1 noniid-labeldir 30
-
-# Task 41/90
+# Task 33/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 promptfl 8 0.2 1 noniid-labeldir 30
 
-# Task 42/90
+# Task 34/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 fedotp 8 0.2 1 noniid-labeldir 30
 
-# Task 43/90
+# Task 35/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 fedpgp 8 0.2 1 noniid-labeldir 30
 
-# Task 44/90
+# Task 36/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 dpfpl 8 0.2 1 noniid-labeldir 30
 
-# Task 45/90
-bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 sepfpl 8 0.2 1 noniid-labeldir 30
-
-# Task 46/90
+# Task 37/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 promptfl 8 0.1 1 noniid-labeldir 30
 
-# Task 47/90
+# Task 38/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 fedotp 8 0.1 1 noniid-labeldir 30
 
-# Task 48/90
+# Task 39/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 fedpgp 8 0.1 1 noniid-labeldir 30
 
-# Task 49/90
+# Task 40/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 dpfpl 8 0.1 1 noniid-labeldir 30
 
-# Task 50/90
-bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 sepfpl 8 0.1 1 noniid-labeldir 30
-
-# Task 51/90
+# Task 41/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 promptfl 8 0.05 1 noniid-labeldir 30
 
-# Task 52/90
+# Task 42/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 fedotp 8 0.05 1 noniid-labeldir 30
 
-# Task 53/90
+# Task 43/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 fedpgp 8 0.05 1 noniid-labeldir 30
 
-# Task 54/90
+# Task 44/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 dpfpl 8 0.05 1 noniid-labeldir 30
 
-# Task 55/90
-bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 sepfpl 8 0.05 1 noniid-labeldir 30
-
-# Task 56/90
+# Task 45/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 promptfl 8 0.01 1 noniid-labeldir 30
 
-# Task 57/90
+# Task 46/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 fedotp 8 0.01 1 noniid-labeldir 30
 
-# Task 58/90
+# Task 47/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 fedpgp 8 0.01 1 noniid-labeldir 30
 
-# Task 59/90
+# Task 48/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 dpfpl 8 0.01 1 noniid-labeldir 30
 
-# Task 60/90
-bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_pets.yaml 10 sepfpl 8 0.01 1 noniid-labeldir 30
-
-# Task 61/90
+# Task 49/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 promptfl 8 0.0 1 noniid-labeldir 30
 
-# Task 62/90
+# Task 50/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 fedotp 8 0.0 1 noniid-labeldir 30
 
-# Task 63/90
+# Task 51/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 fedpgp 8 0.0 1 noniid-labeldir 30
 
-# Task 64/90
+# Task 52/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 dpfpl 8 0.0 1 noniid-labeldir 30
 
-# Task 65/90
-bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 sepfpl 8 0.0 1 noniid-labeldir 30
-
-# Task 66/90
+# Task 53/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 promptfl 8 0.4 1 noniid-labeldir 30
 
-# Task 67/90
+# Task 54/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 fedotp 8 0.4 1 noniid-labeldir 30
 
-# Task 68/90
+# Task 55/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 fedpgp 8 0.4 1 noniid-labeldir 30
 
-# Task 69/90
+# Task 56/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 dpfpl 8 0.4 1 noniid-labeldir 30
 
-# Task 70/90
-bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 sepfpl 8 0.4 1 noniid-labeldir 30
-
-# Task 71/90
+# Task 57/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 promptfl 8 0.2 1 noniid-labeldir 30
 
-# Task 72/90
+# Task 58/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 fedotp 8 0.2 1 noniid-labeldir 30
 
-# Task 73/90
+# Task 59/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 fedpgp 8 0.2 1 noniid-labeldir 30
 
-# Task 74/90
+# Task 60/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 dpfpl 8 0.2 1 noniid-labeldir 30
 
-# Task 75/90
-bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 sepfpl 8 0.2 1 noniid-labeldir 30
-
-# Task 76/90
+# Task 61/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 promptfl 8 0.1 1 noniid-labeldir 30
 
-# Task 77/90
+# Task 62/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 fedotp 8 0.1 1 noniid-labeldir 30
 
-# Task 78/90
+# Task 63/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 fedpgp 8 0.1 1 noniid-labeldir 30
 
-# Task 79/90
+# Task 64/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 dpfpl 8 0.1 1 noniid-labeldir 30
 
-# Task 80/90
-bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 sepfpl 8 0.1 1 noniid-labeldir 30
-
-# Task 81/90
+# Task 65/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 promptfl 8 0.05 1 noniid-labeldir 30
 
-# Task 82/90
+# Task 66/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 fedotp 8 0.05 1 noniid-labeldir 30
 
-# Task 83/90
+# Task 67/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 fedpgp 8 0.05 1 noniid-labeldir 30
 
-# Task 84/90
+# Task 68/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 dpfpl 8 0.05 1 noniid-labeldir 30
 
-# Task 85/90
-bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 sepfpl 8 0.05 1 noniid-labeldir 30
-
-# Task 86/90
+# Task 69/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 promptfl 8 0.01 1 noniid-labeldir 30
 
-# Task 87/90
+# Task 70/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 fedotp 8 0.01 1 noniid-labeldir 30
 
-# Task 88/90
+# Task 71/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 fedpgp 8 0.01 1 noniid-labeldir 30
 
-# Task 89/90
+# Task 72/72
 bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 dpfpl 8 0.01 1 noniid-labeldir 30
-
-# Task 90/90
-bash srun_main.sh /home/liuxin25/dataset configs/datasets/oxford_flowers.yaml 10 sepfpl 8 0.01 1 noniid-labeldir 30
 

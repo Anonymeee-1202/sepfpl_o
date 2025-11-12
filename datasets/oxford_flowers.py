@@ -6,6 +6,7 @@ from collections import defaultdict
 
 from Dassl.dassl.data.datasets.base_dataset import DatasetBase, Datum
 from Dassl.dassl.utils import read_json
+from utils.logger import get_global_logger, get_logger
 
 from .oxford_pets import OxfordPets
 
@@ -47,6 +48,7 @@ class OxfordFlowers(DatasetBase):
         super().__init__(total_train_x=train, federated_train_x=federated_train_x, federated_test_x=federated_test_x)
 
     def read_data(self):
+        logger = get_global_logger() or get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
         tracker = defaultdict(list)
         label_file = loadmat(self.label_file)["labels"][0]
         for i, label in enumerate(label_file):
@@ -55,7 +57,7 @@ class OxfordFlowers(DatasetBase):
             label = int(label)
             tracker[label].append(impath)
 
-        print("Splitting data into 50% train, 20% val, and 30% test")
+        logger.info("Splitting data into 50% train, 20% val, and 30% test")
 
         def _collate(ims, y, c):
             items = []

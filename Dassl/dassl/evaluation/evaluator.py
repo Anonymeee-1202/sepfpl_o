@@ -90,11 +90,11 @@ class Classification(EvaluatorBase):
             logger = get_logger(name, log_dir='logs', log_to_file=False, log_to_console=True)
         logger.info(
             "=> result | "
-            f"total: {self._total:,} | "
-            f"correct: {self._correct:,} | "
-            f"accuracy: {acc:.1f}% | "
-            f"error: {err:.1f}% | "
-            f"macro_f1: {macro_f1:.1f}%"
+            f"total {self._total:,} | "
+            f"correct {self._correct:,} | "
+            f"acc {acc:.2f}% | "
+            f"err {err:.2f}% | "
+            f"macro_f1 {macro_f1:.2f}%"
         )
 
         if self._per_class_res is not None:

@@ -268,7 +268,7 @@ class SimpleTrainer(TrainerBase):
             logger = get_global_logger() or get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
         logger.info(f"Evaluate on the client{idx} {split} set")
 
-        for _, batch in enumerate(tqdm(data_loader)):
+        for _, batch in enumerate(data_loader):
             input, label = self.parse_batch_test(batch)
             self.model.training = False
             output = self.model_inference(input)
