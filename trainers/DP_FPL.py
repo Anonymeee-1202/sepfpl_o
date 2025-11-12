@@ -315,7 +315,7 @@ class DP_FPL(TrainerX):
             # 从配置读取RDP参数
             rdp_alpha = getattr(cfg, 'RDP_ALPHA', 2.0)  # RDP阶数，默认2.0
             # 使用cfg.NOISE作为每个batch的RDP预算
-            rdp_eps_per_batch = cfg.NOISE
+            rdp_eps_per_batch = cfg.NOISE / cfg.OPTIM.ROUND
             
             # 使用RDP计算噪声标准差
             # 对于高斯机制: ε_α = α / (2 * σ^2)
@@ -327,12 +327,10 @@ class DP_FPL(TrainerX):
             # ========== sepfpl隐私预算分配实现 ==========
             if cfg.FACTORIZATION == 'sepfpl':
                 # 从配置读取参数
-                rdp_p = getattr(cfg, 'RDP_P', 1.1)  # 分配参数p，默认2.0
+                rdp_p = getattr(cfg, 'RDP_P', 1.1)  
                 total_rounds = cfg.OPTIM.ROUND  # 总轮数
                 
-                # 通过cfg.NOISE计算总预算
-                # 总预算 = cfg.NOISE * ROUND * batch的数量
-                rdp_eps_tot = rdp_eps_per_batch * total_rounds * total_batches_per_round
+                rdp_eps_tot = cfg.NOISE
                 
                 # 预计算所有轮次的隐私预算分配
                 # ε_t = ε_tot * (t^p) / (sum_{j=1}^T j^p)

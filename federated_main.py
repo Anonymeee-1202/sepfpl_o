@@ -237,6 +237,10 @@ def main(args):
                         cluster_grads[idx] = torch.zeros_like(local_trainer.model.prompt_learner.cluster_ctx.data)
 
             # average global gradient
+            # avg_global_gradient = sum(global_gradients) / cfg.DATASET.USERS
+            # noise = torch.normal(0, std, size=avg_global_gradient.shape, device=avg_global_gradient.device)
+            # avg_global_gradient += noise
+
             if args.factorization == 'sepfpl':
                 per_user_global = []
                 data_sizes = []
@@ -252,9 +256,10 @@ def main(args):
                 avg_global_gradient = sum(w * g for w, g in zip(weights, per_user_global))
             else:
                 avg_global_gradient = sum(global_gradients) / cfg.DATASET.USERS
-            if args.noise > 0 and args.factorization != 'sepfpl':
+            if args.noise > 0:
                 noise = torch.normal(0, std, size=avg_global_gradient.shape, device=avg_global_gradient.device)
                 avg_global_gradient += noise
+                
 
             # backward and update
             for idx in idxs_users:
