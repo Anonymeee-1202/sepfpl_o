@@ -1,0 +1,220 @@
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - 日志文件已创建: logs/caltech-101_promptfl_8_0.05_1_20251112_022748.log
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - Loading trainer: DP_FPL
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - Loading dataset: Caltech101
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - Reading split from /home/liuxin25/dataset/caltech-101/split_zhou_Caltech101.json
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - Creating a baseline federated dataset
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - class_num 100
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [20, 79, 93, 54, 52, 65, 0, 1, 48, 74]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 0, output_dict_len: 673
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [44, 82, 35, 69, 91, 42, 33, 14, 5, 62]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 1, output_dict_len: 296
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [32, 55, 96, 10, 21, 31, 90, 27, 28, 76]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 2, output_dict_len: 251
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [80, 71, 66, 58, 23, 70, 60, 72, 17, 18]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 3, output_dict_len: 275
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [45, 34, 11, 56, 84, 13, 41, 30, 24, 85]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 4, output_dict_len: 369
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [51, 75, 37, 6, 53, 94, 95, 39, 47, 98]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 5, output_dict_len: 265
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [36, 7, 50, 3, 63, 59, 9, 77, 64, 92]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 6, output_dict_len: 286
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [86, 97, 61, 19, 25, 4, 16, 8, 46, 26]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 7, output_dict_len: 675
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [2, 88, 29, 22, 87, 67, 68, 38, 83, 15]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 8, output_dict_len: 695
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [12, 81, 43, 73, 78, 40, 99, 57, 89, 49]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 9, output_dict_len: 343
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - Creating a baseline federated dataset
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - class_num 100
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [20, 79, 93, 54, 52, 65, 0, 1, 48, 74]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 0, output_dict_len: 399
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [44, 82, 35, 69, 91, 42, 33, 14, 5, 62]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 1, output_dict_len: 176
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [32, 55, 96, 10, 21, 31, 90, 27, 28, 76]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 2, output_dict_len: 154
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [80, 71, 66, 58, 23, 70, 60, 72, 17, 18]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 3, output_dict_len: 162
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [45, 34, 11, 56, 84, 13, 41, 30, 24, 85]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 4, output_dict_len: 221
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [51, 75, 37, 6, 53, 94, 95, 39, 47, 98]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 5, output_dict_len: 157
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [36, 7, 50, 3, 63, 59, 9, 77, 64, 92]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 6, output_dict_len: 171
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [86, 97, 61, 19, 25, 4, 16, 8, 46, 26]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 7, output_dict_len: 404
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [2, 88, 29, 22, 87, 67, 68, 38, 83, 15]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 8, output_dict_len: 415
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - user class dict total [12, 81, 43, 73, 78, 40, 99, 57, 89, 49]
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - idx: 9, output_dict_len: 206
+2025-11-12 02:27:48 - caltech-101_promptfl_8_0.05_1 - INFO - Loading CLIP (backbone: ViT-B/16)
+2025-11-12 02:27:52 - caltech-101_promptfl_8_0.05_1 - INFO - Building custom CLIP
+2025-11-12 02:27:52 - caltech-101_promptfl_8_0.05_1 - INFO - Turning off gradients in both the image and the text encoder
+2025-11-12 02:28:08 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 1/30] 训练耗时: 16.23s | 平均训练准确率: 54.33
+2025-11-12 02:28:23 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 2/30] 训练耗时: 14.98s | 平均训练准确率: 75.89
+2025-11-12 02:28:38 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 3/30] 训练耗时: 14.75s | 平均训练准确率: 81.25
+2025-11-12 02:28:53 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 4/30] 训练耗时: 14.78s | 平均训练准确率: 85.09
+2025-11-12 02:29:08 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 5/30] 训练耗时: 15.12s | 平均训练准确率: 83.88
+2025-11-12 02:29:23 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 6/30] 训练耗时: 15.15s | 平均训练准确率: 83.48
+2025-11-12 02:29:38 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 7/30] 训练耗时: 15.19s | 平均训练准确率: 84.51
+2025-11-12 02:29:53 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 8/30] 训练耗时: 14.73s | 平均训练准确率: 85.62
+2025-11-12 02:30:08 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 9/30] 训练耗时: 14.79s | 平均训练准确率: 85.36
+2025-11-12 02:30:23 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 10/30] 训练耗时: 15.39s | 平均训练准确率: 85.13
+2025-11-12 02:30:38 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 11/30] 训练耗时: 14.93s | 平均训练准确率: 85.62
+2025-11-12 02:30:53 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 12/30] 训练耗时: 15.04s | 平均训练准确率: 86.25
+2025-11-12 02:31:08 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 13/30] 训练耗时: 14.74s | 平均训练准确率: 85.36
+2025-11-12 02:31:25 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 14/30] 训练耗时: 17.39s | 平均训练准确率: 84.02
+2025-11-12 02:31:41 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 15/30] 训练耗时: 15.41s | 平均训练准确率: 84.24
+2025-11-12 02:31:56 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 16/30] 训练耗时: 15.05s | 平均训练准确率: 84.46
+2025-11-12 02:32:11 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 17/30] 训练耗时: 15.50s | 平均训练准确率: 84.33
+2025-11-12 02:32:26 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 18/30] 训练耗时: 15.08s | 平均训练准确率: 83.30
+2025-11-12 02:32:42 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 19/30] 训练耗时: 15.86s | 平均训练准确率: 84.29
+2025-11-12 02:32:58 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 20/30] 训练耗时: 15.96s | 平均训练准确率: 85.76
+2025-11-12 02:33:14 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 21/30] 训练耗时: 15.60s | 平均训练准确率: 86.12
+2025-11-12 02:33:30 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 22/30] 训练耗时: 16.37s | 平均训练准确率: 84.82
+2025-11-12 02:33:46 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 23/30] 训练耗时: 15.92s | 平均训练准确率: 85.85
+2025-11-12 02:34:02 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 24/30] 训练耗时: 15.45s | 平均训练准确率: 85.13
+2025-11-12 02:34:18 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 25/30] 训练耗时: 16.24s | 平均训练准确率: 85.67
+2025-11-12 02:34:33 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 26/30] 训练耗时: 14.79s | 平均训练准确率: 85.22
+2025-11-12 02:34:48 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 27/30] 训练耗时: 15.67s | 平均训练准确率: 84.82
+2025-11-12 02:35:04 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 28/30] 训练耗时: 15.18s | 平均训练准确率: 85.49
+2025-11-12 02:35:04 - caltech-101_promptfl_8_0.05_1 - INFO - ------------local test start-------------
+2025-11-12 02:35:04 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client0 local set
+2025-11-12 02:35:07 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 399 | correct: 363 | accuracy: 91.0% | error: 9.0% | macro_f1: 89.9%
+2025-11-12 02:35:07 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client0 neighbor set
+2025-11-12 02:35:18 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,066 | correct: 1,942 | accuracy: 94.0% | error: 6.0% | macro_f1: 91.3%
+2025-11-12 02:35:18 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client1 local set
+2025-11-12 02:35:19 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 176 | correct: 170 | accuracy: 96.6% | error: 3.4% | macro_f1: 97.7%
+2025-11-12 02:35:19 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client1 neighbor set
+2025-11-12 02:35:32 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,289 | correct: 2,135 | accuracy: 93.3% | error: 6.7% | macro_f1: 90.3%
+2025-11-12 02:35:32 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client2 local set
+2025-11-12 02:35:33 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 154 | correct: 135 | accuracy: 87.7% | error: 12.3% | macro_f1: 89.2%
+2025-11-12 02:35:33 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client2 neighbor set
+2025-11-12 02:35:47 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,311 | correct: 2,169 | accuracy: 93.9% | error: 6.1% | macro_f1: 91.3%
+2025-11-12 02:35:47 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client3 local set
+2025-11-12 02:35:49 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 162 | correct: 152 | accuracy: 93.8% | error: 6.2% | macro_f1: 94.5%
+2025-11-12 02:35:49 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client3 neighbor set
+2025-11-12 02:36:06 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,303 | correct: 2,153 | accuracy: 93.5% | error: 6.5% | macro_f1: 91.1%
+2025-11-12 02:36:06 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client4 local set
+2025-11-12 02:36:09 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 221 | correct: 206 | accuracy: 93.2% | error: 6.8% | macro_f1: 93.1%
+2025-11-12 02:36:09 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client4 neighbor set
+2025-11-12 02:36:26 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,244 | correct: 2,099 | accuracy: 93.5% | error: 6.5% | macro_f1: 90.9%
+2025-11-12 02:36:26 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client5 local set
+2025-11-12 02:36:27 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 157 | correct: 144 | accuracy: 91.7% | error: 8.3% | macro_f1: 94.5%
+2025-11-12 02:36:27 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client5 neighbor set
+2025-11-12 02:36:42 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,308 | correct: 2,165 | accuracy: 93.8% | error: 6.2% | macro_f1: 91.1%
+2025-11-12 02:36:42 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client6 local set
+2025-11-12 02:36:43 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 171 | correct: 163 | accuracy: 95.3% | error: 4.7% | macro_f1: 97.7%
+2025-11-12 02:36:43 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client6 neighbor set
+2025-11-12 02:37:00 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,294 | correct: 2,147 | accuracy: 93.6% | error: 6.4% | macro_f1: 90.6%
+2025-11-12 02:37:00 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client7 local set
+2025-11-12 02:37:03 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 404 | correct: 371 | accuracy: 91.8% | error: 8.2% | macro_f1: 86.4%
+2025-11-12 02:37:03 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client7 neighbor set
+2025-11-12 02:37:19 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,061 | correct: 1,939 | accuracy: 94.1% | error: 5.9% | macro_f1: 92.3%
+2025-11-12 02:37:19 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client8 local set
+2025-11-12 02:37:23 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 415 | correct: 406 | accuracy: 97.8% | error: 2.2% | macro_f1: 96.9%
+2025-11-12 02:37:23 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client8 neighbor set
+2025-11-12 02:37:39 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,050 | correct: 1,903 | accuracy: 92.8% | error: 7.2% | macro_f1: 90.3%
+2025-11-12 02:37:39 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client9 local set
+2025-11-12 02:37:42 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 206 | correct: 200 | accuracy: 97.1% | error: 2.9% | macro_f1: 98.1%
+2025-11-12 02:37:42 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client9 neighbor set
+2025-11-12 02:38:02 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,259 | correct: 2,110 | accuracy: 93.4% | error: 6.6% | macro_f1: 91.1%
+2025-11-12 02:38:02 - caltech-101_promptfl_8_0.05_1 - INFO - Global test local acc: 93.61
+2025-11-12 02:38:02 - caltech-101_promptfl_8_0.05_1 - INFO - Global test neighbor acc: 93.59
+2025-11-12 02:38:02 - caltech-101_promptfl_8_0.05_1 - INFO - ------------local test finish-------------
+2025-11-12 02:38:02 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 28/30] 测试耗时: 178.39s
+2025-11-12 02:38:26 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 29/30] 训练耗时: 24.06s | 平均训练准确率: 85.36
+2025-11-12 02:38:26 - caltech-101_promptfl_8_0.05_1 - INFO - ------------local test start-------------
+2025-11-12 02:38:26 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client0 local set
+2025-11-12 02:38:30 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 399 | correct: 362 | accuracy: 90.7% | error: 9.3% | macro_f1: 89.3%
+2025-11-12 02:38:30 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client0 neighbor set
+2025-11-12 02:38:45 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,066 | correct: 1,963 | accuracy: 95.0% | error: 5.0% | macro_f1: 92.6%
+2025-11-12 02:38:45 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client1 local set
+2025-11-12 02:38:46 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 176 | correct: 170 | accuracy: 96.6% | error: 3.4% | macro_f1: 97.7%
+2025-11-12 02:38:46 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client1 neighbor set
+2025-11-12 02:39:00 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,289 | correct: 2,154 | accuracy: 94.1% | error: 5.9% | macro_f1: 91.6%
+2025-11-12 02:39:00 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client2 local set
+2025-11-12 02:39:01 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 154 | correct: 136 | accuracy: 88.3% | error: 11.7% | macro_f1: 90.1%
+2025-11-12 02:39:01 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client2 neighbor set
+2025-11-12 02:39:16 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,311 | correct: 2,190 | accuracy: 94.8% | error: 5.2% | macro_f1: 92.6%
+2025-11-12 02:39:16 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client3 local set
+2025-11-12 02:39:16 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 162 | correct: 151 | accuracy: 93.2% | error: 6.8% | macro_f1: 94.0%
+2025-11-12 02:39:16 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client3 neighbor set
+2025-11-12 02:39:34 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,303 | correct: 2,176 | accuracy: 94.5% | error: 5.5% | macro_f1: 92.5%
+2025-11-12 02:39:34 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client4 local set
+2025-11-12 02:39:35 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 221 | correct: 209 | accuracy: 94.6% | error: 5.4% | macro_f1: 95.1%
+2025-11-12 02:39:35 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client4 neighbor set
+2025-11-12 02:39:52 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,244 | correct: 2,117 | accuracy: 94.3% | error: 5.7% | macro_f1: 92.0%
+2025-11-12 02:39:52 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client5 local set
+2025-11-12 02:39:53 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 157 | correct: 146 | accuracy: 93.0% | error: 7.0% | macro_f1: 95.4%
+2025-11-12 02:39:53 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client5 neighbor set
+2025-11-12 02:40:08 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,308 | correct: 2,180 | accuracy: 94.5% | error: 5.5% | macro_f1: 92.2%
+2025-11-12 02:40:08 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client6 local set
+2025-11-12 02:40:10 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 171 | correct: 160 | accuracy: 93.6% | error: 6.4% | macro_f1: 96.9%
+2025-11-12 02:40:10 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client6 neighbor set
+2025-11-12 02:40:26 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,294 | correct: 2,165 | accuracy: 94.4% | error: 5.6% | macro_f1: 91.8%
+2025-11-12 02:40:26 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client7 local set
+2025-11-12 02:40:29 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 404 | correct: 385 | accuracy: 95.3% | error: 4.7% | macro_f1: 93.0%
+2025-11-12 02:40:29 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client7 neighbor set
+2025-11-12 02:40:45 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,061 | correct: 1,940 | accuracy: 94.1% | error: 5.9% | macro_f1: 92.3%
+2025-11-12 02:40:45 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client8 local set
+2025-11-12 02:40:49 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 415 | correct: 406 | accuracy: 97.8% | error: 2.2% | macro_f1: 97.1%
+2025-11-12 02:40:49 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client8 neighbor set
+2025-11-12 02:41:05 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,050 | correct: 1,918 | accuracy: 93.6% | error: 6.4% | macro_f1: 91.4%
+2025-11-12 02:41:05 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client9 local set
+2025-11-12 02:41:07 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 206 | correct: 201 | accuracy: 97.6% | error: 2.4% | macro_f1: 97.9%
+2025-11-12 02:41:07 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client9 neighbor set
+2025-11-12 02:41:22 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,259 | correct: 2,123 | accuracy: 94.0% | error: 6.0% | macro_f1: 92.0%
+2025-11-12 02:41:22 - caltech-101_promptfl_8_0.05_1 - INFO - Global test local acc: 94.07
+2025-11-12 02:41:22 - caltech-101_promptfl_8_0.05_1 - INFO - Global test neighbor acc: 94.32
+2025-11-12 02:41:22 - caltech-101_promptfl_8_0.05_1 - INFO - ------------local test finish-------------
+2025-11-12 02:41:22 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 29/30] 测试耗时: 176.04s
+2025-11-12 02:41:48 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 30/30] 训练耗时: 25.90s | 平均训练准确率: 85.94
+2025-11-12 02:41:48 - caltech-101_promptfl_8_0.05_1 - INFO - ------------local test start-------------
+2025-11-12 02:41:48 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client0 local set
+2025-11-12 02:41:51 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 399 | correct: 364 | accuracy: 91.2% | error: 8.8% | macro_f1: 90.4%
+2025-11-12 02:41:51 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client0 neighbor set
+2025-11-12 02:42:06 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,066 | correct: 1,953 | accuracy: 94.5% | error: 5.5% | macro_f1: 92.0%
+2025-11-12 02:42:06 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client1 local set
+2025-11-12 02:42:07 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 176 | correct: 170 | accuracy: 96.6% | error: 3.4% | macro_f1: 97.7%
+2025-11-12 02:42:07 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client1 neighbor set
+2025-11-12 02:42:21 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,289 | correct: 2,148 | accuracy: 93.8% | error: 6.2% | macro_f1: 91.2%
+2025-11-12 02:42:21 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client2 local set
+2025-11-12 02:42:22 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 154 | correct: 135 | accuracy: 87.7% | error: 12.3% | macro_f1: 89.7%
+2025-11-12 02:42:22 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client2 neighbor set
+2025-11-12 02:42:36 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,311 | correct: 2,185 | accuracy: 94.5% | error: 5.5% | macro_f1: 92.3%
+2025-11-12 02:42:36 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client3 local set
+2025-11-12 02:42:37 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 162 | correct: 153 | accuracy: 94.4% | error: 5.6% | macro_f1: 94.8%
+2025-11-12 02:42:37 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client3 neighbor set
+2025-11-12 02:42:54 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,303 | correct: 2,167 | accuracy: 94.1% | error: 5.9% | macro_f1: 91.9%
+2025-11-12 02:42:54 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client4 local set
+2025-11-12 02:42:55 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 221 | correct: 207 | accuracy: 93.7% | error: 6.3% | macro_f1: 93.4%
+2025-11-12 02:42:55 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client4 neighbor set
+2025-11-12 02:43:11 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,244 | correct: 2,113 | accuracy: 94.2% | error: 5.8% | macro_f1: 91.8%
+2025-11-12 02:43:11 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client5 local set
+2025-11-12 02:43:12 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 157 | correct: 144 | accuracy: 91.7% | error: 8.3% | macro_f1: 94.5%
+2025-11-12 02:43:12 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client5 neighbor set
+2025-11-12 02:43:32 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,308 | correct: 2,176 | accuracy: 94.3% | error: 5.7% | macro_f1: 91.8%
+2025-11-12 02:43:32 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client6 local set
+2025-11-12 02:43:33 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 171 | correct: 164 | accuracy: 95.9% | error: 4.1% | macro_f1: 98.0%
+2025-11-12 02:43:33 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client6 neighbor set
+2025-11-12 02:43:49 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,294 | correct: 2,158 | accuracy: 94.1% | error: 5.9% | macro_f1: 91.3%
+2025-11-12 02:43:49 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client7 local set
+2025-11-12 02:43:53 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 404 | correct: 374 | accuracy: 92.6% | error: 7.4% | macro_f1: 87.8%
+2025-11-12 02:43:53 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client7 neighbor set
+2025-11-12 02:44:13 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,061 | correct: 1,946 | accuracy: 94.4% | error: 5.6% | macro_f1: 92.7%
+2025-11-12 02:44:13 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client8 local set
+2025-11-12 02:44:16 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 415 | correct: 406 | accuracy: 97.8% | error: 2.2% | macro_f1: 97.2%
+2025-11-12 02:44:16 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client8 neighbor set
+2025-11-12 02:44:35 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,050 | correct: 1,914 | accuracy: 93.4% | error: 6.6% | macro_f1: 91.1%
+2025-11-12 02:44:35 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client9 local set
+2025-11-12 02:44:36 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 206 | correct: 200 | accuracy: 97.1% | error: 2.9% | macro_f1: 98.0%
+2025-11-12 02:44:36 - caltech-101_promptfl_8_0.05_1 - INFO - Evaluate on the client9 neighbor set
+2025-11-12 02:44:58 - caltech-101_promptfl_8_0.05_1 - INFO - => result | total: 2,259 | correct: 2,120 | accuracy: 93.8% | error: 6.2% | macro_f1: 91.7%
+2025-11-12 02:44:58 - caltech-101_promptfl_8_0.05_1 - INFO - Global test local acc: 93.87
+2025-11-12 02:44:58 - caltech-101_promptfl_8_0.05_1 - INFO - Global test neighbor acc: 94.12
+2025-11-12 02:44:58 - caltech-101_promptfl_8_0.05_1 - INFO - ------------local test finish-------------
+2025-11-12 02:44:58 - caltech-101_promptfl_8_0.05_1 - INFO - [Epoch 30/30] 测试耗时: 190.00s
+2025-11-12 02:44:58 - caltech-101_promptfl_8_0.05_1 - INFO - maximum test local acc: 94.067
+2025-11-12 02:44:58 - caltech-101_promptfl_8_0.05_1 - INFO - mean of local acc: 93.848
+2025-11-12 02:44:58 - caltech-101_promptfl_8_0.05_1 - INFO - maximum test neighbor acc: 94.321
+2025-11-12 02:44:58 - caltech-101_promptfl_8_0.05_1 - INFO - mean of neighbor acc: 94.008

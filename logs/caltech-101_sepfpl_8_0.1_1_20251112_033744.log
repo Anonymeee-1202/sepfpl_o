@@ -1,0 +1,224 @@
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - 日志文件已创建: logs/caltech-101_sepfpl_8_0.1_1_20251112_033744.log
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - Loading trainer: DP_FPL
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - Loading dataset: Caltech101
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - Reading split from /home/liuxin25/dataset/caltech-101/split_zhou_Caltech101.json
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - Creating a baseline federated dataset
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - class_num 100
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [20, 79, 93, 54, 52, 65, 0, 1, 48, 74]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 0, output_dict_len: 673
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [44, 82, 35, 69, 91, 42, 33, 14, 5, 62]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 1, output_dict_len: 296
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [32, 55, 96, 10, 21, 31, 90, 27, 28, 76]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 2, output_dict_len: 251
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [80, 71, 66, 58, 23, 70, 60, 72, 17, 18]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 3, output_dict_len: 275
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [45, 34, 11, 56, 84, 13, 41, 30, 24, 85]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 4, output_dict_len: 369
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [51, 75, 37, 6, 53, 94, 95, 39, 47, 98]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 5, output_dict_len: 265
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [36, 7, 50, 3, 63, 59, 9, 77, 64, 92]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 6, output_dict_len: 286
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [86, 97, 61, 19, 25, 4, 16, 8, 46, 26]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 7, output_dict_len: 675
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [2, 88, 29, 22, 87, 67, 68, 38, 83, 15]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 8, output_dict_len: 695
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [12, 81, 43, 73, 78, 40, 99, 57, 89, 49]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 9, output_dict_len: 343
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - Creating a baseline federated dataset
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - class_num 100
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [20, 79, 93, 54, 52, 65, 0, 1, 48, 74]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 0, output_dict_len: 399
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [44, 82, 35, 69, 91, 42, 33, 14, 5, 62]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 1, output_dict_len: 176
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [32, 55, 96, 10, 21, 31, 90, 27, 28, 76]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 2, output_dict_len: 154
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [80, 71, 66, 58, 23, 70, 60, 72, 17, 18]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 3, output_dict_len: 162
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [45, 34, 11, 56, 84, 13, 41, 30, 24, 85]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 4, output_dict_len: 221
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [51, 75, 37, 6, 53, 94, 95, 39, 47, 98]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 5, output_dict_len: 157
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [36, 7, 50, 3, 63, 59, 9, 77, 64, 92]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 6, output_dict_len: 171
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [86, 97, 61, 19, 25, 4, 16, 8, 46, 26]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 7, output_dict_len: 404
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [2, 88, 29, 22, 87, 67, 68, 38, 83, 15]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 8, output_dict_len: 415
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - user class dict total [12, 81, 43, 73, 78, 40, 99, 57, 89, 49]
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - idx: 9, output_dict_len: 206
+2025-11-12 03:37:44 - caltech-101_sepfpl_8_0.1_1 - INFO - Loading CLIP (backbone: ViT-B/16)
+2025-11-12 03:37:47 - caltech-101_sepfpl_8_0.1_1 - INFO - Building custom CLIP
+2025-11-12 03:37:47 - caltech-101_sepfpl_8_0.1_1 - INFO - Turning off gradients in both the image and the text encoder
+2025-11-12 03:37:48 - caltech-101_sepfpl_8_0.1_1 - INFO - [RDP-sepfpl] 轮次 1: ε=0.033690, std=1.702548
+2025-11-12 03:38:05 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 1/30] 训练耗时: 17.47s | 平均训练准确率: 62.54
+2025-11-12 03:38:21 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 2/30] 训练耗时: 15.79s | 平均训练准确率: 75.27
+2025-11-12 03:38:36 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 3/30] 训练耗时: 15.52s | 平均训练准确率: 77.99
+2025-11-12 03:38:52 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 4/30] 训练耗时: 15.42s | 平均训练准确率: 80.22
+2025-11-12 03:39:08 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 5/30] 训练耗时: 16.15s | 平均训练准确率: 81.16
+2025-11-12 03:39:23 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 6/30] 训练耗时: 15.36s | 平均训练准确率: 81.96
+2025-11-12 03:39:39 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 7/30] 训练耗时: 15.68s | 平均训练准确率: 84.06
+2025-11-12 03:39:56 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 8/30] 训练耗时: 16.68s | 平均训练准确率: 84.38
+2025-11-12 03:40:11 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 9/30] 训练耗时: 15.73s | 平均训练准确率: 84.60
+2025-11-12 03:40:11 - caltech-101_sepfpl_8_0.1_1 - INFO - [RDP-sepfpl] 轮次 10: ε=0.424132, std=0.479843
+2025-11-12 03:40:27 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 10/30] 训练耗时: 15.39s | 平均训练准确率: 86.65
+2025-11-12 03:40:42 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 11/30] 训练耗时: 15.43s | 平均训练准确率: 85.13
+2025-11-12 03:40:57 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 12/30] 训练耗时: 15.02s | 平均训练准确率: 87.14
+2025-11-12 03:41:13 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 13/30] 训练耗时: 15.51s | 平均训练准确率: 85.36
+2025-11-12 03:41:28 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 14/30] 训练耗时: 15.47s | 平均训练准确率: 86.34
+2025-11-12 03:41:44 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 15/30] 训练耗时: 15.96s | 平均训练准确率: 85.54
+2025-11-12 03:42:00 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 16/30] 训练耗时: 16.01s | 平均训练准确率: 85.22
+2025-11-12 03:42:17 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 17/30] 训练耗时: 16.42s | 平均训练准确率: 86.70
+2025-11-12 03:42:32 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 18/30] 训练耗时: 15.33s | 平均训练准确率: 88.44
+2025-11-12 03:42:48 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 19/30] 训练耗时: 15.90s | 平均训练准确率: 88.97
+2025-11-12 03:42:48 - caltech-101_sepfpl_8_0.1_1 - INFO - [RDP-sepfpl] 轮次 20: ε=0.909147, std=0.327743
+2025-11-12 03:43:04 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 20/30] 训练耗时: 16.01s | 平均训练准确率: 88.71
+2025-11-12 03:43:19 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 21/30] 训练耗时: 15.47s | 平均训练准确率: 88.97
+2025-11-12 03:43:35 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 22/30] 训练耗时: 15.49s | 平均训练准确率: 88.88
+2025-11-12 03:43:50 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 23/30] 训练耗时: 15.29s | 平均训练准确率: 88.88
+2025-11-12 03:44:06 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 24/30] 训练耗时: 15.58s | 平均训练准确率: 88.44
+2025-11-12 03:44:21 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 25/30] 训练耗时: 15.33s | 平均训练准确率: 90.00
+2025-11-12 03:44:37 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 26/30] 训练耗时: 15.56s | 平均训练准确率: 89.29
+2025-11-12 03:44:52 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 27/30] 训练耗时: 15.15s | 平均训练准确率: 90.36
+2025-11-12 03:45:07 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 28/30] 训练耗时: 15.54s | 平均训练准确率: 90.49
+2025-11-12 03:45:07 - caltech-101_sepfpl_8_0.1_1 - INFO - ------------local test start-------------
+2025-11-12 03:45:07 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client0 local set
+2025-11-12 03:45:10 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 399 | correct: 384 | accuracy: 96.2% | error: 3.8% | macro_f1: 94.9%
+2025-11-12 03:45:10 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client0 neighbor set
+2025-11-12 03:45:21 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,066 | correct: 1,777 | accuracy: 86.0% | error: 14.0% | macro_f1: 81.1%
+2025-11-12 03:45:21 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client1 local set
+2025-11-12 03:45:22 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 176 | correct: 166 | accuracy: 94.3% | error: 5.7% | macro_f1: 97.1%
+2025-11-12 03:45:22 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client1 neighbor set
+2025-11-12 03:45:34 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,289 | correct: 2,041 | accuracy: 89.2% | error: 10.8% | macro_f1: 84.7%
+2025-11-12 03:45:34 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client2 local set
+2025-11-12 03:45:35 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 154 | correct: 142 | accuracy: 92.2% | error: 7.8% | macro_f1: 93.0%
+2025-11-12 03:45:35 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client2 neighbor set
+2025-11-12 03:45:48 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,311 | correct: 1,973 | accuracy: 85.4% | error: 14.6% | macro_f1: 82.5%
+2025-11-12 03:45:48 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client3 local set
+2025-11-12 03:45:49 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 162 | correct: 151 | accuracy: 93.2% | error: 6.8% | macro_f1: 93.9%
+2025-11-12 03:45:49 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client3 neighbor set
+2025-11-12 03:46:01 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,303 | correct: 2,098 | accuracy: 91.1% | error: 8.9% | macro_f1: 87.6%
+2025-11-12 03:46:01 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client4 local set
+2025-11-12 03:46:03 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 221 | correct: 212 | accuracy: 95.9% | error: 4.1% | macro_f1: 96.8%
+2025-11-12 03:46:03 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client4 neighbor set
+2025-11-12 03:46:15 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,244 | correct: 2,008 | accuracy: 89.5% | error: 10.5% | macro_f1: 85.4%
+2025-11-12 03:46:15 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client5 local set
+2025-11-12 03:46:16 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 157 | correct: 146 | accuracy: 93.0% | error: 7.0% | macro_f1: 95.2%
+2025-11-12 03:46:16 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client5 neighbor set
+2025-11-12 03:46:29 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,308 | correct: 1,924 | accuracy: 83.4% | error: 16.6% | macro_f1: 81.6%
+2025-11-12 03:46:29 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client6 local set
+2025-11-12 03:46:30 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 171 | correct: 164 | accuracy: 95.9% | error: 4.1% | macro_f1: 98.0%
+2025-11-12 03:46:30 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client6 neighbor set
+2025-11-12 03:46:42 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,294 | correct: 2,106 | accuracy: 91.8% | error: 8.2% | macro_f1: 88.0%
+2025-11-12 03:46:42 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client7 local set
+2025-11-12 03:46:44 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 404 | correct: 363 | accuracy: 89.9% | error: 10.1% | macro_f1: 84.3%
+2025-11-12 03:46:44 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client7 neighbor set
+2025-11-12 03:46:56 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,061 | correct: 1,767 | accuracy: 85.7% | error: 14.3% | macro_f1: 83.0%
+2025-11-12 03:46:56 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client8 local set
+2025-11-12 03:46:58 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 415 | correct: 393 | accuracy: 94.7% | error: 5.3% | macro_f1: 90.8%
+2025-11-12 03:46:58 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client8 neighbor set
+2025-11-12 03:47:09 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,050 | correct: 1,768 | accuracy: 86.2% | error: 13.8% | macro_f1: 82.6%
+2025-11-12 03:47:09 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client9 local set
+2025-11-12 03:47:11 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 206 | correct: 205 | accuracy: 99.5% | error: 0.5% | macro_f1: 99.3%
+2025-11-12 03:47:11 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client9 neighbor set
+2025-11-12 03:47:23 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,259 | correct: 1,889 | accuracy: 83.6% | error: 16.4% | macro_f1: 81.4%
+2025-11-12 03:47:23 - caltech-101_sepfpl_8_0.1_1 - INFO - Global test local acc: 94.49
+2025-11-12 03:47:23 - caltech-101_sepfpl_8_0.1_1 - INFO - Global test neighbor acc: 87.19
+2025-11-12 03:47:23 - caltech-101_sepfpl_8_0.1_1 - INFO - ------------local test finish-------------
+2025-11-12 03:47:23 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 28/30] 测试耗时: 135.57s
+2025-11-12 03:47:38 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 29/30] 训练耗时: 15.58s | 平均训练准确率: 89.51
+2025-11-12 03:47:38 - caltech-101_sepfpl_8_0.1_1 - INFO - ------------local test start-------------
+2025-11-12 03:47:38 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client0 local set
+2025-11-12 03:47:41 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 399 | correct: 385 | accuracy: 96.5% | error: 3.5% | macro_f1: 94.9%
+2025-11-12 03:47:41 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client0 neighbor set
+2025-11-12 03:47:52 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,066 | correct: 1,792 | accuracy: 86.7% | error: 13.3% | macro_f1: 81.9%
+2025-11-12 03:47:52 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client1 local set
+2025-11-12 03:47:53 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 176 | correct: 170 | accuracy: 96.6% | error: 3.4% | macro_f1: 98.1%
+2025-11-12 03:47:53 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client1 neighbor set
+2025-11-12 03:48:06 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,289 | correct: 2,033 | accuracy: 88.8% | error: 11.2% | macro_f1: 84.1%
+2025-11-12 03:48:06 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client2 local set
+2025-11-12 03:48:07 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 154 | correct: 142 | accuracy: 92.2% | error: 7.8% | macro_f1: 92.4%
+2025-11-12 03:48:07 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client2 neighbor set
+2025-11-12 03:48:19 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,311 | correct: 1,969 | accuracy: 85.2% | error: 14.8% | macro_f1: 81.0%
+2025-11-12 03:48:19 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client3 local set
+2025-11-12 03:48:20 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 162 | correct: 152 | accuracy: 93.8% | error: 6.2% | macro_f1: 94.3%
+2025-11-12 03:48:20 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client3 neighbor set
+2025-11-12 03:48:33 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,303 | correct: 2,103 | accuracy: 91.3% | error: 8.7% | macro_f1: 87.4%
+2025-11-12 03:48:33 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client4 local set
+2025-11-12 03:48:34 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 221 | correct: 212 | accuracy: 95.9% | error: 4.1% | macro_f1: 97.4%
+2025-11-12 03:48:34 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client4 neighbor set
+2025-11-12 03:48:46 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,244 | correct: 1,945 | accuracy: 86.7% | error: 13.3% | macro_f1: 83.2%
+2025-11-12 03:48:46 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client5 local set
+2025-11-12 03:48:47 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 157 | correct: 151 | accuracy: 96.2% | error: 3.8% | macro_f1: 98.2%
+2025-11-12 03:48:47 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client5 neighbor set
+2025-11-12 03:48:59 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,308 | correct: 1,937 | accuracy: 83.9% | error: 16.1% | macro_f1: 80.9%
+2025-11-12 03:48:59 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client6 local set
+2025-11-12 03:49:00 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 171 | correct: 163 | accuracy: 95.3% | error: 4.7% | macro_f1: 97.8%
+2025-11-12 03:49:00 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client6 neighbor set
+2025-11-12 03:49:12 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,294 | correct: 2,117 | accuracy: 92.3% | error: 7.7% | macro_f1: 88.5%
+2025-11-12 03:49:12 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client7 local set
+2025-11-12 03:49:15 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 404 | correct: 371 | accuracy: 91.8% | error: 8.2% | macro_f1: 86.4%
+2025-11-12 03:49:15 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client7 neighbor set
+2025-11-12 03:49:26 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,061 | correct: 1,782 | accuracy: 86.5% | error: 13.5% | macro_f1: 82.8%
+2025-11-12 03:49:26 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client8 local set
+2025-11-12 03:49:28 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 415 | correct: 395 | accuracy: 95.2% | error: 4.8% | macro_f1: 93.2%
+2025-11-12 03:49:28 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client8 neighbor set
+2025-11-12 03:49:39 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,050 | correct: 1,756 | accuracy: 85.7% | error: 14.3% | macro_f1: 81.3%
+2025-11-12 03:49:39 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client9 local set
+2025-11-12 03:49:40 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 206 | correct: 205 | accuracy: 99.5% | error: 0.5% | macro_f1: 99.3%
+2025-11-12 03:49:40 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client9 neighbor set
+2025-11-12 03:49:53 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,259 | correct: 1,852 | accuracy: 82.0% | error: 18.0% | macro_f1: 78.6%
+2025-11-12 03:49:53 - caltech-101_sepfpl_8_0.1_1 - INFO - Global test local acc: 95.31
+2025-11-12 03:49:53 - caltech-101_sepfpl_8_0.1_1 - INFO - Global test neighbor acc: 86.91
+2025-11-12 03:49:53 - caltech-101_sepfpl_8_0.1_1 - INFO - ------------local test finish-------------
+2025-11-12 03:49:53 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 29/30] 测试耗时: 134.57s
+2025-11-12 03:49:53 - caltech-101_sepfpl_8_0.1_1 - INFO - [RDP-sepfpl] 轮次 30: ε=1.420151, std=0.262230
+2025-11-12 03:50:08 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 30/30] 训练耗时: 15.51s | 平均训练准确率: 91.03
+2025-11-12 03:50:08 - caltech-101_sepfpl_8_0.1_1 - INFO - ------------local test start-------------
+2025-11-12 03:50:08 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client0 local set
+2025-11-12 03:50:11 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 399 | correct: 385 | accuracy: 96.5% | error: 3.5% | macro_f1: 95.0%
+2025-11-12 03:50:11 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client0 neighbor set
+2025-11-12 03:50:22 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,066 | correct: 1,822 | accuracy: 88.2% | error: 11.8% | macro_f1: 84.0%
+2025-11-12 03:50:22 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client1 local set
+2025-11-12 03:50:23 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 176 | correct: 169 | accuracy: 96.0% | error: 4.0% | macro_f1: 97.8%
+2025-11-12 03:50:23 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client1 neighbor set
+2025-11-12 03:50:35 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,289 | correct: 2,006 | accuracy: 87.6% | error: 12.4% | macro_f1: 83.4%
+2025-11-12 03:50:35 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client2 local set
+2025-11-12 03:50:36 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 154 | correct: 144 | accuracy: 93.5% | error: 6.5% | macro_f1: 94.0%
+2025-11-12 03:50:36 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client2 neighbor set
+2025-11-12 03:50:48 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,311 | correct: 1,969 | accuracy: 85.2% | error: 14.8% | macro_f1: 83.1%
+2025-11-12 03:50:48 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client3 local set
+2025-11-12 03:50:49 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 162 | correct: 152 | accuracy: 93.8% | error: 6.2% | macro_f1: 94.3%
+2025-11-12 03:50:49 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client3 neighbor set
+2025-11-12 03:51:02 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,303 | correct: 2,088 | accuracy: 90.7% | error: 9.3% | macro_f1: 87.2%
+2025-11-12 03:51:02 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client4 local set
+2025-11-12 03:51:03 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 221 | correct: 212 | accuracy: 95.9% | error: 4.1% | macro_f1: 97.3%
+2025-11-12 03:51:03 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client4 neighbor set
+2025-11-12 03:51:15 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,244 | correct: 1,980 | accuracy: 88.2% | error: 11.8% | macro_f1: 84.6%
+2025-11-12 03:51:15 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client5 local set
+2025-11-12 03:51:16 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 157 | correct: 148 | accuracy: 94.3% | error: 5.7% | macro_f1: 96.5%
+2025-11-12 03:51:16 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client5 neighbor set
+2025-11-12 03:51:28 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,308 | correct: 1,963 | accuracy: 85.1% | error: 14.9% | macro_f1: 83.6%
+2025-11-12 03:51:28 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client6 local set
+2025-11-12 03:51:29 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 171 | correct: 165 | accuracy: 96.5% | error: 3.5% | macro_f1: 98.3%
+2025-11-12 03:51:29 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client6 neighbor set
+2025-11-12 03:51:41 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,294 | correct: 2,087 | accuracy: 91.0% | error: 9.0% | macro_f1: 88.2%
+2025-11-12 03:51:41 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client7 local set
+2025-11-12 03:51:43 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 404 | correct: 360 | accuracy: 89.1% | error: 10.9% | macro_f1: 81.0%
+2025-11-12 03:51:43 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client7 neighbor set
+2025-11-12 03:51:54 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,061 | correct: 1,748 | accuracy: 84.8% | error: 15.2% | macro_f1: 82.5%
+2025-11-12 03:51:54 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client8 local set
+2025-11-12 03:51:56 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 415 | correct: 398 | accuracy: 95.9% | error: 4.1% | macro_f1: 93.1%
+2025-11-12 03:51:56 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client8 neighbor set
+2025-11-12 03:52:08 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,050 | correct: 1,782 | accuracy: 86.9% | error: 13.1% | macro_f1: 82.9%
+2025-11-12 03:52:08 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client9 local set
+2025-11-12 03:52:09 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 206 | correct: 205 | accuracy: 99.5% | error: 0.5% | macro_f1: 99.3%
+2025-11-12 03:52:09 - caltech-101_sepfpl_8_0.1_1 - INFO - Evaluate on the client9 neighbor set
+2025-11-12 03:52:21 - caltech-101_sepfpl_8_0.1_1 - INFO - => result | total: 2,259 | correct: 1,860 | accuracy: 82.3% | error: 17.7% | macro_f1: 80.7%
+2025-11-12 03:52:21 - caltech-101_sepfpl_8_0.1_1 - INFO - Global test local acc: 95.11
+2025-11-12 03:52:21 - caltech-101_sepfpl_8_0.1_1 - INFO - Global test neighbor acc: 87.00
+2025-11-12 03:52:21 - caltech-101_sepfpl_8_0.1_1 - INFO - ------------local test finish-------------
+2025-11-12 03:52:21 - caltech-101_sepfpl_8_0.1_1 - INFO - [Epoch 30/30] 测试耗时: 132.81s
+2025-11-12 03:52:21 - caltech-101_sepfpl_8_0.1_1 - INFO - maximum test local acc: 95.307
+2025-11-12 03:52:21 - caltech-101_sepfpl_8_0.1_1 - INFO - mean of local acc: 94.967
+2025-11-12 03:52:21 - caltech-101_sepfpl_8_0.1_1 - INFO - maximum test neighbor acc: 87.190
+2025-11-12 03:52:21 - caltech-101_sepfpl_8_0.1_1 - INFO - mean of neighbor acc: 87.033

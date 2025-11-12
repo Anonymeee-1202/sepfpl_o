@@ -8,6 +8,7 @@ from datasets.food101 import Food101
 from datasets.dtd import DescribableTextures
 from datasets.domainnet import DomainNet
 from datasets.office import Office
+from utils.logger import get_global_logger, get_logger
 
 DATASET_REGISTRY = Registry("DATASET")
 # DATASET_REGISTRY.register(Caltech101)
@@ -24,5 +25,6 @@ def build_dataset(cfg):
     avai_datasets = DATASET_REGISTRY.registered_names()
     check_availability(cfg.DATASET.NAME, avai_datasets)
     if cfg.VERBOSE:
-        print("Loading dataset: {}".format(cfg.DATASET.NAME))
+        logger = get_global_logger() or get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
+        logger.info("Loading dataset: {}".format(cfg.DATASET.NAME))
     return DATASET_REGISTRY.get(cfg.DATASET.NAME)(cfg)

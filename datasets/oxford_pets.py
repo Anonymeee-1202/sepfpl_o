@@ -7,6 +7,11 @@ from collections import defaultdict
 # from Dassl.dassl.data.datasets import DATASET_REGISTRY, Datum, DatasetBase
 from Dassl.dassl.data.datasets.base_dataset import DatasetBase, Datum
 from Dassl.dassl.utils import read_json, write_json
+from utils.logger import get_global_logger, get_logger
+
+
+def _get_logger():
+    return get_global_logger() or get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
 
 
 # @DATASET_REGISTRY.register()
@@ -73,7 +78,8 @@ class OxfordPets(DatasetBase):
     @staticmethod
     def split_trainval(trainval, p_val=0.2):
         p_trn = 1 - p_val
-        print(f"Splitting trainval into {p_trn:.0%} train and {p_val:.0%} val")
+        logger = _get_logger()
+        logger.info("Splitting trainval into %.0f%% train and %.0f%% val", p_trn * 100, p_val * 100)
         tracker = defaultdict(list)
         for idx, item in enumerate(trainval):
             label = item.label
@@ -95,6 +101,7 @@ class OxfordPets(DatasetBase):
 
     @staticmethod
     def save_split(train, val, test, filepath, path_prefix):
+        logger = _get_logger()
         def _extract(items):
             out = []
             for item in items:
@@ -114,10 +121,11 @@ class OxfordPets(DatasetBase):
         split = {"train": train, "val": val, "test": test}
 
         write_json(split, filepath)
-        print(f"Saved split to {filepath}")
+        logger.info("Saved split to %s", filepath)
 
     @staticmethod
     def read_split(filepath, path_prefix):
+        logger = _get_logger()
         def _convert(items):
             out = []
             for impath, label, classname in items:
@@ -126,7 +134,7 @@ class OxfordPets(DatasetBase):
                 out.append(item)
             return out
 
-        print(f"Reading split from {filepath}")
+        logger.info("Reading split from %s", filepath)
         split = read_json(filepath)
         train = _convert(split["train"])
         val = _convert(split["val"])
@@ -159,7 +167,8 @@ class OxfordPets(DatasetBase):
         # Divide classes into two halves
         m = math.ceil(n / 2)
 
-        print(f"SUBSAMPLE {subsample.upper()} CLASSES!")
+        logger = _get_logger()
+        logger.info("SUBSAMPLE %s CLASSES!", subsample.upper())
         if subsample == "base":
             selected = labels[:m]  # take the first half
         else:

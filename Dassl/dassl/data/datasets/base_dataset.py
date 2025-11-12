@@ -7,6 +7,11 @@ from collections import defaultdict
 import gdown
 
 from Dassl.dassl.utils import check_isfile
+from utils.logger import get_global_logger, get_logger
+
+
+def _get_dataset_logger():
+    return get_global_logger() or get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
 
 
 class Datum:
@@ -130,7 +135,8 @@ class DatasetBase:
         else:
             raise NotImplementedError
 
-        print("Extracting file ...")
+        logger = _get_dataset_logger()
+        logger.info("Extracting file ...")
 
         if dst.endswith(".zip"):
             zip_ref = zipfile.ZipFile(dst, "r")
@@ -150,7 +156,7 @@ class DatasetBase:
         else:
             raise NotImplementedError
 
-        print("File extracted to {}".format(osp.dirname(dst)))
+        logger.info("File extracted to {}".format(osp.dirname(dst)))
 
     def generate_fewshot_dataset(
         self, *data_sources, num_shots=-1, repeat=False
@@ -171,15 +177,16 @@ class DatasetBase:
                 return data_sources[0]
             return data_sources
 
-        print(f"Creating a {num_shots}-shot dataset")
+        logger = _get_dataset_logger()
+        logger.info(f"Creating a {num_shots}-shot dataset")
 
         output = []
-        print("data_sources len",len(data_sources))
+        logger.info("data_sources len %d", len(data_sources))
 
         for data_source in data_sources:
-            print("data_source len", len(data_source))
+            logger.info("data_source len %d", len(data_source))
             tracker = self.split_dataset_by_label(data_source)
-            print("tracker len",len(tracker))
+            logger.info("tracker len %d", len(tracker))
             dataset = []
 
             for label, items in tracker.items():
@@ -217,7 +224,8 @@ class DatasetBase:
         Return:
             Directory[list]:list of data for each user
         """
-        print(f"Creating a {num_shots}-shot federated dataset")
+        logger = _get_dataset_logger()
+        logger.info(f"Creating a {num_shots}-shot federated dataset")
         output_dict = defaultdict(list)
         if num_shots < 1:
             for idx in range(num_users):
@@ -228,7 +236,7 @@ class DatasetBase:
         else:
             user_class_dict = defaultdict(list)
             class_num = self.get_num_classes(data_sources[0])
-            print("class_num",class_num)
+            logger.info("class_num %d", class_num)
             class_per_user = int(round(class_num/num_users))
             class_list = list(range(0,class_num))
             random.seed(2023)
@@ -239,10 +247,10 @@ class DatasetBase:
                 class_norepeat_list = class_list[repeat_num:class_num]
                 class_per_user = int(round((class_num-repeat_num)/num_users))
                 fold = int(num_users/num_shots)
-                print("repeat_num",repeat_num)
-                print("class_repeat_list", class_repeat_list)
-                print("class_norepeat_list",class_norepeat_list)
-                print("fold", fold)
+                logger.info("repeat_num %d", repeat_num)
+                logger.info("class_repeat_list %s", class_repeat_list)
+                logger.info("class_norepeat_list %s", class_norepeat_list)
+                logger.info("fold %d", fold)
                 if fold > 0:
                     client_idx_fold = defaultdict(list)
                     client_per_fold = int(round(num_users/fold))
@@ -276,16 +284,18 @@ class DatasetBase:
                                             user_class_dict[idx].extend(class_repeat_list[k * repeat_per_fold:(k + 1) * repeat_per_fold])
                             else:
                                 user_class_dict[idx].extend(class_repeat_list)
-                            print("user_class_dict repeat part", user_class_dict[idx])
+                        logger.info("user_class_dict repeat part %s", user_class_dict[idx])
 
-                            if idx == num_users - 1:
-                                user_class_dict[idx].extend(class_norepeat_list[idx * class_per_user:  class_num - repeat_num])
-                                print("user_class_dict nonrepeat part", class_norepeat_list[idx * class_per_user:  class_num - repeat_num])
-                            else:
-                                user_class_dict[idx].extend(class_norepeat_list[idx * class_per_user: (idx + 1) * class_per_user])
-                                print("user_class_dict nonrepeat part", class_norepeat_list[idx * class_per_user: (idx + 1) * class_per_user])
+                        if idx == num_users - 1:
+                            segment = class_norepeat_list[idx * class_per_user:  class_num - repeat_num]
+                            user_class_dict[idx].extend(segment)
+                            logger.info("user_class_dict nonrepeat part %s", segment)
+                        else:
+                            segment = class_norepeat_list[idx * class_per_user: (idx + 1) * class_per_user]
+                            user_class_dict[idx].extend(segment)
+                            logger.info("user_class_dict nonrepeat part %s", segment)
 
-                    print("user class dict total",user_class_dict[idx])
+                    logger.info("user class dict total %s", user_class_dict[idx])
 
                     dataset = []
 
@@ -312,7 +322,7 @@ class DatasetBase:
                                 dataset.extend(sampled_items)
 
                     output_dict[idx] = dataset
-                    print("idx:",idx,",","output_dict_len:",len(output_dict[idx]))
+                    logger.info("idx: %s, output_dict_len: %d", idx, len(output_dict[idx]))
 
         return output_dict
 
@@ -335,13 +345,14 @@ class DatasetBase:
         Return:
             Directory[list]:list of data for each user
         """
-        print(f"Creating a baseline federated dataset")
+        logger = _get_dataset_logger()
+        logger.info(f"Creating a baseline federated dataset")
         output_dict = defaultdict(list)
         user_class_dict = defaultdict(list)
         sample_per_user = defaultdict(int)
         sample_order = defaultdict(list)
         class_num = self.get_num_classes(data_sources[0])
-        print("class_num",class_num)
+        logger.info("class_num %d", class_num)
         class_per_user = int(round(class_num/num_users))
         class_list = list(range(0, class_num))
         random.seed(2023)
@@ -357,10 +368,10 @@ class DatasetBase:
                 class_norepeat_list = class_list[repeat_num:class_num]
                 class_per_user = int(round((class_num-repeat_num)/num_users))
                 fold = int(num_users/num_shots)
-                print("repeat_num",repeat_num)
-                print("class_repeat_list", class_repeat_list)
-                print("class_norepeat_list",class_norepeat_list)
-                print("fold", fold)
+                logger.info("repeat_num %d", repeat_num)
+                logger.info("class_repeat_list %s", class_repeat_list)
+                logger.info("class_norepeat_list %s", class_norepeat_list)
+                logger.info("fold %d", fold)
                 if fold > 0:
                     client_idx_fold = defaultdict(list)
                     client_per_fold = int(round(num_users/fold))
@@ -399,16 +410,18 @@ class DatasetBase:
                                         user_class_dict[idx].extend(class_repeat_list[k * repeat_per_fold:(k + 1) * repeat_per_fold])
                         else:
                             user_class_dict[idx].extend(class_repeat_list)
-                        print("user_class_dict repeat part",user_class_dict[idx])
+                        logger.info("user_class_dict repeat part %s", user_class_dict[idx])
 
                         if idx == num_users - 1:
-                            user_class_dict[idx].extend(class_norepeat_list[idx * class_per_user:  class_num-repeat_num])
-                            print("user_class_dict nonrepeat part", class_norepeat_list[idx * class_per_user:  class_num-repeat_num])
+                            segment = class_norepeat_list[idx * class_per_user:  class_num-repeat_num]
+                            user_class_dict[idx].extend(segment)
+                            logger.info("user_class_dict nonrepeat part %s", segment)
                         else:
-                            user_class_dict[idx].extend(class_norepeat_list[idx * class_per_user: (idx + 1) * class_per_user])
-                            print("user_class_dict nonrepeat part", class_norepeat_list[idx * class_per_user: (idx + 1) * class_per_user])
+                            segment = class_norepeat_list[idx * class_per_user: (idx + 1) * class_per_user]
+                            user_class_dict[idx].extend(segment)
+                            logger.info("user_class_dict nonrepeat part %s", segment)
 
-                print("user class dict total",user_class_dict[idx])
+                logger.info("user class dict total %s", user_class_dict[idx])
 
                 dataset = []
 
@@ -437,7 +450,7 @@ class DatasetBase:
 
 
                 output_dict[idx] = dataset
-                print("idx:",idx,",","output_dict_len:",len(output_dict[idx]))
+                logger.info("idx: %s, output_dict_len: %d", idx, len(output_dict[idx]))
 
         return output_dict
 
