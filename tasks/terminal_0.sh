@@ -1,11 +1,6 @@
 #!/bin/bash
 # Terminal 1 tasks (GPU 0) - Total: 36 tasks
 
-# Task 5/72
-CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 promptfl 8 0.4 1 noniid-labeldir 30 0
-
-# Task 7/72
-CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 fedpgp 8 0.4 1 noniid-labeldir 30 0
 
 # Task 9/72
 CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/liuxin25/dataset configs/datasets/caltech-101.yaml 10 promptfl 8 0.2 1 noniid-labeldir 30 0
