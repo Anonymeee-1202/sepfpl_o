@@ -207,7 +207,7 @@ class PromptLearner(nn.Module):
                 client_ctx = self.global_ctx
         # 仅在sepfpl时叠加cluster_ctx
         if getattr(self, 'cluster_ctx', None) is not None and self.factorization == 'sepfpl':
-            client_ctx = client_ctx + self.cluster_ctx
+            client_ctx = client_ctx + 0.5 * self.cluster_ctx
         if client_ctx.dim() == 2:
             client_ctx = client_ctx.unsqueeze(0).expand(self.n_cls, -1, -1)
         client_prompt = torch.cat(

@@ -1,5 +1,6 @@
 import os
 import pickle
+import random
 
 # from Dassl.dassl.data.datasets import DATASET_REGISTRY, Datum, DatasetBase
 from Dassl.dassl.data.datasets.base_dataset import DatasetBase, Datum
@@ -23,6 +24,29 @@ class Food101(DatasetBase):
         else:
             train, val, test = DTD.read_and_split_data(self.image_dir)
             OxfordPets.save_split(train, val, test, self.split_path, self.image_dir)
+
+        # ========== 按类别内样本比例采样（保持类别集合不变） ==========
+        sample_ratio = getattr(cfg.DATASET, 'FOOD101_SAMPLE_RATIO', 1.0)
+        if sample_ratio is None:
+            sample_ratio = 1.0
+        if sample_ratio <= 0 or sample_ratio > 1:
+            sample_ratio = 1.0
+        if sample_ratio < 1.0:
+            rng = random.Random(getattr(cfg, 'SEED', 1))
+            def per_class_downsample(data_list):
+                by_class = {}
+                for d in data_list:
+                    by_class.setdefault(d.classname, []).append(d)
+                downsampled = []
+                for cname, items in by_class.items():
+                    n_keep = max(1, int(round(len(items) * sample_ratio)))
+                    if len(items) <= n_keep:
+                        downsampled.extend(items)
+                    else:
+                        downsampled.extend(rng.sample(items, n_keep))
+                return downsampled
+            train = per_class_downsample(train)
+            test = per_class_downsample(test)
 
         if cfg.DATASET.USEALL:
             federated_train_x = self.generate_federated_dataset(train, num_shots=cfg.DATASET.NUM_SHOTS,

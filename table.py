@@ -4,36 +4,13 @@ import os
 from statistics import mean, stdev
 
 
-DEFAULT_DATASET_LIST = ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101']
-DEFAULT_FACTORIZATION_LIST = ['sepfpl', 'dpfpl', 'fedpgp', 'fedotp', 'promptfl']
-DEFAULT_NOISE_LIST = [0.0, 0.01, 0.05, 0.1, 0.2, 0.4]
-DEFAULT_SEED_LIST = [1]
-DEFAULT_RANK_LIST = [8]
+# ========== 配置参数 ==========
+dataset_list = ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101']
+factorization_list = ['promptfl', 'fedotp', 'fedpgp', 'dpfpl', 'sepfpl']
+noise_list = [0.0, 0.4, 0.1, 0.2, 0.05, 0.01]
+seed_list = [1]
+rank_list = [8]
 TAIL_EPOCHS = 3
-
-
-def load_config_from_run_main():
-    try:
-        from run_main import EXPERIMENT_CONFIG
-
-        dataset_list = EXPERIMENT_CONFIG.get('dataset_list', DEFAULT_DATASET_LIST)
-        factorization_list = EXPERIMENT_CONFIG.get('factorization_list', DEFAULT_FACTORIZATION_LIST)
-        noise_list = EXPERIMENT_CONFIG.get('noise_list', DEFAULT_NOISE_LIST)
-        seed_list = EXPERIMENT_CONFIG.get('seed_list', DEFAULT_SEED_LIST)
-        rank_value = EXPERIMENT_CONFIG.get('rank', DEFAULT_RANK_LIST[0])
-        rank_list = [rank_value] if not isinstance(rank_value, (list, tuple)) else list(rank_value)
-        return dataset_list, factorization_list, noise_list, seed_list, rank_list
-    except Exception:
-        return (
-            DEFAULT_DATASET_LIST,
-            DEFAULT_FACTORIZATION_LIST,
-            DEFAULT_NOISE_LIST,
-            DEFAULT_SEED_LIST,
-            DEFAULT_RANK_LIST,
-        )
-
-
-dataset_list, factorization_list, noise_list, seed_list, rank_list = load_config_from_run_main()
 
 
 def tail_values(values, tail=TAIL_EPOCHS):
@@ -118,9 +95,9 @@ for dataset in dataset_list:
             local_table.add_row(local_row)
             neighbor_table.add_row(neighbor_row)
 
-    print(f'========== {dataset} local accuracy ==========')
+    print(f'============================== {dataset} local accuracy ==============================')
     print(local_table)
-    print(f'========== {dataset} neighbor accuracy ==========')
+    print(f'============================== {dataset} neighbor accuracy ==============================')
     print(neighbor_table)
     print('\n\n')
 

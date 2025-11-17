@@ -44,6 +44,11 @@ def extend_cfg(cfg, args):
     cfg.DATASET.NUM_SHOTS = args.num_shots # caltech101, dtd, oxford_flowers, oxford_pets, food101
     cfg.DATASET.PARTITION = args.partition # cifar10, cifar100
     cfg.DATASET.BETA = args.beta # cifar10, cifar100
+    # Food101 per-class sampling ratio (keep class set unchanged, downsample items within each class)
+    if hasattr(args, 'food101_sample_ratio'):
+        cfg.DATASET.FOOD101_SAMPLE_RATIO = args.food101_sample_ratio
+    else:
+        cfg.DATASET.FOOD101_SAMPLE_RATIO = 1.0
     cfg.DATALOADER.TRAIN_X.N_DOMAIN = 6 if args.num_users == 6 else 4 # domainnet, office
     if args.useall:
         cfg.DATALOADER.TRAIN_X.BATCH_SIZE = args.train_batch_size
@@ -397,7 +402,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--round', type=int, default=20, help="number of communication round")
     parser.add_argument('--num-users', type=int, default=10, help="number of users")
-    parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
+    parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
     parser.add_argument('--train-batch-size', type=int, default=32, help="number of trainer batch size")
     parser.add_argument('--test-batch-size', type=int, default=100, help="number of test batch size")
     parser.add_argument("--seed", type=int, default=1, help="only positive value enables a fixed seed")
@@ -415,6 +420,7 @@ if __name__ == "__main__":
     parser.add_argument('--iid', default=False, help="is iid, control the iid of caltech101, oxford_flowers, oxford_pets, food101 and dtd")
     parser.add_argument('--num-shots', type=int, default=16, help="number of shots in few shot setting")
     parser.add_argument('--useall', default=True, help="is useall, True for all training samples, False for few shot learning")
+    parser.add_argument('--food101-sample-ratio', type=float, default=0.1, help="per-class sampling ratio for Food101 (0,1], keep class set unchanged")
     # cifar10, cifar100
     parser.add_argument('--partition', type=str, default='noniid-labeldir', help='the data partitioning strategy of cifar10 and cifar100, select from "homo, noniid-labeluni, noniid-labeldir,noniid-labeldir100"')
     parser.add_argument('--beta', type=float, default=0.3, help='The parameter for the dirichlet distribution for data partitioning')
@@ -423,7 +429,7 @@ if __name__ == "__main__":
     parser.add_argument('--n_ctx', type=int, default=16, help="number of text encoder of text prompts")
     # sepfpl-specific optional params
     parser.add_argument('--sepfpl-topk', type=int, default=8, help='top-k neighbors for HCSE graph sparsification (sepfpl only)')
-    parser.add_argument('--sepfpl-lr-c', type=float, default=0.0001, help='learning rate for cluster prompt updates (defaults to OPTIM.LR)')
+    parser.add_argument('--sepfpl-lr-c', type=float, default=0.001, help='learning rate for cluster prompt updates (defaults to OPTIM.LR)')
 
     # parameters of path
     parser.add_argument("--root", type=str, default="/datasets", help="path to dataset")
