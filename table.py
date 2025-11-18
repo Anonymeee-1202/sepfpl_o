@@ -7,7 +7,7 @@ from statistics import mean, stdev
 # ========== 配置参数 ==========
 dataset_list = ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101']
 factorization_list = ['promptfl', 'fedotp', 'fedpgp', 'dpfpl', 'sepfpl']
-noise_list = [0.0, 0.4, 0.1, 0.2, 0.05, 0.01]
+noise_list = [0.0, 0.4, 0.2, 0.1, 0.05, 0.01]
 seed_list = [1]
 rank_list = [8]
 TAIL_EPOCHS = 3

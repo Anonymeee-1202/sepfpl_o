@@ -1,0 +1,224 @@
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - 日志文件已创建: logs/oxford_flowers/sepfpl/8_0.4_1_20251117_225850.log
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - Loading trainer: DP_FPL
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - Loading dataset: OxfordFlowers
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - Reading split from /home/liuxin25/dataset/oxford_flowers/split_zhou_OxfordFlowers.json
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - Creating a baseline federated dataset
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - class_num 102
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [90, 54, 31, 35, 55, 72, 92, 42, 95, 84]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 0, output_dict_len: 451
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [74, 0, 1, 80, 27, 20, 77, 50, 66, 45]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 1, output_dict_len: 562
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [44, 82, 14, 32, 52, 70, 28, 51, 10, 21]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 2, output_dict_len: 373
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [33, 75, 5, 48, 87, 98, 23, 69, 62, 7]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 3, output_dict_len: 350
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [17, 18, 60, 34, 11, 58, 86, 13, 41, 30]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 4, output_dict_len: 302
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [24, 71, 56, 76, 37, 6, 53, 79, 97, 39]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 5, output_dict_len: 433
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [47, 65, 36, 91, 3, 63, 59, 9, 96, 64]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 6, output_dict_len: 367
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [94, 88, 99, 61, 19, 25, 4, 16, 8, 46]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 7, output_dict_len: 387
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [26, 2, 93, 85, 29, 22, 100, 67, 68, 38]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 8, output_dict_len: 341
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [83, 15, 12, 81, 43, 73, 78, 40, 101, 57, 89, 49]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 9, output_dict_len: 527
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - Creating a baseline federated dataset
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - class_num 102
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [90, 54, 31, 35, 55, 72, 92, 42, 95, 84]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 0, output_dict_len: 269
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [74, 0, 1, 80, 27, 20, 77, 50, 66, 45]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 1, output_dict_len: 339
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [44, 82, 14, 32, 52, 70, 28, 51, 10, 21]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 2, output_dict_len: 223
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [33, 75, 5, 48, 87, 98, 23, 69, 62, 7]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 3, output_dict_len: 211
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [17, 18, 60, 34, 11, 58, 86, 13, 41, 30]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 4, output_dict_len: 178
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [24, 71, 56, 76, 37, 6, 53, 79, 97, 39]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 5, output_dict_len: 262
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [47, 65, 36, 91, 3, 63, 59, 9, 96, 64]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 6, output_dict_len: 223
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [94, 88, 99, 61, 19, 25, 4, 16, 8, 46]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 7, output_dict_len: 234
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [26, 2, 93, 85, 29, 22, 100, 67, 68, 38]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 8, output_dict_len: 205
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - user class dict total [83, 15, 12, 81, 43, 73, 78, 40, 101, 57, 89, 49]
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - idx: 9, output_dict_len: 319
+2025-11-17 22:58:50 - 8_0.4_1 - INFO - Loading CLIP (backbone: ViT-B/16)
+2025-11-17 22:58:53 - 8_0.4_1 - INFO - Building custom CLIP
+2025-11-17 22:58:53 - 8_0.4_1 - INFO - Turning off gradients in both the image and the text encoder
+2025-11-17 22:58:53 - 8_0.4_1 - INFO - [RDP-sepfpl] 轮次 1: ε=0.000743, std=11.463021
+2025-11-17 23:00:35 - 8_0.4_1 - INFO - [Epoch 1/30] 训练耗时: 102.55s | 平均训练准确率: 12.22
+2025-11-17 23:01:24 - 8_0.4_1 - INFO - [Epoch 2/30] 训练耗时: 48.51s | 平均训练准确率: 54.41
+2025-11-17 23:02:12 - 8_0.4_1 - INFO - [Epoch 3/30] 训练耗时: 48.19s | 平均训练准确率: 59.13
+2025-11-17 23:03:01 - 8_0.4_1 - INFO - [Epoch 4/30] 训练耗时: 49.05s | 平均训练准确率: 60.94
+2025-11-17 23:03:49 - 8_0.4_1 - INFO - [Epoch 5/30] 训练耗时: 48.25s | 平均训练准确率: 60.03
+2025-11-17 23:04:38 - 8_0.4_1 - INFO - [Epoch 6/30] 训练耗时: 48.45s | 平均训练准确率: 60.00
+2025-11-17 23:05:24 - 8_0.4_1 - INFO - [Epoch 7/30] 训练耗时: 46.55s | 平均训练准确率: 61.88
+2025-11-17 23:06:13 - 8_0.4_1 - INFO - [Epoch 8/30] 训练耗时: 48.52s | 平均训练准确率: 61.63
+2025-11-17 23:07:00 - 8_0.4_1 - INFO - [Epoch 9/30] 训练耗时: 46.57s | 平均训练准确率: 63.23
+2025-11-17 23:07:00 - 8_0.4_1 - INFO - [RDP-sepfpl] 轮次 10: ε=0.008339, std=3.422150
+2025-11-17 23:07:46 - 8_0.4_1 - INFO - [Epoch 10/30] 训练耗时: 46.94s | 平均训练准确率: 61.28
+2025-11-17 23:08:35 - 8_0.4_1 - INFO - [Epoch 11/30] 训练耗时: 48.28s | 平均训练准确率: 61.01
+2025-11-17 23:09:22 - 8_0.4_1 - INFO - [Epoch 12/30] 训练耗时: 47.19s | 平均训练准确率: 61.67
+2025-11-17 23:10:08 - 8_0.4_1 - INFO - [Epoch 13/30] 训练耗时: 45.99s | 平均训练准确率: 61.81
+2025-11-17 23:10:57 - 8_0.4_1 - INFO - [Epoch 14/30] 训练耗时: 48.65s | 平均训练准确率: 61.11
+2025-11-17 23:15:09 - 8_0.4_1 - INFO - [Epoch 15/30] 训练耗时: 252.44s | 平均训练准确率: 61.46
+2025-11-17 23:20:48 - 8_0.4_1 - INFO - [Epoch 16/30] 训练耗时: 338.79s | 平均训练准确率: 62.36
+2025-11-17 23:27:12 - 8_0.4_1 - INFO - [Epoch 17/30] 训练耗时: 384.46s | 平均训练准确率: 64.76
+2025-11-17 23:33:29 - 8_0.4_1 - INFO - [Epoch 18/30] 训练耗时: 377.04s | 平均训练准确率: 64.10
+2025-11-17 23:39:56 - 8_0.4_1 - INFO - [Epoch 19/30] 训练耗时: 386.59s | 平均训练准确率: 64.69
+2025-11-17 23:39:56 - 8_0.4_1 - INFO - [RDP-sepfpl] 轮次 20: ε=0.017266, std=2.378255
+2025-11-17 23:41:20 - 8_0.4_1 - INFO - [Epoch 20/30] 训练耗时: 83.63s | 平均训练准确率: 63.78
+2025-11-17 23:42:11 - 8_0.4_1 - INFO - [Epoch 21/30] 训练耗时: 51.17s | 平均训练准确率: 64.34
+2025-11-17 23:43:00 - 8_0.4_1 - INFO - [Epoch 22/30] 训练耗时: 49.39s | 平均训练准确率: 63.37
+2025-11-17 23:43:50 - 8_0.4_1 - INFO - [Epoch 23/30] 训练耗时: 49.53s | 平均训练准确率: 64.90
+2025-11-17 23:44:39 - 8_0.4_1 - INFO - [Epoch 24/30] 训练耗时: 48.99s | 平均训练准确率: 63.96
+2025-11-17 23:45:27 - 8_0.4_1 - INFO - [Epoch 25/30] 训练耗时: 48.25s | 平均训练准确率: 64.79
+2025-11-17 23:46:08 - 8_0.4_1 - INFO - [Epoch 26/30] 训练耗时: 41.11s | 平均训练准确率: 63.96
+2025-11-17 23:46:50 - 8_0.4_1 - INFO - [Epoch 27/30] 训练耗时: 42.19s | 平均训练准确率: 62.47
+2025-11-17 23:47:33 - 8_0.4_1 - INFO - [Epoch 28/30] 训练耗时: 43.20s | 平均训练准确率: 63.61
+2025-11-17 23:47:33 - 8_0.4_1 - INFO - ------------local test start-------------
+2025-11-17 23:47:33 - 8_0.4_1 - INFO - Evaluate on the client0 local set
+2025-11-17 23:47:40 - 8_0.4_1 - INFO - => result | total 269 | correct 142 | acc 52.79% | err 47.21% | macro_f1 51.91%
+2025-11-17 23:47:40 - 8_0.4_1 - INFO - Evaluate on the client0 neighbor set
+2025-11-17 23:48:38 - 8_0.4_1 - INFO - => result | total 2,194 | correct 1,526 | acc 69.55% | err 30.45% | macro_f1 63.13%
+2025-11-17 23:48:38 - 8_0.4_1 - INFO - Evaluate on the client1 local set
+2025-11-17 23:48:43 - 8_0.4_1 - INFO - => result | total 339 | correct 231 | acc 68.14% | err 31.86% | macro_f1 65.98%
+2025-11-17 23:48:43 - 8_0.4_1 - INFO - Evaluate on the client1 neighbor set
+2025-11-17 23:49:16 - 8_0.4_1 - INFO - => result | total 2,124 | correct 1,442 | acc 67.89% | err 32.11% | macro_f1 62.37%
+2025-11-17 23:49:16 - 8_0.4_1 - INFO - Evaluate on the client2 local set
+2025-11-17 23:49:19 - 8_0.4_1 - INFO - => result | total 223 | correct 169 | acc 75.78% | err 24.22% | macro_f1 71.92%
+2025-11-17 23:49:19 - 8_0.4_1 - INFO - Evaluate on the client2 neighbor set
+2025-11-17 23:49:54 - 8_0.4_1 - INFO - => result | total 2,240 | correct 1,511 | acc 67.46% | err 32.54% | macro_f1 61.55%
+2025-11-17 23:49:54 - 8_0.4_1 - INFO - Evaluate on the client3 local set
+2025-11-17 23:49:57 - 8_0.4_1 - INFO - => result | total 211 | correct 163 | acc 77.25% | err 22.75% | macro_f1 73.25%
+2025-11-17 23:49:57 - 8_0.4_1 - INFO - Evaluate on the client3 neighbor set
+2025-11-17 23:50:33 - 8_0.4_1 - INFO - => result | total 2,252 | correct 1,518 | acc 67.41% | err 32.59% | macro_f1 61.66%
+2025-11-17 23:50:33 - 8_0.4_1 - INFO - Evaluate on the client4 local set
+2025-11-17 23:50:36 - 8_0.4_1 - INFO - => result | total 178 | correct 121 | acc 67.98% | err 32.02% | macro_f1 80.30%
+2025-11-17 23:50:36 - 8_0.4_1 - INFO - Evaluate on the client4 neighbor set
+2025-11-17 23:51:10 - 8_0.4_1 - INFO - => result | total 2,285 | correct 1,560 | acc 68.27% | err 31.73% | macro_f1 61.42%
+2025-11-17 23:51:10 - 8_0.4_1 - INFO - Evaluate on the client5 local set
+2025-11-17 23:51:14 - 8_0.4_1 - INFO - => result | total 262 | correct 212 | acc 80.92% | err 19.08% | macro_f1 77.86%
+2025-11-17 23:51:14 - 8_0.4_1 - INFO - Evaluate on the client5 neighbor set
+2025-11-17 23:51:49 - 8_0.4_1 - INFO - => result | total 2,201 | correct 1,466 | acc 66.61% | err 33.39% | macro_f1 61.29%
+2025-11-17 23:51:49 - 8_0.4_1 - INFO - Evaluate on the client6 local set
+2025-11-17 23:51:53 - 8_0.4_1 - INFO - => result | total 223 | correct 91 | acc 40.81% | err 59.19% | macro_f1 49.62%
+2025-11-17 23:51:53 - 8_0.4_1 - INFO - Evaluate on the client6 neighbor set
+2025-11-17 23:52:26 - 8_0.4_1 - INFO - => result | total 2,240 | correct 1,578 | acc 70.45% | err 29.55% | macro_f1 63.57%
+2025-11-17 23:52:26 - 8_0.4_1 - INFO - Evaluate on the client7 local set
+2025-11-17 23:52:29 - 8_0.4_1 - INFO - => result | total 234 | correct 151 | acc 64.53% | err 35.47% | macro_f1 79.01%
+2025-11-17 23:52:29 - 8_0.4_1 - INFO - Evaluate on the client7 neighbor set
+2025-11-17 23:53:03 - 8_0.4_1 - INFO - => result | total 2,229 | correct 1,505 | acc 67.52% | err 32.48% | macro_f1 59.83%
+2025-11-17 23:53:03 - 8_0.4_1 - INFO - Evaluate on the client8 local set
+2025-11-17 23:53:07 - 8_0.4_1 - INFO - => result | total 205 | correct 137 | acc 66.83% | err 33.17% | macro_f1 63.27%
+2025-11-17 23:53:07 - 8_0.4_1 - INFO - Evaluate on the client8 neighbor set
+2025-11-17 23:53:42 - 8_0.4_1 - INFO - => result | total 2,258 | correct 1,514 | acc 67.05% | err 32.95% | macro_f1 61.44%
+2025-11-17 23:53:42 - 8_0.4_1 - INFO - Evaluate on the client9 local set
+2025-11-17 23:53:48 - 8_0.4_1 - INFO - => result | total 319 | correct 255 | acc 79.94% | err 20.06% | macro_f1 77.67%
+2025-11-17 23:53:48 - 8_0.4_1 - INFO - Evaluate on the client9 neighbor set
+2025-11-17 23:54:20 - 8_0.4_1 - INFO - => result | total 2,144 | correct 1,388 | acc 64.74% | err 35.26% | macro_f1 58.74%
+2025-11-17 23:54:20 - 8_0.4_1 - INFO - Global test local acc: 67.50
+2025-11-17 23:54:20 - 8_0.4_1 - INFO - Global test neighbor acc: 67.69
+2025-11-17 23:54:20 - 8_0.4_1 - INFO - ------------local test finish-------------
+2025-11-17 23:54:20 - 8_0.4_1 - INFO - [Epoch 28/30] 测试耗时: 407.13s
+2025-11-17 23:55:03 - 8_0.4_1 - INFO - [Epoch 29/30] 训练耗时: 42.25s | 平均训练准确率: 64.34
+2025-11-17 23:55:03 - 8_0.4_1 - INFO - ------------local test start-------------
+2025-11-17 23:55:03 - 8_0.4_1 - INFO - Evaluate on the client0 local set
+2025-11-17 23:55:07 - 8_0.4_1 - INFO - => result | total 269 | correct 145 | acc 53.90% | err 46.10% | macro_f1 52.58%
+2025-11-17 23:55:07 - 8_0.4_1 - INFO - Evaluate on the client0 neighbor set
+2025-11-17 23:55:40 - 8_0.4_1 - INFO - => result | total 2,194 | correct 1,525 | acc 69.51% | err 30.49% | macro_f1 63.21%
+2025-11-17 23:55:40 - 8_0.4_1 - INFO - Evaluate on the client1 local set
+2025-11-17 23:55:45 - 8_0.4_1 - INFO - => result | total 339 | correct 236 | acc 69.62% | err 30.38% | macro_f1 67.45%
+2025-11-17 23:55:45 - 8_0.4_1 - INFO - Evaluate on the client1 neighbor set
+2025-11-17 23:56:18 - 8_0.4_1 - INFO - => result | total 2,124 | correct 1,444 | acc 67.98% | err 32.02% | macro_f1 62.86%
+2025-11-17 23:56:18 - 8_0.4_1 - INFO - Evaluate on the client2 local set
+2025-11-17 23:56:21 - 8_0.4_1 - INFO - => result | total 223 | correct 172 | acc 77.13% | err 22.87% | macro_f1 72.64%
+2025-11-17 23:56:21 - 8_0.4_1 - INFO - Evaluate on the client2 neighbor set
+2025-11-17 23:56:57 - 8_0.4_1 - INFO - => result | total 2,240 | correct 1,509 | acc 67.37% | err 32.63% | macro_f1 61.79%
+2025-11-17 23:56:57 - 8_0.4_1 - INFO - Evaluate on the client3 local set
+2025-11-17 23:57:00 - 8_0.4_1 - INFO - => result | total 211 | correct 163 | acc 77.25% | err 22.75% | macro_f1 71.63%
+2025-11-17 23:57:00 - 8_0.4_1 - INFO - Evaluate on the client3 neighbor set
+2025-11-17 23:57:35 - 8_0.4_1 - INFO - => result | total 2,252 | correct 1,522 | acc 67.58% | err 32.42% | macro_f1 61.87%
+2025-11-17 23:57:35 - 8_0.4_1 - INFO - Evaluate on the client4 local set
+2025-11-17 23:57:38 - 8_0.4_1 - INFO - => result | total 178 | correct 121 | acc 67.98% | err 32.02% | macro_f1 80.30%
+2025-11-17 23:57:38 - 8_0.4_1 - INFO - Evaluate on the client4 neighbor set
+2025-11-17 23:58:12 - 8_0.4_1 - INFO - => result | total 2,285 | correct 1,560 | acc 68.27% | err 31.73% | macro_f1 61.32%
+2025-11-17 23:58:12 - 8_0.4_1 - INFO - Evaluate on the client5 local set
+2025-11-17 23:58:16 - 8_0.4_1 - INFO - => result | total 262 | correct 210 | acc 80.15% | err 19.85% | macro_f1 77.82%
+2025-11-17 23:58:16 - 8_0.4_1 - INFO - Evaluate on the client5 neighbor set
+2025-11-17 23:58:49 - 8_0.4_1 - INFO - => result | total 2,201 | correct 1,476 | acc 67.06% | err 32.94% | macro_f1 61.64%
+2025-11-17 23:58:49 - 8_0.4_1 - INFO - Evaluate on the client6 local set
+2025-11-17 23:58:53 - 8_0.4_1 - INFO - => result | total 223 | correct 100 | acc 44.84% | err 55.16% | macro_f1 52.73%
+2025-11-17 23:58:53 - 8_0.4_1 - INFO - Evaluate on the client6 neighbor set
+2025-11-17 23:59:27 - 8_0.4_1 - INFO - => result | total 2,240 | correct 1,582 | acc 70.62% | err 29.38% | macro_f1 63.53%
+2025-11-17 23:59:27 - 8_0.4_1 - INFO - Evaluate on the client7 local set
+2025-11-17 23:59:30 - 8_0.4_1 - INFO - => result | total 234 | correct 151 | acc 64.53% | err 35.47% | macro_f1 77.68%
+2025-11-17 23:59:30 - 8_0.4_1 - INFO - Evaluate on the client7 neighbor set
+2025-11-18 00:00:04 - 8_0.4_1 - INFO - => result | total 2,229 | correct 1,524 | acc 68.37% | err 31.63% | macro_f1 60.66%
+2025-11-18 00:00:04 - 8_0.4_1 - INFO - Evaluate on the client8 local set
+2025-11-18 00:00:08 - 8_0.4_1 - INFO - => result | total 205 | correct 142 | acc 69.27% | err 30.73% | macro_f1 68.96%
+2025-11-18 00:00:08 - 8_0.4_1 - INFO - Evaluate on the client8 neighbor set
+2025-11-18 00:00:43 - 8_0.4_1 - INFO - => result | total 2,258 | correct 1,526 | acc 67.58% | err 32.42% | macro_f1 61.48%
+2025-11-18 00:00:43 - 8_0.4_1 - INFO - Evaluate on the client9 local set
+2025-11-18 00:00:48 - 8_0.4_1 - INFO - => result | total 319 | correct 245 | acc 76.80% | err 23.20% | macro_f1 74.73%
+2025-11-18 00:00:48 - 8_0.4_1 - INFO - Evaluate on the client9 neighbor set
+2025-11-18 00:01:21 - 8_0.4_1 - INFO - => result | total 2,144 | correct 1,424 | acc 66.42% | err 33.58% | macro_f1 60.35%
+2025-11-18 00:01:21 - 8_0.4_1 - INFO - Global test local acc: 68.15
+2025-11-18 00:01:21 - 8_0.4_1 - INFO - Global test neighbor acc: 68.08
+2025-11-18 00:01:21 - 8_0.4_1 - INFO - ------------local test finish-------------
+2025-11-18 00:01:21 - 8_0.4_1 - INFO - [Epoch 29/30] 测试耗时: 378.36s
+2025-11-18 00:01:21 - 8_0.4_1 - INFO - [RDP-sepfpl] 轮次 30: ε=0.026429, std=1.922252
+2025-11-18 00:02:05 - 8_0.4_1 - INFO - [Epoch 30/30] 训练耗时: 44.05s | 平均训练准确率: 64.24
+2025-11-18 00:02:05 - 8_0.4_1 - INFO - ------------local test start-------------
+2025-11-18 00:02:05 - 8_0.4_1 - INFO - Evaluate on the client0 local set
+2025-11-18 00:02:09 - 8_0.4_1 - INFO - => result | total 269 | correct 145 | acc 53.90% | err 46.10% | macro_f1 51.58%
+2025-11-18 00:02:09 - 8_0.4_1 - INFO - Evaluate on the client0 neighbor set
+2025-11-18 00:02:44 - 8_0.4_1 - INFO - => result | total 2,194 | correct 1,553 | acc 70.78% | err 29.22% | macro_f1 64.45%
+2025-11-18 00:02:44 - 8_0.4_1 - INFO - Evaluate on the client1 local set
+2025-11-18 00:02:49 - 8_0.4_1 - INFO - => result | total 339 | correct 239 | acc 70.50% | err 29.50% | macro_f1 69.14%
+2025-11-18 00:02:49 - 8_0.4_1 - INFO - Evaluate on the client1 neighbor set
+2025-11-18 00:03:19 - 8_0.4_1 - INFO - => result | total 2,124 | correct 1,458 | acc 68.64% | err 31.36% | macro_f1 63.48%
+2025-11-18 00:03:19 - 8_0.4_1 - INFO - Evaluate on the client2 local set
+2025-11-18 00:03:22 - 8_0.4_1 - INFO - => result | total 223 | correct 168 | acc 75.34% | err 24.66% | macro_f1 71.39%
+2025-11-18 00:03:22 - 8_0.4_1 - INFO - Evaluate on the client2 neighbor set
+2025-11-18 00:03:54 - 8_0.4_1 - INFO - => result | total 2,240 | correct 1,524 | acc 68.04% | err 31.96% | macro_f1 62.29%
+2025-11-18 00:03:54 - 8_0.4_1 - INFO - Evaluate on the client3 local set
+2025-11-18 00:03:56 - 8_0.4_1 - INFO - => result | total 211 | correct 169 | acc 80.09% | err 19.91% | macro_f1 75.24%
+2025-11-18 00:03:56 - 8_0.4_1 - INFO - Evaluate on the client3 neighbor set
+2025-11-18 00:04:28 - 8_0.4_1 - INFO - => result | total 2,252 | correct 1,534 | acc 68.12% | err 31.88% | macro_f1 62.33%
+2025-11-18 00:04:28 - 8_0.4_1 - INFO - Evaluate on the client4 local set
+2025-11-18 00:04:31 - 8_0.4_1 - INFO - => result | total 178 | correct 119 | acc 66.85% | err 33.15% | macro_f1 79.46%
+2025-11-18 00:04:31 - 8_0.4_1 - INFO - Evaluate on the client4 neighbor set
+2025-11-18 00:05:04 - 8_0.4_1 - INFO - => result | total 2,285 | correct 1,572 | acc 68.80% | err 31.20% | macro_f1 61.51%
+2025-11-18 00:05:04 - 8_0.4_1 - INFO - Evaluate on the client5 local set
+2025-11-18 00:05:07 - 8_0.4_1 - INFO - => result | total 262 | correct 211 | acc 80.53% | err 19.47% | macro_f1 77.89%
+2025-11-18 00:05:07 - 8_0.4_1 - INFO - Evaluate on the client5 neighbor set
+2025-11-18 00:05:39 - 8_0.4_1 - INFO - => result | total 2,201 | correct 1,486 | acc 67.51% | err 32.49% | macro_f1 61.75%
+2025-11-18 00:05:39 - 8_0.4_1 - INFO - Evaluate on the client6 local set
+2025-11-18 00:05:42 - 8_0.4_1 - INFO - => result | total 223 | correct 108 | acc 48.43% | err 51.57% | macro_f1 56.24%
+2025-11-18 00:05:42 - 8_0.4_1 - INFO - Evaluate on the client6 neighbor set
+2025-11-18 00:06:17 - 8_0.4_1 - INFO - => result | total 2,240 | correct 1,591 | acc 71.03% | err 28.97% | macro_f1 63.82%
+2025-11-18 00:06:17 - 8_0.4_1 - INFO - Evaluate on the client7 local set
+2025-11-18 00:06:20 - 8_0.4_1 - INFO - => result | total 234 | correct 154 | acc 65.81% | err 34.19% | macro_f1 78.47%
+2025-11-18 00:06:20 - 8_0.4_1 - INFO - Evaluate on the client7 neighbor set
+2025-11-18 00:06:52 - 8_0.4_1 - INFO - => result | total 2,229 | correct 1,534 | acc 68.82% | err 31.18% | macro_f1 60.86%
+2025-11-18 00:06:52 - 8_0.4_1 - INFO - Evaluate on the client8 local set
+2025-11-18 00:06:55 - 8_0.4_1 - INFO - => result | total 205 | correct 139 | acc 67.80% | err 32.20% | macro_f1 65.31%
+2025-11-18 00:06:55 - 8_0.4_1 - INFO - Evaluate on the client8 neighbor set
+2025-11-18 00:07:26 - 8_0.4_1 - INFO - => result | total 2,258 | correct 1,543 | acc 68.33% | err 31.67% | macro_f1 62.17%
+2025-11-18 00:07:26 - 8_0.4_1 - INFO - Evaluate on the client9 local set
+2025-11-18 00:07:31 - 8_0.4_1 - INFO - => result | total 319 | correct 254 | acc 79.62% | err 20.38% | macro_f1 76.55%
+2025-11-18 00:07:31 - 8_0.4_1 - INFO - Evaluate on the client9 neighbor set
+2025-11-18 00:08:02 - 8_0.4_1 - INFO - => result | total 2,144 | correct 1,429 | acc 66.65% | err 33.35% | macro_f1 60.10%
+2025-11-18 00:08:02 - 8_0.4_1 - INFO - Global test local acc: 68.89
+2025-11-18 00:08:02 - 8_0.4_1 - INFO - Global test neighbor acc: 68.67
+2025-11-18 00:08:02 - 8_0.4_1 - INFO - ------------local test finish-------------
+2025-11-18 00:08:02 - 8_0.4_1 - INFO - [Epoch 30/30] 测试耗时: 356.91s
+2025-11-18 00:08:02 - 8_0.4_1 - INFO - maximum test local acc: 68.890
+2025-11-18 00:08:02 - 8_0.4_1 - INFO - mean of local acc: 68.178
+2025-11-18 00:08:02 - 8_0.4_1 - INFO - maximum test neighbor acc: 68.673
+2025-11-18 00:08:02 - 8_0.4_1 - INFO - mean of neighbor acc: 68.148

@@ -479,10 +479,12 @@ class DP_FPL(TrainerX):
         # logger.info(f'{client_info} | {batch_info} : {loss_summary}')
         return loss_summary
 
-    def backward_pass(self, avg_global_gradient):
+    def backward_pass(self, avg_global_gradient, aggregated_cluster_gradient=None):
         # update global gradient
         param_dict = dict(self.model.named_parameters())
         param_dict['prompt_learner.global_ctx'].grad = avg_global_gradient
+        if aggregated_cluster_gradient is not None and 'prompt_learner.cluster_ctx' in param_dict:
+            param_dict['prompt_learner.cluster_ctx'].grad = aggregated_cluster_gradient
         # update
         self.model_update()
 
