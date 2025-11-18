@@ -117,7 +117,7 @@ def load_checkpoint(args):
 
 
 def main(args):
-    # 初始化日志记录器
+    # ---------- 初始化日志与核心配置 ----------
     logger = init_logger_from_args(args, log_dir='logs', log_to_file=True, log_to_console=True)
     
     cfg = setup_cfg(args)
@@ -127,10 +127,12 @@ def main(args):
     if torch.cuda.is_available() and cfg.USE_CUDA:
         torch.backends.cudnn.benchmark = True
 
+    # ---------- 数据划分模式：识别是否为Dirichlet场景 ----------
     dirichlet = False
     if args.dataset_config_file.split('/')[-1].split('.')[0] in ['cifar10', 'cifar100']:
         dirichlet = True
 
+    # ---------- 联邦权重与梯度缓存初始化 ----------
     global_gradients = [None for _ in range(args.num_users)]
     local_weights = [{} for _ in range(args.num_users)]
     local_weights_g = [None for _ in range(args.num_users)]
@@ -138,10 +140,11 @@ def main(args):
     local_weights_u = [None for _ in range(args.num_users)]
     local_weights_v = [None for _ in range(args.num_users)]
 
+    # ---------- 构建本地训练器并缓存初始权重 ----------
     local_trainer = build_trainer(cfg)
     initial_weights = copy.deepcopy(local_trainer.model.state_dict())
 
-    # sepfpl：首轮为各客户端预填聚类提示参数，若失败由后续流程覆盖
+    # ---------- sepfpl：为各客户端预填聚类提示 ----------
     try:
         if args.factorization == 'sepfpl' and 'prompt_learner.cluster_ctx' in initial_weights:
             for i in range(args.num_users):
@@ -150,7 +153,7 @@ def main(args):
     except Exception as e:
         logger.warning(f"[Init] cluster_ctx 初始化失败（可忽略首轮由后续流程写入）：{e}")
 
-    # Training
+    # ---------- 训练主流程所需的统计变量 ----------
     start_epoch = 0
     max_epoch = cfg.OPTIM.ROUND
     local_acc_list, neighbor_acc_list, = [], []
@@ -162,13 +165,13 @@ def main(args):
     if args.noise > 0:
         std = local_trainer.std / cfg.DATASET.USERS
     
-    # 统计单轮最大批次数，用于进度条估计
+    # ---------- 统计每轮最大批次数，辅助进度估计 ----------
     train_loaders = getattr(local_trainer, "fed_train_loader_x_dict", {})
     if train_loaders:
         max_batches_per_epoch = max(len(loader) for loader in train_loaders.values())
     else:
         max_batches_per_epoch = 0
-    # 维护提示参数名称到对应缓冲区的映射，便于统一读写逻辑
+    # ---------- 建立提示参数缓冲映射，统一读写入口 ----------
     key_to_buffer = {'prompt_learner.global_ctx': local_weights_g}
     if args.factorization in ['fedotp', 'dplora', 'dpfpl', 'sepfpl']:
         key_to_buffer['prompt_learner.local_ctx'] = local_weights_l
@@ -192,17 +195,17 @@ def main(args):
     for epoch in range(start_epoch, max_epoch): # global communication loop
         idxs_users = list(range(0,cfg.DATASET.USERS))
         
-        # 重置epoch计时器
+        # ---------- Epoch 初始化：计时与准确率统计器重置 ----------
         local_trainer.reset_epoch_timer()
         epoch_start_time = time.time()
         train_acc_sum = 0.0
         train_acc_count = 0
         
-        # 更新sepfpl的增量式隐私预算分配（如果启用）
+        # ---------- sepfpl：按轮更新差分隐私噪声标准差 ----------
         if args.factorization == 'sepfpl' and hasattr(local_trainer, 'update_std_for_round'):
             local_trainer.update_std_for_round(epoch)
 
-        # create data iters
+        # ---------- 为每个客户端准备本地数据迭代器 ----------
         data_iters = []
         for idx in idxs_users:
             local_trainer.set_model_mode("train")
@@ -210,7 +213,7 @@ def main(args):
             data_iters.append(iter(loader))
         max_batch = max_batches_per_epoch
 
-        # loop through batches
+        # ---------- 批次循环：收集梯度并缓存客户端模型 ----------
         for batch in range(0, max_batch):
             local_trainer.set_model_mode("train")
             # 按客户端收集梯度信息，供全局聚合与聚类阶段使用
@@ -241,10 +244,9 @@ def main(args):
                     else:
                         cluster_grads[idx] = torch.zeros_like(local_trainer.model.prompt_learner.cluster_ctx.data)
 
-            # average global gradient
-            # avg_global_gradient = sum(global_gradients) / cfg.DATASET.USERS
-            # noise = torch.normal(0, std, size=avg_global_gradient.shape, device=avg_global_gradient.device)
-            # avg_global_gradient += noise
+            # ---------- 计算全局梯度与（可选）聚类梯度 ----------
+            aggregated_cluster_grads = None
+            cluster_gradients_to_apply = None
 
             if args.factorization == 'sepfpl':
                 per_user_global = []
@@ -259,41 +261,14 @@ def main(args):
                 total_size = float(sum(data_sizes))
                 weights = [s / total_size for s in data_sizes]
                 avg_global_gradient = sum(w * g for w, g in zip(weights, per_user_global))
-            else:
-                avg_global_gradient = sum(global_gradients) / cfg.DATASET.USERS
-            if args.noise > 0:
-                noise = torch.normal(0, std, size=avg_global_gradient.shape, device=avg_global_gradient.device)
-                avg_global_gradient += noise
-                
 
-            # backward and update
-            for idx in idxs_users:
-                for key, buffer in key_to_buffer.items():
-                    should_handle = (
-                        key == 'prompt_learner.global_ctx'
-                        or key in local_weights[idx]
-                        or key in initial_weights
-                    )
-                    if not should_handle or buffer is None:
-                        continue
-                    if not isinstance(buffer[idx], torch.Tensor):
-                        buffer[idx] = copy.deepcopy(get_prompt_default(key, idx))
-                    local_weights[idx][key] = buffer[idx]
-                local_trainer.model.load_state_dict(local_weights[idx], strict=False)
-                local_trainer.train_backward(avg_global_gradient=avg_global_gradient)
-
-                local_weight = local_trainer.model.state_dict()
-                for key, buffer in key_to_buffer.items():
-                    if buffer is None or key not in local_weight:
-                        continue
-                    copied = copy.deepcopy(local_weight[key])
-                    buffer[idx] = copied
-                    local_weights[idx][key] = copied
-
-            # sepfpl：基于结构熵树对簇梯度进行聚合并同步写回
-            if args.factorization == 'sepfpl':
                 try:
-                    from hcse.encoding_tree import PartitionTree, compute_gradient_similarity_matrix_torch, aggregate_gradients_by_encoding_tree
+                    from hcse.encoding_tree import (
+                        PartitionTree,
+                        compute_gradient_similarity_matrix_torch,
+                        aggregate_gradients_by_encoding_tree,
+                    )
+
                     for i in range(len(cluster_grads)):
                         if cluster_grads[i] is None:
                             if 'prompt_learner.cluster_ctx' in local_trainer.model.state_dict():
@@ -302,6 +277,7 @@ def main(args):
                                 cluster_grads[i] = torch.zeros(zshape, device=device)
                             else:
                                 cluster_grads[i] = torch.zeros_like(local_trainer.model.prompt_learner.global_ctx.data)
+
                     sim_mat = compute_gradient_similarity_matrix_torch(cluster_grads, normalize=True)
                     # ========== top-k 稀疏与对称化 ==========
                     k = args.sepfpl_topk if hasattr(args, 'sepfpl_topk') and args.sepfpl_topk is not None else 5
@@ -320,17 +296,54 @@ def main(args):
                     tree = PartitionTree(adj_matrix)
                     tree.build_encoding_tree(k=2, mode='v2')
                     aggregated_cluster_grads = aggregate_gradients_by_encoding_tree(tree, cluster_grads, adj_matrix)
-                    for idx in idxs_users:
-                        if 'prompt_learner.cluster_ctx' in local_weights[idx]:
-                            eta_c = args.sepfpl_lr_c if hasattr(args, 'sepfpl_lr_c') and args.sepfpl_lr_c is not None else cfg.OPTIM.LR
-                            updated = local_weights[idx]['prompt_learner.cluster_ctx'] - eta_c * aggregated_cluster_grads[idx]
-                            detached = updated.detach().clone()
-                            local_weights[idx]['prompt_learner.cluster_ctx'] = detached
-                            if key_to_buffer.get('prompt_learner.cluster_ctx') is not None:
-                                key_to_buffer['prompt_learner.cluster_ctx'][idx] = detached
+
+                    # 聚类梯度沿用全局学习率，无需单独eta
+                    cluster_gradients_to_apply = {
+                        i: aggregated_cluster_grads[i] for i in idxs_users if aggregated_cluster_grads[i] is not None
+                    }
                 except Exception as e:
                     logger.warning(f"[HCSE] 聚类与聚合出现异常，跳过本步: {e}")
+            else:
+                avg_global_gradient = sum(global_gradients) / cfg.DATASET.USERS
+            if args.noise > 0:
+                noise = torch.normal(0, std, size=avg_global_gradient.shape, device=avg_global_gradient.device)
+                avg_global_gradient += noise
+                
 
+            # ---------- 回传与本地权重缓存同步 ----------
+            for idx in idxs_users:
+                for key, buffer in key_to_buffer.items():
+                    should_handle = (
+                        key == 'prompt_learner.global_ctx'
+                        or key in local_weights[idx]
+                        or key in initial_weights
+                    )
+                    if not should_handle or buffer is None:
+                        continue
+                    if not isinstance(buffer[idx], torch.Tensor):
+                        buffer[idx] = copy.deepcopy(get_prompt_default(key, idx))
+                local_weights[idx][key] = buffer[idx]
+                local_trainer.model.load_state_dict(local_weights[idx], strict=False)
+
+                cluster_grad_for_idx = None
+                if cluster_gradients_to_apply is not None and idx in cluster_gradients_to_apply:
+                    cluster_grad_for_idx = cluster_gradients_to_apply[idx]
+
+                local_trainer.train_backward(
+                    avg_global_gradient=avg_global_gradient,
+                    aggregated_cluster_gradient=cluster_grad_for_idx,
+                )
+
+                local_weight = local_trainer.model.state_dict()
+                for key, buffer in key_to_buffer.items():
+                    if buffer is None or key not in local_weight:
+                        continue
+                    copied = copy.deepcopy(local_weight[key])
+                    buffer[idx] = copied
+                    local_weights[idx][key] = copied
+
+
+        # ---------- Epoch 训练日志输出 ----------
         train_stage_end = time.time()
         train_stage_duration = train_stage_end - epoch_start_time
         avg_train_acc = (train_acc_sum / train_acc_count) if train_acc_count > 0 else 0.0
@@ -338,7 +351,7 @@ def main(args):
             f"[Epoch {epoch + 1}/{max_epoch}] 训练耗时: {train_stage_duration:.2f}s | 平均训练准确率: {avg_train_acc:.2f}"
         )
 
-        # test（保持原有频率与输出）
+        # ---------- 判断是否进入测试阶段 ----------
         should_test = False
         if max_epoch < 20:
             # 如果round总数小于20，只在最后1个epoch测试邻居
@@ -349,6 +362,7 @@ def main(args):
             should_test = (epoch >= max_epoch - last_epochs)
 
         if should_test:
+            # ---------- 测试阶段：同步权重并评估客户端 ----------
             test_start_time = time.time()
             logger.info("------------local test start-------------")
             local_trainer.set_model_mode("eval")
@@ -385,7 +399,7 @@ def main(args):
             test_duration = time.time() - test_start_time
             logger.info(f"[Epoch {epoch + 1}/{max_epoch}] 测试耗时: {test_duration:.2f}s")
 
-            # save checkpoint（保持）
+            # ---------- 保存训练曲线与权重检查点 ----------
             save_checkpoint(args, epoch, local_weights, local_acc_list, neighbor_acc_list)
             dataset_name = args.dataset_config_file.split('/')[-1].split('.')[0]
             output_dir = os.path.join(os.getcwd(), f'outputs/{dataset_name}')
@@ -413,7 +427,7 @@ if __name__ == "__main__":
     parser.add_argument('--norm-thresh', type=float, default=10.0, help='clipping norm threshold')
     parser.add_argument('--noise', type=float, default=0.0, help='differential privacy noise scale')
     parser.add_argument('--rdp-alpha', type=float, default=2.0, help='RDP (Rényi Differential Privacy) order alpha, default 2.0')
-    parser.add_argument('--rdp-p', type=float, default=1.1, help='RDP privacy budget allocation parameter p for sepfpl, default 2.0')
+    parser.add_argument('--rdp-p', type=float, default=1.05, help='RDP privacy budget allocation parameter p for sepfpl, default 2.0')
 
     # parameters of datasets
     # caltech101, oxford_flowers, oxford_pets, food101 and dtd

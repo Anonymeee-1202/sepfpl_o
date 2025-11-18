@@ -142,8 +142,8 @@ class TrainerBase:
         loss_summary = self.forward_pass(batch)
         print('Loss summary:', loss_summary)
 
-    def train_backward(self, avg_global_gradient=None):
-        self.backward_pass(avg_global_gradient)
+    def train_backward(self, avg_global_gradient=None, aggregated_cluster_gradient=None):
+        self.backward_pass(avg_global_gradient, aggregated_cluster_gradient)
 
     def test(self):
         raise NotImplementedError
@@ -249,8 +249,8 @@ class SimpleTrainer(TrainerBase):
     def train_forward(self, idx=-1, train_iter=None):
         super().train_forward(idx, train_iter)
 
-    def train_backward(self, avg_global_gradient=None):
-        super().train_backward(avg_global_gradient)
+    def train_backward(self, avg_global_gradient=None, aggregated_cluster_gradient=None):
+        super().train_backward(avg_global_gradient, aggregated_cluster_gradient)
 
     @torch.no_grad()
     def test(self, idx=-1, split=None):
