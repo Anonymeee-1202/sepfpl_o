@@ -5,7 +5,7 @@ from collections import defaultdict
 from datasets import download_standard_datasets
 
 # ==================== 配置参数 ====================
-root = '/home/liuxin25/dataset'  # 数据集路径
+root = '/root/dataset'  # 数据集路径
 NUM_TERMINALS = 1  # 并行终端数量（所有实验共用）
 
 # ==================== 实验配置 ====================
