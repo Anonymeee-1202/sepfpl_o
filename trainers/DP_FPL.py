@@ -130,6 +130,7 @@ class TextEncoder(nn.Module):
 class PromptLearner(nn.Module):
     def __init__(self, cfg, classnames, clip_model):
         super().__init__()
+        self.cfg = cfg  # 保存cfg以便在forward方法中使用
         n_cls = len(classnames)
         n_ctx = cfg.TRAINER.DP_FPL.N_CTX
         dtype = clip_model.dtype
@@ -139,8 +140,9 @@ class PromptLearner(nn.Module):
         self.factorization = cfg.FACTORIZATION
         self.rank = cfg.RANK
         assert cfg_imsize == clip_imsize, f"cfg_imsize ({cfg_imsize}) must equal to clip_imsize ({clip_imsize})"
-        # ========== 新增 cluster prompt 参数初始化（仅sepfpl启用） ==========
-        if self.factorization == 'sepfpl':
+        # ========== 新增 cluster prompt 参数初始化（仅启用HCSE时使用） ==========
+        use_hcse = (self.factorization in ['sepfpl', 'sepfpl_hcse'])            
+        if use_hcse:
             cluster_ctx_vectors = torch.empty(n_ctx, ctx_dim, dtype=dtype)
             nn.init.normal_(cluster_ctx_vectors, std=0.02)
             self.cluster_ctx = nn.Parameter(cluster_ctx_vectors)
@@ -201,12 +203,13 @@ class PromptLearner(nn.Module):
                 client_ctx = self.global_ctx + torch.matmul(self.local_u_ctx, self.local_v_ctx)
             elif self.factorization == 'dpfpl':
                 client_ctx = self.global_ctx + torch.matmul(self.local_u_ctx, self.local_v_ctx) + residual
-            elif self.factorization == 'sepfpl':
+            elif self.factorization in ['sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']:
                 client_ctx = self.global_ctx + torch.matmul(self.local_u_ctx, self.local_v_ctx) + residual
             else:
                 client_ctx = self.global_ctx
-        # 仅在sepfpl时叠加cluster_ctx
-        if getattr(self, 'cluster_ctx', None) is not None and self.factorization == 'sepfpl':
+        # 仅在启用HCSE时叠加cluster_ctx（根据factorization自动判断）
+        use_hcse = (self.factorization in ['sepfpl', 'sepfpl_hcse'])
+        if getattr(self, 'cluster_ctx', None) is not None and use_hcse:
             client_ctx = client_ctx + 0.5 * self.cluster_ctx
         if client_ctx.dim() == 2:
             client_ctx = client_ctx.unsqueeze(0).expand(self.n_cls, -1, -1)
@@ -324,10 +327,12 @@ class DP_FPL(TrainerX):
             sensitivity = cfg.NORM_THRESH / max_batch_size  # 敏感度
             self.std = rdp_sigma * sensitivity
                         
-            # ========== sepfpl隐私预算分配实现 ==========
-            if cfg.FACTORIZATION == 'sepfpl':
+            # ========== sepfpl隐私预算分配实现（时间适应隐私分配）==========
+            # 根据factorization自动判断：sepfpl/sepfpl_time_adaptive/sepfpl_hcse默认启用
+            use_time_adaptive = (cfg.FACTORIZATION in ['sepfpl', 'sepfpl_time_adaptive'])
+            if use_time_adaptive:
                 # 从配置读取参数
-                rdp_p = getattr(cfg, 'RDP_P', 1.1)  
+                rdp_p = getattr(cfg, 'RDP_P', 1.05)  
                 total_rounds = cfg.OPTIM.ROUND  # 总轮数
                 
                 rdp_eps_tot = cfg.NOISE
@@ -366,8 +371,8 @@ class DP_FPL(TrainerX):
         if hasattr(self, 'std_per_batch_list') and self.std_per_batch_list is not None:
             if 0 <= round_idx < len(self.std_per_batch_list):
                 self.std = self.std_per_batch_list[round_idx]
-                # 只在每10轮或关键轮次打印信息
-                if hasattr(self, 'rdp_eps_per_batch_list') and (round_idx == 0 or (round_idx + 1) % 10 == 0 or round_idx == len(self.std_per_batch_list) - 1):
+                # 每一轮都打印信息
+                if hasattr(self, 'rdp_eps_per_batch_list'):
                     logger = getattr(self, 'logger', None)
                     if logger is None:
                         logger = get_global_logger() or get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
@@ -421,8 +426,8 @@ class DP_FPL(TrainerX):
                 noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
                 param_dict['prompt_learner.local_ctx'].grad += noise
             
-            elif self.cfg.FACTORIZATION in ['fedpgp', 'dplora', 'dpfpl', 'sepfpl']:
-                # fedpgp/dplora/dpfpl: 对local_u_ctx和local_v_ctx进行裁剪和加噪
+            elif self.cfg.FACTORIZATION in ['fedpgp', 'dplora', 'dpfpl', 'sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']:
+                # fedpgp/dplora/dpfpl/sepfpl系列: 对local_u_ctx和local_v_ctx进行裁剪和加噪
                 grad = param_dict['prompt_learner.local_u_ctx'].grad.data
                 norm = grad.norm(2)
                 if norm > self.cfg.NORM_THRESH:
@@ -441,8 +446,11 @@ class DP_FPL(TrainerX):
                 noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
                 param_dict['prompt_learner.local_v_ctx'].grad += noise
             
-            # sepfpl: 对cluster_ctx进行裁剪和加噪
-            if self.cfg.FACTORIZATION == 'sepfpl' and 'prompt_learner.cluster_ctx' in param_dict and param_dict['prompt_learner.cluster_ctx'].grad is not None:
+            # sepfpl: 对cluster_ctx进行裁剪和加噪（仅在启用HCSE时）
+            use_hcse_for_noise = getattr(self.cfg, 'USE_HCSE', None)
+            if use_hcse_for_noise is None:
+                use_hcse_for_noise = (self.cfg.FACTORIZATION in ['sepfpl', 'sepfpl_hcse'])
+            if use_hcse_for_noise and 'prompt_learner.cluster_ctx' in param_dict and param_dict['prompt_learner.cluster_ctx'].grad is not None:
                 grad = param_dict['prompt_learner.cluster_ctx'].grad.data
                 norm = grad.norm(2)
                 if norm > self.cfg.NORM_THRESH:

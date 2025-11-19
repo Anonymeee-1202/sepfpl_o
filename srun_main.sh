@@ -1,23 +1,26 @@
 #!/bin/bash
 
-# 第8个参数：数据划分策略（partition）
-PARTITION=${8:-noniid-labeldir}
-# 第9个参数：训练轮次
-ROUND=${9:-10}
-# 可选第10个参数：显卡列表，如 0 或 0,1
-GPUS_ARG=${10:-}
-if [ -n "$GPUS_ARG" ]; then
-  export CUDA_VISIBLE_DEVICES="$GPUS_ARG"
-fi
+# 参数说明：
+# $1: root - 数据集路径
+# $2: dataset-config-file - 数据集配置文件路径
+# $3: num-users - 客户端数量
+# $4: factorization - 分解方法
+# $5: rank - 矩阵分解的秩
+# $6: noise - 差分隐私噪声级别
+# $7: seed - 随机种子
+# $8: round - 训练轮次（可选，默认 10）
+# $9+: 额外参数（如 --task-id 等）
+
+# 第8个参数：训练轮次
+ROUND=${8:-10}
 
 python federated_main.py \
-  --root $1 \
-  --dataset-config-file $2 \
-  --num-users $3 \
-  --factorization $4 \
-  --rank $5 \
-  --noise $6 \
-  --seed $7 \
-  --partition $PARTITION \
-  --round $ROUND \
-  ${GPUS_ARG:+--gpus $GPUS_ARG}
+  --root "$1" \
+  --dataset-config-file "$2" \
+  --num-users "$3" \
+  --factorization "$4" \
+  --rank "$5" \
+  --noise "$6" \
+  --seed "$7" \
+  --round "$ROUND" \
+  "${@:9}"  # 传递第9个参数及之后的所有额外参数（如--task-id等）

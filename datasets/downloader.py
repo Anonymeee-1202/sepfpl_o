@@ -115,6 +115,7 @@ def download_standard_datasets(base_root: str, dataset_list: list = None) -> Non
     - oxford_pets (Oxford-IIIT Pet)
     - oxford_flowers (Oxford Flowers 102)
     - food-101 (Food-101)
+    - cifar-100 (CIFAR-100)
 
     参数:
         base_root: 数据集保存的根目录
@@ -157,6 +158,11 @@ def download_standard_datasets(base_root: str, dataset_list: list = None) -> Non
             'name': 'Food-101',
             'downloader': tvd.Food101,
             'candidates': ['food-101', 'Food101', 'food101'],
+        },
+        'cifar-100': {
+            'name': 'CIFAR-100',
+            'downloader': tvd.CIFAR100,
+            'candidates': ['cifar-100', 'CIFAR100', 'cifar100'],
         },
     }
 

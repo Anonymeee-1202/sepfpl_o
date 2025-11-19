@@ -1,11 +1,11 @@
 import numpy as np
 import os.path as osp
+import warnings
 from collections import OrderedDict, defaultdict
 import torch
 from sklearn.metrics import f1_score, confusion_matrix
 
 from .build import EVALUATOR_REGISTRY
-from utils.logger import get_logger, get_global_logger
 
 
 class EvaluatorBase:
@@ -65,43 +65,29 @@ class Classification(EvaluatorBase):
                 matches_i = int(matches[i].item())
                 self._per_class_res[label].append(matches_i)
 
-    def evaluate(self, logger=None):
+    def evaluate(self):
         results = OrderedDict()
         acc = 100.0 * self._correct / self._total
         err = 100.0 - acc
-        macro_f1 = 100.0 * f1_score(
-            self._y_true,
-            self._y_pred,
-            average="macro",
-            labels=np.unique(self._y_true)
-        )
+        # 抑制 sklearn 关于类别数量过多的警告（在联邦学习中，每个客户端样本少但类别多是正常的）
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
+            macro_f1 = 100.0 * f1_score(
+                self._y_true,
+                self._y_pred,
+                average="macro",
+                labels=np.unique(self._y_true)
+            )
 
         # The first value will be returned by trainer.test()
         results["accuracy"] = acc
         results["error_rate"] = err
         results["macro_f1"] = macro_f1
 
-        if logger is None:
-            logger = getattr(self, "logger", None)
-        if logger is None:
-            logger = get_global_logger()
-        if logger is None:
-            name = getattr(self.cfg, "LOGGER_NAME", "dp-fpl")
-            logger = get_logger(name, log_dir='logs', log_to_file=False, log_to_console=True)
-        logger.info(
-            "=> result | "
-            f"total {self._total:,} | "
-            f"correct {self._correct:,} | "
-            f"acc {acc:.2f}% | "
-            f"err {err:.2f}% | "
-            f"macro_f1 {macro_f1:.2f}%"
-        )
-
         if self._per_class_res is not None:
             labels = list(self._per_class_res.keys())
             labels.sort()
 
-            logger.info("=> per-class result")
             accs = []
 
             for label in labels:
@@ -111,23 +97,18 @@ class Classification(EvaluatorBase):
                 total = len(res)
                 acc = 100.0 * correct / total
                 accs.append(acc)
-                logger.info(
-                    f"* class: {label} ({classname})\t"
-                    f"total: {total:,}\t"
-                    f"correct: {correct:,}\t"
-                    f"acc: {acc:.1f}%"
-                )
             mean_acc = np.mean(accs)
-            logger.info(f"* average: {mean_acc:.1f}%")
 
             results["perclass_accuracy"] = mean_acc
 
         if self.cfg.TEST.COMPUTE_CMAT:
-            cmat = confusion_matrix(
-                self._y_true, self._y_pred, normalize="true"
-            )
+            # 抑制 sklearn 关于类别数量过多的警告
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
+                cmat = confusion_matrix(
+                    self._y_true, self._y_pred, normalize="true"
+                )
             save_path = osp.join(self.cfg.OUTPUT_DIR, "cmat.pt")
             torch.save(cmat, save_path)
-            logger.info(f"Confusion matrix is saved to {save_path}")
 
         return results
