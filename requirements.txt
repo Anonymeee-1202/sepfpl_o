@@ -6,6 +6,7 @@ importlib-metadata==8.0.0
 isort==4.3.21
 jaraco.collections==5.1.0
 numba==0.62.1
+wandb==0.17.5
 pip-chill==1.0.3
 platformdirs==4.2.2
 prettytable==3.16.0

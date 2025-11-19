@@ -14,6 +14,13 @@ from tqdm import tqdm
 from prettytable import PrettyTable
 from utils.logger import init_logger_from_args
 
+try:
+    import wandb  # type: ignore
+    _WANDB_AVAILABLE = True
+except ImportError:
+    wandb = None
+    _WANDB_AVAILABLE = False
+
 
 def extend_cfg(cfg, args):
     """
@@ -110,6 +117,103 @@ def setup_cfg(args):
 
     return cfg
 
+
+def _should_enable_wandb(args):
+    env_disabled = os.environ.get('WANDB_DISABLED', '').lower() in ['1', 'true', 'yes']
+    if env_disabled:
+        return False
+    if getattr(args, 'wandb_mode', None) == 'disabled':
+        return False
+    return True
+
+
+def _default_wandb_run_name(args):
+    dataset = os.path.splitext(os.path.basename(args.dataset_config_file))[0]
+    parts = [
+        dataset,
+        args.factorization,
+        f"rank{args.rank}",
+        f"noise{args.noise}",
+        f"seed{args.seed}",
+        f"users{args.num_users}",
+    ]
+    if args.task_id:
+        parts.append(args.task_id.strip('[]'))
+    return "-".join(parts)
+
+
+def _prepare_wandb_tags(args):
+    dataset = os.path.splitext(os.path.basename(args.dataset_config_file))[0]
+    tags = {
+        f"dataset:{dataset}",
+        f"factorization:{args.factorization}",
+        f"rank:{args.rank}",
+        f"noise:{args.noise}",
+        f"users:{args.num_users}",
+    }
+    if args.task_id:
+        tags.add(f"task:{args.task_id}")
+    if args.wandb_tags:
+        user_tags = [tag.strip() for tag in args.wandb_tags.split(',') if tag.strip()]
+        tags.update(user_tags)
+    return sorted(tags)
+
+
+def init_wandb_run(args, cfg, logger):
+    if not _WANDB_AVAILABLE:
+        if _should_enable_wandb(args):
+            logger.warning("已请求使用 Weights & Biases，但未安装 wandb 包，已自动禁用。")
+        return None
+    if not _should_enable_wandb(args):
+        return None
+
+    project = args.wandb_project or os.environ.get('WANDB_PROJECT', 'dp-fpl')
+    entity = args.wandb_entity or os.environ.get('WANDB_ENTITY')
+    group = args.wandb_group or os.environ.get('WANDB_GROUP')
+    mode = args.wandb_mode or os.environ.get('WANDB_MODE', 'online')
+    run_name = args.wandb_run_name or _default_wandb_run_name(args)
+    wandb_dir = args.wandb_dir or os.environ.get('WANDB_DIR')
+    tags = _prepare_wandb_tags(args)
+
+    config_payload = {
+        "dataset_config": args.dataset_config_file,
+        "factorization": args.factorization,
+        "rank": args.rank,
+        "noise": args.noise,
+        "rdp_alpha": args.rdp_alpha,
+        "rdp_p": args.rdp_p,
+        "num_users": args.num_users,
+        "round": args.round,
+        "seed": args.seed,
+        "task_id": args.task_id,
+        "norm_thresh": args.norm_thresh,
+        "lr": args.lr,
+        "train_batch_size": args.train_batch_size,
+        "test_batch_size": args.test_batch_size,
+        "partition": args.partition,
+        "beta": args.beta,
+        "n_ctx": args.n_ctx,
+        "use_hcse": cfg.USE_HCSE,
+        "use_time_adaptive": cfg.USE_TIME_ADAPTIVE,
+    }
+
+    init_kwargs = {
+        "project": project,
+        "entity": entity,
+        "group": group,
+        "mode": mode,
+        "name": run_name,
+        "dir": wandb_dir,
+        "tags": tags,
+        "config": config_payload,
+        "settings": wandb.Settings(start_method="thread", _disable_stats=True),
+    }
+    # Remove None values to avoid wandb complaining
+    init_kwargs = {k: v for k, v in init_kwargs.items() if v is not None}
+
+    logger.info(f"[wandb] 正在初始化实验：project={project}, name={run_name}, mode={mode}")
+    return wandb.init(**init_kwargs)
+
 def save_checkpoint(args, epoch, local_weights, local_acc, neighbor_acc):
     dataset = args.dataset_config_file.split('/')[-1].split('.')[0]
     save_dir = os.path.join(os.getcwd(), f'checkpoints/{dataset}')
@@ -169,6 +273,11 @@ def main(args):
 
     # ---------- 构建本地训练器并缓存初始权重 ----------
     local_trainer = build_trainer(cfg)
+    wandb_run = init_wandb_run(args, cfg, logger)
+    if wandb_run and args.wandb_watch and args.wandb_watch.lower() != 'off':
+        watch_log = args.wandb_watch
+        watch_logfreq = args.wandb_watch_logfreq
+        wandb.watch(local_trainer.model, log=watch_log, log_freq=watch_logfreq, log_graph=False)
     initial_weights = copy.deepcopy(local_trainer.model.state_dict())
 
     # ---------- sepfpl：为各客户端预填聚类提示 ----------
@@ -403,6 +512,15 @@ def main(args):
         logger.info(
             f"[Epoch {epoch + 1}/{max_epoch}] 训练耗时: {train_stage_duration:.2f}s | 平均训练准确率: {avg_train_acc:.2f}"
         )
+        if wandb_run:
+            wandb.log(
+                {
+                    "train/epoch": epoch + 1,
+                    "train/avg_acc": avg_train_acc,
+                    "train/duration_sec": train_stage_duration,
+                },
+                step=epoch + 1,
+            )
 
         # ---------- 判断是否进入测试阶段 ----------
         should_test = False
@@ -520,6 +638,15 @@ def main(args):
             logger.info(f"                    测试耗时: {test_duration:.2f}s")
             logger.info("=" * 80)
             logger.info("")
+            if wandb_run:
+                log_payload = {
+                    "test/epoch": epoch + 1,
+                    "test/local_acc_avg": avg_local_acc,
+                    "test/duration_sec": test_duration,
+                }
+                if results_neighbor is not None:
+                    log_payload["test/neighbor_acc_avg"] = avg_neighbor_acc
+                wandb.log(log_payload, step=epoch + 1)
 
             # ---------- 保存训练曲线与权重检查点 ----------
             save_checkpoint(args, epoch, local_weights, local_acc_list, neighbor_acc_list)
@@ -536,11 +663,35 @@ def main(args):
                     'wb'
                 )
             )
-    logger.info(f"maximum test local acc: {max(local_acc_list):.3f}")
-    logger.info(f"mean of local acc: {np.mean(local_acc_list[-5:]):.3f}")
-    if not dirichlet:
-        logger.info(f"maximum test neighbor acc: {max(neighbor_acc_list):.3f}")
-        logger.info(f"mean of neighbor acc: {np.mean(neighbor_acc_list[-5:]):.3f}")
+    if local_acc_list:
+        max_local = max(local_acc_list)
+        mean_local = np.mean(local_acc_list[-5:]) if len(local_acc_list) >= 5 else np.mean(local_acc_list)
+        logger.info(f"maximum test local acc: {max_local:.3f}")
+        logger.info(f"mean of local acc: {mean_local:.3f}")
+    else:
+        max_local = None
+        mean_local = None
+    if not dirichlet and neighbor_acc_list:
+        max_neighbor = max(neighbor_acc_list)
+        mean_neighbor = np.mean(neighbor_acc_list[-5:]) if len(neighbor_acc_list) >= 5 else np.mean(neighbor_acc_list)
+        logger.info(f"maximum test neighbor acc: {max_neighbor:.3f}")
+        logger.info(f"mean of neighbor acc: {mean_neighbor:.3f}")
+    else:
+        max_neighbor = None
+        mean_neighbor = None
+
+    if wandb_run:
+        summary_updates = {}
+        if max_local is not None:
+            summary_updates["summary/local_acc_max"] = max_local
+        if mean_local is not None:
+            summary_updates["summary/local_acc_mean"] = mean_local
+        if max_neighbor is not None:
+            summary_updates["summary/neighbor_acc_max"] = max_neighbor
+        if mean_neighbor is not None:
+            summary_updates["summary/neighbor_acc_mean"] = mean_neighbor
+        wandb_run.summary.update(summary_updates)
+        wandb_run.finish()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -584,6 +735,19 @@ if __name__ == "__main__":
     # Optional CLIP model parameters
     parser.add_argument('--clip-model-path', type=str, default=None, help='path to local CLIP model file (optional)')
     parser.add_argument('--clip-cache-dir', type=str, default=None, help='directory to cache/download CLIP models (optional)')
+
+    # wandb logging configuration
+    default_wandb_mode = os.environ.get('WANDB_MODE', 'online' if _WANDB_AVAILABLE else 'disabled')
+    parser.add_argument('--wandb-mode', type=str, default=default_wandb_mode, choices=['online', 'offline', 'disabled'],
+                        help='wandb 日志模式：online/offline/disabled')
+    parser.add_argument('--wandb-project', type=str, default=None, help='wandb 项目名称（默认 dp-fpl）')
+    parser.add_argument('--wandb-entity', type=str, default=None, help='wandb entity/团队名称')
+    parser.add_argument('--wandb-group', type=str, default=None, help='wandb group，用于实验分组')
+    parser.add_argument('--wandb-run-name', type=str, default=None, help='wandb run 名称（默认根据实验参数自动生成）')
+    parser.add_argument('--wandb-dir', type=str, default=None, help='wandb 本地缓存目录')
+    parser.add_argument('--wandb-tags', type=str, default=None, help='额外的 wandb 标签，使用逗号分隔')
+    parser.add_argument('--wandb-watch', type=str, default='gradients', help='wandb.watch log 类型，设置为off禁用')
+    parser.add_argument('--wandb-watch-logfreq', type=int, default=200, help='wandb.watch 日志频率')
 
     args = parser.parse_args()
     
