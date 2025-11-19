@@ -263,11 +263,6 @@ class SimpleTrainer(TrainerBase):
         elif split == 'neighbor':
             data_loader = self.fed_test_neighbor_loader_x_dict[idx]
 
-        logger = getattr(self, 'logger', None)
-        if logger is None:
-            logger = get_global_logger() or get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
-        logger.info(f"Evaluate on the client{idx} {split} set")
-
         for _, batch in enumerate(data_loader):
             input, label = self.parse_batch_test(batch)
             self.model.training = False
@@ -275,9 +270,7 @@ class SimpleTrainer(TrainerBase):
             self.model.training = True
             self.evaluator.process(output, label)
 
-        if hasattr(self.evaluator, "logger"):
-            self.evaluator.logger = logger
-        results = self.evaluator.evaluate(logger=logger)
+        results = self.evaluator.evaluate()
 
         return list(results.values())
 

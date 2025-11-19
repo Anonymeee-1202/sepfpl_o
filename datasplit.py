@@ -239,14 +239,30 @@ def renormalize(weights, index):
 
     return renormalized_weights
 
-def partition_data(dataset, datadir, partition, n_parties, beta=0.4):
-
-    if dataset == 'cifar10':
-        X_train, y_train, X_test, y_test, data_train, data_test, lab2cname, classnames = load_cifar10_data(datadir)
-        y = np.concatenate([y_train, y_test], axis=0)
-    elif dataset == 'cifar100':
-        X_train, y_train, X_test, y_test, data_train, data_test, lab2cname, classnames = load_cifar100_data(datadir)
-        y = np.concatenate([y_train, y_test], axis=0)
+def partition_data(dataset, datadir, partition, n_parties, beta=0.4, 
+                   X_train=None, y_train=None, X_test=None, y_test=None, 
+                   data_train=None, data_test=None, lab2cname=None, classnames=None):
+    """
+    数据划分函数
+    
+    Args:
+        dataset: 数据集名称 ('cifar10' 或 'cifar100')
+        datadir: 数据集目录
+        partition: 划分策略
+        n_parties: 客户端数量
+        beta: Dirichlet 分布参数
+        X_train, y_train, X_test, y_test, data_train, data_test, lab2cname, classnames: 
+            可选参数，如果提供则使用这些数据，否则从 datadir 加载
+    """
+    # 如果提供了数据，使用提供的数据；否则加载数据
+    if X_train is None or y_train is None or X_test is None or y_test is None or \
+       data_train is None or data_test is None or lab2cname is None or classnames is None:
+        if dataset == 'cifar10':
+            X_train, y_train, X_test, y_test, data_train, data_test, lab2cname, classnames = load_cifar10_data(datadir)
+        elif dataset == 'cifar100':
+            X_train, y_train, X_test, y_test, data_train, data_test, lab2cname, classnames = load_cifar100_data(datadir)
+    
+    y = np.concatenate([y_train, y_test], axis=0)
 
     n_train = y_train.shape[0]
     n_test = y_test.shape[0]
