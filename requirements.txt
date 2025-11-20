@@ -5,6 +5,7 @@ gdown==5.2.0
 importlib-metadata==8.0.0
 isort==4.3.21
 jaraco.collections==5.1.0
+loguru==0.7.2
 numba==0.62.1
 wandb==0.17.5
 pip-chill==1.0.3

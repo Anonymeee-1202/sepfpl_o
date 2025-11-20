@@ -1,0 +1,748 @@
+2025-11-19 22:02:51,258 INFO    StreamThr :3979921 [internal.py:wandb_internal():85] W&B internal server running at pid: 3979921, started at: 2025-11-19 22:02:51.257348
+2025-11-19 22:02:51,261 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status
+2025-11-19 22:02:51,265 INFO    WriterThread:3979921 [datastore.py:open_for_write():87] open: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/run-5gm8ip1c.wandb
+2025-11-19 22:02:51,266 DEBUG   SenderThread:3979921 [sender.py:send():379] send: header
+2025-11-19 22:02:51,266 DEBUG   SenderThread:3979921 [sender.py:send():379] send: run
+2025-11-19 22:02:52,799 INFO    SenderThread:3979921 [dir_watcher.py:__init__():211] watching files in: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files
+2025-11-19 22:02:52,799 INFO    SenderThread:3979921 [sender.py:_start_run_threads():1188] run started: 5gm8ip1c with start time 1763560971.256796
+2025-11-19 22:02:52,803 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: check_version
+2025-11-19 22:02:52,804 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: check_version
+2025-11-19 22:02:53,264 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: run_start
+2025-11-19 22:02:53,278 DEBUG   HandlerThread:3979921 [system_info.py:__init__():26] System info init
+2025-11-19 22:02:53,278 DEBUG   HandlerThread:3979921 [system_info.py:__init__():41] System info init done
+2025-11-19 22:02:53,278 INFO    HandlerThread:3979921 [system_monitor.py:probe():214] Collecting system info
+2025-11-19 22:02:53,343 DEBUG   HandlerThread:3979921 [system_info.py:probe():152] Probing system
+2025-11-19 22:02:53,345 DEBUG   HandlerThread:3979921 [system_info.py:_probe_git():137] Probing git
+2025-11-19 22:02:53,353 DEBUG   HandlerThread:3979921 [system_info.py:_probe_git():145] Probing git done
+2025-11-19 22:02:53,353 DEBUG   HandlerThread:3979921 [system_info.py:probe():200] Probing system done
+2025-11-19 22:02:53,353 DEBUG   HandlerThread:3979921 [system_monitor.py:probe():223] {'os': 'Linux-5.15.0-139-generic-x86_64-with-glibc2.31', 'python': '3.11.14', 'heartbeatAt': '2025-11-19T14:02:53.344039', 'startedAt': '2025-11-19T14:02:51.250388', 'docker': None, 'cuda': None, 'args': ('--root', '/home/liuxin25/dataset', '--dataset-config-file', 'configs/datasets/cifar-100.yaml', '--num-users', '10', '--factorization', 'sepfpl', '--rank', '8', '--noise', '0.1', '--seed', '1', '--round', '3'), 'state': 'running', 'program': '/date/liuxin/code/dp-fpl/federated_main.py', 'codePathLocal': 'federated_main.py', 'codePath': 'federated_main.py', 'git': {'remote': 'git@gitee.com:anonymeee/dp-fpl.git', 'commit': '0930cde325304f18b61d668a619bbdc02c44f5fe'}, 'email': '1712543411@qq.com', 'root': '/date/liuxin/code/dp-fpl', 'host': 'c224', 'username': 'liuxin25', 'executable': '/date/liuxin/miniconda3/envs/sepfpl/bin/python', 'cpu_count': 32, 'cpu_count_logical': 64, 'cpu_freq': {'current': 1466.352453125, 'min': 800.0, 'max': 3500.0}, 'cpu_freq_per_core': [{'current': 900.0, 'min': 800.0, 'max': 3500.0}, {'current': 3100.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 2800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 900.0, 'min': 800.0, 'max': 3500.0}, {'current': 900.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 3000.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 2400.0, 'min': 800.0, 'max': 3500.0}, {'current': 3500.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 2300.002, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 900.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 3221.492, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 2000.0, 'min': 800.0, 'max': 3500.0}, {'current': 2220.627, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 2900.0, 'min': 800.0, 'max': 3500.0}, {'current': 2600.0, 'min': 800.0, 'max': 3500.0}, {'current': 900.0, 'min': 800.0, 'max': 3500.0}, {'current': 3500.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 2300.002, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 1200.0, 'min': 800.0, 'max': 3500.0}, {'current': 2900.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 900.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 900.0, 'min': 800.0, 'max': 3500.0}, {'current': 2300.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 3500.0, 'min': 800.0, 'max': 3500.0}, {'current': 900.0, 'min': 800.0, 'max': 3500.0}, {'current': 2600.0, 'min': 800.0, 'max': 3500.0}, {'current': 3500.0, 'min': 800.0, 'max': 3500.0}, {'current': 3242.966, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 2800.0, 'min': 800.0, 'max': 3500.0}, {'current': 1400.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}], 'disk': {'/': {'total': 1758.8579597473145, 'used': 1658.5472602844238}}, 'gpu': 'NVIDIA A800-SXM4-80GB', 'gpu_count': 2, 'gpu_devices': [{'name': 'NVIDIA A800-SXM4-80GB', 'memory_total': 85899345920}, {'name': 'NVIDIA A800-SXM4-80GB', 'memory_total': 85899345920}], 'memory': {'total': 503.30577087402344}}
+2025-11-19 22:02:53,353 INFO    HandlerThread:3979921 [system_monitor.py:probe():224] Finished collecting system info
+2025-11-19 22:02:53,353 INFO    HandlerThread:3979921 [system_monitor.py:probe():227] Publishing system info
+2025-11-19 22:02:53,353 DEBUG   HandlerThread:3979921 [system_info.py:_save_conda():209] Saving list of conda packages installed into the current environment
+2025-11-19 22:02:53,801 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_created():271] file/dir created: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/conda-environment.yaml
+2025-11-19 22:02:56,023 DEBUG   HandlerThread:3979921 [system_info.py:_save_conda():224] Saving conda packages done
+2025-11-19 22:02:56,024 INFO    HandlerThread:3979921 [system_monitor.py:probe():229] Finished publishing system info
+2025-11-19 22:02:56,032 DEBUG   SenderThread:3979921 [sender.py:send():379] send: files
+2025-11-19 22:02:56,033 INFO    SenderThread:3979921 [sender.py:_save_file():1454] saving file wandb-metadata.json with policy now
+2025-11-19 22:02:56,122 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: python_packages
+2025-11-19 22:02:56,122 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: python_packages
+2025-11-19 22:02:56,124 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:02:56,124 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:02:56,128 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:02:56,800 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/conda-environment.yaml
+2025-11-19 22:02:56,801 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_created():271] file/dir created: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/wandb-metadata.json
+2025-11-19 22:02:56,801 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_created():271] file/dir created: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/requirements.txt
+2025-11-19 22:02:56,876 DEBUG   SenderThread:3979921 [sender.py:send():379] send: telemetry
+2025-11-19 22:02:56,876 DEBUG   SenderThread:3979921 [sender.py:send():379] send: telemetry
+2025-11-19 22:02:56,876 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:02:57,123 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:02:57,512 INFO    wandb-upload_0:3979921 [upload_job.py:push():130] Uploaded file /tmp/tmp0wdq2oofwandb/g3hbqhhl-wandb-metadata.json
+2025-11-19 22:02:57,801 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_created():271] file/dir created: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:02:58,124 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:02:59,124 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:02:59,802 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:00,159 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:01,124 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:01,802 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:02,124 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:03:02,124 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:03,125 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:04,124 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:05,125 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:05,804 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:06,125 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:07,125 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:07,805 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:08,124 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:03:08,125 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:09,125 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:10,125 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:11,123 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:03:11,123 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:03:11,163 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:11,806 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:12,126 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:13,126 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:13,775 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:03:13,806 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:14,126 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:15,126 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:16,126 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:17,126 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:17,808 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:18,126 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:19,127 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:19,579 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:03:19,808 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:20,127 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:21,127 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:21,809 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:22,126 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:23,127 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:23,810 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:24,127 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:25,127 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:25,252 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:03:25,810 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:25,811 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/config.yaml
+2025-11-19 22:03:26,131 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:03:26,131 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:26,131 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:03:27,127 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:27,811 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:28,127 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:29,127 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:30,127 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:30,979 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:03:31,127 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:31,812 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:32,128 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:33,128 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:33,813 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:34,128 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:35,128 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:36,124 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:03:36,128 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:37,128 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:37,814 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:38,129 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:39,129 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:39,815 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:40,129 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:41,123 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:03:41,123 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:03:41,129 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:41,453 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:03:42,129 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:43,129 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:43,816 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:44,129 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:45,129 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:45,817 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:46,129 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:47,130 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:47,347 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:03:47,817 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:48,130 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:49,130 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:50,130 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:51,130 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:51,818 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:52,130 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:53,130 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:53,219 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:03:53,819 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:54,130 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:55,131 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:55,383 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:03:55,427 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:03:55,427 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:03:55,427 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:03:56,123 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:03:56,124 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:03:56,131 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:57,131 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:57,820 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:03:58,131 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:03:58,454 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:03:59,131 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:00,131 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:01,131 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:01,822 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:02,131 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:03,131 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:03,507 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:04:03,822 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:04,131 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:05,132 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:05,823 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:06,131 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:07,132 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:08,132 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:09,132 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:09,351 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:04:09,824 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:10,132 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:11,123 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:04:11,124 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:04:11,132 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:11,825 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:12,132 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:13,132 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:14,133 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:15,075 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:04:15,133 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:15,826 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:16,132 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:17,133 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:17,827 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:18,133 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:18,827 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:04:18,830 DEBUG   SenderThread:3979921 [sender.py:send():379] send: telemetry
+2025-11-19 22:04:18,830 DEBUG   SenderThread:3979921 [sender.py:send():379] send: history
+2025-11-19 22:04:18,831 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: summary_record
+2025-11-19 22:04:18,832 INFO    SenderThread:3979921 [sender.py:_save_file():1454] saving file wandb-summary.json with policy end
+2025-11-19 22:04:19,133 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:19,832 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_created():271] file/dir created: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/wandb-summary.json
+2025-11-19 22:04:20,133 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:20,833 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:04:21,133 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:21,833 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:22,133 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:23,133 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:23,833 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:24,133 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:25,134 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:26,123 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:04:26,124 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:04:26,167 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:26,446 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:04:27,134 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:27,835 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:28,134 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:29,134 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:29,836 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:30,134 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:31,134 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:31,836 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:32,131 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:04:32,135 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:33,134 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:33,837 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/config.yaml
+2025-11-19 22:04:34,135 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:35,135 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:35,838 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:36,135 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:37,135 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:37,839 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:38,126 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:04:38,135 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:39,135 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:39,840 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:40,135 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:41,123 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:04:41,124 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:04:41,167 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:42,136 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:43,136 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:43,841 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:44,019 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:04:44,136 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:45,136 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:45,842 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:46,136 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:47,136 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:48,137 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:49,137 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:49,216 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:04:49,844 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:50,137 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:51,136 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:51,845 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:52,137 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:52,853 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:04:52,898 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:04:52,899 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:04:52,899 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:04:53,137 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:54,137 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:54,996 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:04:55,137 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:55,846 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:56,123 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:04:56,124 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:04:56,137 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:57,138 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:57,847 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:04:58,138 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:04:59,138 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:00,138 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:00,667 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:05:01,138 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:01,849 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:02,138 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:03,138 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:03,850 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:04,139 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:05,139 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:05,850 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:06,126 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:05:06,139 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:07,139 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:07,851 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:08,139 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:09,139 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:09,852 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:10,139 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:11,124 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:05:11,124 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:05:11,167 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:11,490 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:05:11,852 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:12,139 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:13,139 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:13,853 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:14,139 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:15,140 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:15,853 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:16,140 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:17,127 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:05:17,140 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:17,854 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:18,140 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:19,140 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:19,855 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:20,140 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:21,140 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:22,140 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:23,127 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:05:23,141 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:23,857 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:24,141 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:25,141 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:25,857 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:26,124 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:05:26,124 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:05:26,167 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:27,141 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:28,141 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:28,503 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:05:29,179 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:29,859 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:30,141 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:31,141 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:31,860 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:32,142 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:33,142 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:33,861 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:33,919 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:05:34,142 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:35,142 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:36,142 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:37,142 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:37,559 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:05:37,562 DEBUG   SenderThread:3979921 [sender.py:send():379] send: history
+2025-11-19 22:05:37,563 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: summary_record
+2025-11-19 22:05:37,563 INFO    SenderThread:3979921 [sender.py:_save_file():1454] saving file wandb-summary.json with policy end
+2025-11-19 22:05:37,862 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/wandb-summary.json
+2025-11-19 22:05:37,862 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:38,142 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:39,142 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:39,564 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:05:39,863 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:40,143 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:41,124 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:05:41,124 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:05:41,143 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:41,863 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:42,143 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:43,143 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:44,143 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:45,135 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:05:45,143 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:45,865 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:46,143 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:47,143 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:47,866 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:48,143 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:48,463 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:05:48,507 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:05:48,507 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:05:48,507 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:05:49,144 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:50,144 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:50,623 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:05:51,144 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:51,867 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:52,144 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:53,144 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:53,868 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:54,144 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:55,144 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:55,869 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:05:56,124 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:05:56,125 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:05:56,167 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:56,440 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:05:57,144 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:58,145 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:59,145 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:05:59,870 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:00,145 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:01,145 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:01,871 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:02,128 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:06:02,145 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:03,145 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:04,145 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:05,145 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:05,872 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:06,146 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:07,146 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:07,873 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:08,128 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:06:08,146 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:09,146 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:09,874 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:10,146 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:11,124 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:06:11,125 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:06:11,167 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:12,147 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:13,146 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:13,441 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:06:13,875 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:14,147 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:15,146 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:15,876 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:16,147 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:17,147 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:18,147 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:18,743 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:06:19,147 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:19,878 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:20,147 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:21,148 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:21,878 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:22,148 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:23,149 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:23,879 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:24,149 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:24,419 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:06:25,149 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:26,124 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:06:26,125 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:06:26,149 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:27,149 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:27,881 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:28,149 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:29,149 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:29,882 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:30,119 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:06:30,150 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:31,149 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:32,150 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:33,150 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:33,884 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:34,150 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:35,150 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:35,667 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:06:35,884 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:36,150 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:37,150 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:37,885 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:38,150 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:39,150 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:39,886 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:40,150 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:41,124 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:06:41,124 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:06:41,167 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:41,462 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:06:41,886 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:42,151 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:43,151 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:43,887 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:44,151 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:45,076 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:06:45,119 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:06:45,119 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:06:45,119 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:06:45,151 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:46,151 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:47,129 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:06:47,152 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:47,888 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:48,187 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:49,152 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:49,889 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:50,152 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:51,152 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:52,129 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:06:52,152 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:53,152 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:53,891 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:54,152 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:55,152 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:55,891 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:06:56,125 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:06:56,125 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:06:56,166 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:56,615 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:06:56,620 DEBUG   SenderThread:3979921 [sender.py:send():379] send: history
+2025-11-19 22:06:56,621 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: summary_record
+2025-11-19 22:06:56,622 INFO    SenderThread:3979921 [sender.py:_save_file():1454] saving file wandb-summary.json with policy end
+2025-11-19 22:06:56,891 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/wandb-summary.json
+2025-11-19 22:06:57,153 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:57,623 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:06:58,153 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:59,153 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:06:59,893 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:07:00,153 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:01,153 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:02,153 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:03,129 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:07:03,154 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:04,154 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:05,154 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:06,154 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:07,154 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:07,896 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:07:08,154 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:09,130 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:07:09,154 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:10,154 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:11,125 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:07:11,125 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:07:11,167 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:12,154 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:13,155 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:14,155 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:14,455 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:07:15,191 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:16,155 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:17,155 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:17,900 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:07:18,156 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:19,155 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:20,129 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:07:20,156 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:21,156 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:22,156 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:23,156 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:24,156 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:25,156 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:25,223 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:07:25,902 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:07:26,125 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:07:26,125 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:07:26,167 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:27,156 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:28,156 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:29,157 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:30,157 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:30,557 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:07:31,157 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:32,157 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:33,157 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:34,157 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:35,157 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:35,907 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:07:36,130 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:07:36,157 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:37,157 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:38,157 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:39,158 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:40,158 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:41,125 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:07:41,125 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:07:41,167 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:41,483 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:07:42,158 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:43,158 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:43,910 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:07:44,158 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:45,158 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:46,158 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:47,130 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:07:47,158 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:48,159 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:49,159 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:50,159 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:51,159 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:52,159 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:52,439 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:07:53,159 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:53,914 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:07:54,159 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:55,159 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:56,125 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:07:56,125 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:07:56,167 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:57,159 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:57,551 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:07:58,160 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:07:59,160 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:00,160 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:01,160 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:02,160 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:03,130 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:08:03,160 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:03,917 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:08:04,160 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:05,160 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:06,160 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:07,161 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:08,131 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:08:08,160 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:09,161 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:10,161 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:11,125 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:08:11,125 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:08:11,166 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:11,920 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:08:12,161 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:13,161 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:13,497 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:08:14,161 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:15,161 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:16,161 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:17,162 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:18,162 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:18,758 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:08:19,162 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:20,162 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:21,162 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:21,922 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:08:22,162 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:23,163 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:24,132 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:08:24,162 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:25,162 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:26,126 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-19 22:08:26,126 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: stop_status
+2025-11-19 22:08:26,167 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:27,163 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:28,203 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: partial_history
+2025-11-19 22:08:28,204 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:28,207 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: server_info
+2025-11-19 22:08:28,208 DEBUG   SenderThread:3979921 [sender.py:send():379] send: telemetry
+2025-11-19 22:08:28,209 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: summary_record
+2025-11-19 22:08:28,211 INFO    SenderThread:3979921 [sender.py:_save_file():1454] saving file wandb-summary.json with policy end
+2025-11-19 22:08:28,212 DEBUG   SenderThread:3979921 [sender.py:send():379] send: telemetry
+2025-11-19 22:08:28,212 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: server_info
+2025-11-19 22:08:28,529 DEBUG   SenderThread:3979921 [sender.py:send():379] send: exit
+2025-11-19 22:08:28,530 INFO    SenderThread:3979921 [sender.py:send_exit():586] handling exit code: 0
+2025-11-19 22:08:28,530 INFO    SenderThread:3979921 [sender.py:send_exit():588] handling runtime: 335
+2025-11-19 22:08:28,530 INFO    SenderThread:3979921 [sender.py:_save_file():1454] saving file wandb-summary.json with policy end
+2025-11-19 22:08:28,530 INFO    SenderThread:3979921 [sender.py:send_exit():594] send defer
+2025-11-19 22:08:28,531 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: defer
+2025-11-19 22:08:28,531 INFO    HandlerThread:3979921 [handler.py:handle_request_defer():184] handle defer: 0
+2025-11-19 22:08:28,531 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: defer
+2025-11-19 22:08:28,531 INFO    SenderThread:3979921 [sender.py:send_request_defer():610] handle sender defer: 0
+2025-11-19 22:08:28,531 INFO    SenderThread:3979921 [sender.py:transition_state():614] send defer: 1
+2025-11-19 22:08:28,531 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: defer
+2025-11-19 22:08:28,531 INFO    HandlerThread:3979921 [handler.py:handle_request_defer():184] handle defer: 1
+2025-11-19 22:08:28,532 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: defer
+2025-11-19 22:08:28,532 INFO    SenderThread:3979921 [sender.py:send_request_defer():610] handle sender defer: 1
+2025-11-19 22:08:28,532 INFO    SenderThread:3979921 [sender.py:transition_state():614] send defer: 2
+2025-11-19 22:08:28,532 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: defer
+2025-11-19 22:08:28,532 INFO    HandlerThread:3979921 [handler.py:handle_request_defer():184] handle defer: 2
+2025-11-19 22:08:28,532 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: defer
+2025-11-19 22:08:28,532 INFO    SenderThread:3979921 [sender.py:send_request_defer():610] handle sender defer: 2
+2025-11-19 22:08:28,532 INFO    SenderThread:3979921 [sender.py:transition_state():614] send defer: 3
+2025-11-19 22:08:28,532 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: defer
+2025-11-19 22:08:28,532 INFO    HandlerThread:3979921 [handler.py:handle_request_defer():184] handle defer: 3
+2025-11-19 22:08:28,534 DEBUG   SenderThread:3979921 [sender.py:send():379] send: history
+2025-11-19 22:08:28,534 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: summary_record
+2025-11-19 22:08:28,547 INFO    SenderThread:3979921 [sender.py:_save_file():1454] saving file wandb-summary.json with policy end
+2025-11-19 22:08:28,547 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: defer
+2025-11-19 22:08:28,547 INFO    SenderThread:3979921 [sender.py:send_request_defer():610] handle sender defer: 3
+2025-11-19 22:08:28,547 INFO    SenderThread:3979921 [sender.py:transition_state():614] send defer: 4
+2025-11-19 22:08:28,547 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: defer
+2025-11-19 22:08:28,547 INFO    HandlerThread:3979921 [handler.py:handle_request_defer():184] handle defer: 4
+2025-11-19 22:08:28,548 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: defer
+2025-11-19 22:08:28,548 INFO    SenderThread:3979921 [sender.py:send_request_defer():610] handle sender defer: 4
+2025-11-19 22:08:28,548 INFO    SenderThread:3979921 [sender.py:transition_state():614] send defer: 5
+2025-11-19 22:08:28,548 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: defer
+2025-11-19 22:08:28,548 INFO    HandlerThread:3979921 [handler.py:handle_request_defer():184] handle defer: 5
+2025-11-19 22:08:28,549 DEBUG   SenderThread:3979921 [sender.py:send():379] send: summary
+2025-11-19 22:08:28,550 INFO    SenderThread:3979921 [sender.py:_save_file():1454] saving file wandb-summary.json with policy end
+2025-11-19 22:08:28,550 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: defer
+2025-11-19 22:08:28,550 INFO    SenderThread:3979921 [sender.py:send_request_defer():610] handle sender defer: 5
+2025-11-19 22:08:28,550 INFO    SenderThread:3979921 [sender.py:transition_state():614] send defer: 6
+2025-11-19 22:08:28,550 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: defer
+2025-11-19 22:08:28,550 INFO    HandlerThread:3979921 [handler.py:handle_request_defer():184] handle defer: 6
+2025-11-19 22:08:28,550 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: defer
+2025-11-19 22:08:28,550 INFO    SenderThread:3979921 [sender.py:send_request_defer():610] handle sender defer: 6
+2025-11-19 22:08:28,553 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:08:28,897 INFO    SenderThread:3979921 [sender.py:transition_state():614] send defer: 7
+2025-11-19 22:08:28,897 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: defer
+2025-11-19 22:08:28,898 INFO    HandlerThread:3979921 [handler.py:handle_request_defer():184] handle defer: 7
+2025-11-19 22:08:28,898 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: defer
+2025-11-19 22:08:28,898 INFO    SenderThread:3979921 [sender.py:send_request_defer():610] handle sender defer: 7
+2025-11-19 22:08:28,925 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/wandb-summary.json
+2025-11-19 22:08:28,926 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/config.yaml
+2025-11-19 22:08:29,104 INFO    SenderThread:3979921 [sender.py:transition_state():614] send defer: 8
+2025-11-19 22:08:29,104 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: defer
+2025-11-19 22:08:29,104 INFO    HandlerThread:3979921 [handler.py:handle_request_defer():184] handle defer: 8
+2025-11-19 22:08:29,105 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: defer
+2025-11-19 22:08:29,105 INFO    SenderThread:3979921 [sender.py:send_request_defer():610] handle sender defer: 8
+2025-11-19 22:08:29,105 INFO    SenderThread:3979921 [job_builder.py:build():440] Attempting to build job artifact
+2025-11-19 22:08:29,108 INFO    SenderThread:3979921 [job_builder.py:_get_source_type():569] is repo sourced job
+2025-11-19 22:08:29,134 INFO    SenderThread:3979921 [job_builder.py:build():545] adding wandb-job metadata file
+2025-11-19 22:08:29,137 INFO    SenderThread:3979921 [sender.py:transition_state():614] send defer: 9
+2025-11-19 22:08:29,137 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: defer
+2025-11-19 22:08:29,138 DEBUG   SenderThread:3979921 [sender.py:send():379] send: artifact
+2025-11-19 22:08:29,138 INFO    HandlerThread:3979921 [handler.py:handle_request_defer():184] handle defer: 9
+2025-11-19 22:08:29,529 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: poll_exit
+2025-11-19 22:08:29,926 INFO    Thread-12 :3979921 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:08:31,298 INFO    wandb-upload_0:3979921 [upload_job.py:push():85] Skipped uploading /home/liuxin25/.local/share/wandb/artifacts/staging/tmpifvuhhl8
+2025-11-19 22:08:32,141 INFO    wandb-upload_1:3979921 [upload_job.py:push():88] Uploaded file /tmp/tmp6qe4omg_/wandb-job.json
+2025-11-19 22:08:34,274 INFO    SenderThread:3979921 [sender.py:send_artifact():1537] sent artifact job-git_gitee.com_anonymeee_dp-fpl.git_federated_main.py - {'id': 'QXJ0aWZhY3Q6MjI2NjQwOTI4Ng==', 'state': 'PENDING', 'artifactSequence': {'id': 'QXJ0aWZhY3RDb2xsZWN0aW9uOjc5NzI2MjEzNQ==', 'latestArtifact': {'id': 'QXJ0aWZhY3Q6MjI2NjM4ODk5Mw==', 'versionIndex': 0}}}
+2025-11-19 22:08:34,274 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: defer
+2025-11-19 22:08:34,274 INFO    SenderThread:3979921 [sender.py:send_request_defer():610] handle sender defer: 9
+2025-11-19 22:08:34,274 INFO    SenderThread:3979921 [dir_watcher.py:finish():358] shutting down directory watcher
+2025-11-19 22:08:34,274 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: status_report
+2025-11-19 22:08:34,530 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: keepalive
+2025-11-19 22:08:34,927 INFO    SenderThread:3979921 [dir_watcher.py:finish():388] scan: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files
+2025-11-19 22:08:34,927 INFO    SenderThread:3979921 [dir_watcher.py:finish():402] scan save: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/wandb-summary.json wandb-summary.json
+2025-11-19 22:08:34,928 INFO    SenderThread:3979921 [dir_watcher.py:finish():402] scan save: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log output.log
+2025-11-19 22:08:34,928 INFO    SenderThread:3979921 [dir_watcher.py:finish():402] scan save: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/config.yaml config.yaml
+2025-11-19 22:08:34,928 INFO    SenderThread:3979921 [dir_watcher.py:finish():402] scan save: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/wandb-metadata.json wandb-metadata.json
+2025-11-19 22:08:34,928 INFO    SenderThread:3979921 [dir_watcher.py:finish():402] scan save: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/requirements.txt requirements.txt
+2025-11-19 22:08:34,928 INFO    SenderThread:3979921 [dir_watcher.py:finish():402] scan save: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/conda-environment.yaml conda-environment.yaml
+2025-11-19 22:08:34,936 INFO    SenderThread:3979921 [sender.py:transition_state():614] send defer: 10
+2025-11-19 22:08:34,938 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: poll_exit
+2025-11-19 22:08:34,943 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: defer
+2025-11-19 22:08:34,948 INFO    HandlerThread:3979921 [handler.py:handle_request_defer():184] handle defer: 10
+2025-11-19 22:08:34,949 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: defer
+2025-11-19 22:08:34,949 INFO    SenderThread:3979921 [sender.py:send_request_defer():610] handle sender defer: 10
+2025-11-19 22:08:34,950 INFO    SenderThread:3979921 [file_pusher.py:finish():169] shutting down file pusher
+2025-11-19 22:08:35,531 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: poll_exit
+2025-11-19 22:08:35,531 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: poll_exit
+2025-11-19 22:08:35,646 INFO    wandb-upload_2:3979921 [upload_job.py:push():130] Uploaded file /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/config.yaml
+2025-11-19 22:08:36,467 INFO    wandb-upload_3:3979921 [upload_job.py:push():130] Uploaded file /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/requirements.txt
+2025-11-19 22:08:36,475 INFO    wandb-upload_0:3979921 [upload_job.py:push():130] Uploaded file /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/wandb-summary.json
+2025-11-19 22:08:36,532 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: poll_exit
+2025-11-19 22:08:36,532 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: poll_exit
+2025-11-19 22:08:36,686 INFO    wandb-upload_1:3979921 [upload_job.py:push():130] Uploaded file /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/output.log
+2025-11-19 22:08:36,801 INFO    wandb-upload_4:3979921 [upload_job.py:push():130] Uploaded file /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/files/conda-environment.yaml
+2025-11-19 22:08:37,001 INFO    Thread-11 (_thread_body):3979921 [sender.py:transition_state():614] send defer: 11
+2025-11-19 22:08:37,002 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: defer
+2025-11-19 22:08:37,002 INFO    HandlerThread:3979921 [handler.py:handle_request_defer():184] handle defer: 11
+2025-11-19 22:08:37,002 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: defer
+2025-11-19 22:08:37,002 INFO    SenderThread:3979921 [sender.py:send_request_defer():610] handle sender defer: 11
+2025-11-19 22:08:37,002 INFO    SenderThread:3979921 [file_pusher.py:join():175] waiting for file pusher
+2025-11-19 22:08:37,003 INFO    SenderThread:3979921 [sender.py:transition_state():614] send defer: 12
+2025-11-19 22:08:37,003 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: defer
+2025-11-19 22:08:37,003 INFO    HandlerThread:3979921 [handler.py:handle_request_defer():184] handle defer: 12
+2025-11-19 22:08:37,003 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: defer
+2025-11-19 22:08:37,003 INFO    SenderThread:3979921 [sender.py:send_request_defer():610] handle sender defer: 12
+2025-11-19 22:08:37,003 INFO    SenderThread:3979921 [file_stream.py:finish():601] file stream finish called
+2025-11-19 22:08:37,532 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: poll_exit
+2025-11-19 22:08:38,945 INFO    SenderThread:3979921 [file_stream.py:finish():605] file stream finish is done
+2025-11-19 22:08:38,945 INFO    SenderThread:3979921 [sender.py:transition_state():614] send defer: 13
+2025-11-19 22:08:38,946 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: poll_exit
+2025-11-19 22:08:38,946 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: defer
+2025-11-19 22:08:38,946 INFO    HandlerThread:3979921 [handler.py:handle_request_defer():184] handle defer: 13
+2025-11-19 22:08:38,947 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: defer
+2025-11-19 22:08:38,947 INFO    SenderThread:3979921 [sender.py:send_request_defer():610] handle sender defer: 13
+2025-11-19 22:08:38,947 INFO    SenderThread:3979921 [sender.py:transition_state():614] send defer: 14
+2025-11-19 22:08:38,948 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: defer
+2025-11-19 22:08:38,948 INFO    HandlerThread:3979921 [handler.py:handle_request_defer():184] handle defer: 14
+2025-11-19 22:08:38,948 DEBUG   SenderThread:3979921 [sender.py:send():379] send: final
+2025-11-19 22:08:38,948 DEBUG   SenderThread:3979921 [sender.py:send():379] send: footer
+2025-11-19 22:08:38,948 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: defer
+2025-11-19 22:08:38,948 INFO    SenderThread:3979921 [sender.py:send_request_defer():610] handle sender defer: 14
+2025-11-19 22:08:38,949 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: poll_exit
+2025-11-19 22:08:38,950 DEBUG   SenderThread:3979921 [sender.py:send_request():406] send_request: poll_exit
+2025-11-19 22:08:38,951 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-19 22:08:38,951 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: get_summary
+2025-11-19 22:08:38,953 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: sampled_history
+2025-11-19 22:08:38,954 DEBUG   HandlerThread:3979921 [handler.py:handle_request():158] handle_request: shutdown
+2025-11-19 22:08:38,954 INFO    HandlerThread:3979921 [handler.py:finish():882] shutting down handler
+2025-11-19 22:08:39,950 INFO    WriterThread:3979921 [datastore.py:close():296] close: /date/liuxin/code/dp-fpl/wandb/run-20251119_220251-5gm8ip1c/run-5gm8ip1c.wandb
+2025-11-19 22:08:39,950 INFO    SenderThread:3979921 [sender.py:finish():1615] shutting down sender
+2025-11-19 22:08:39,950 INFO    SenderThread:3979921 [file_pusher.py:finish():169] shutting down file pusher
+2025-11-19 22:08:39,950 INFO    SenderThread:3979921 [file_pusher.py:join():175] waiting for file pusher
