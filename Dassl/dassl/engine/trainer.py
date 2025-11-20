@@ -14,7 +14,6 @@ from Dassl.dassl.utils import (
 )
 from Dassl.dassl.modeling import build_head, build_backbone
 from Dassl.dassl.evaluation import build_evaluator
-from utils.logger import get_logger, get_global_logger
 import os
 
 class SimpleNet(nn.Module):

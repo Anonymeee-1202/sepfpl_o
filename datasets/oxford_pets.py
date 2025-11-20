@@ -7,11 +7,11 @@ from collections import defaultdict
 # from Dassl.dassl.data.datasets import DATASET_REGISTRY, Datum, DatasetBase
 from Dassl.dassl.data.datasets.base_dataset import DatasetBase, Datum
 from Dassl.dassl.utils import read_json, write_json
-from utils.logger import get_global_logger, get_logger
+from utils.logger import require_global_logger
 
 
 def _get_logger():
-    return get_global_logger() or get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
+    return require_global_logger()
 
 
 # @DATASET_REGISTRY.register()
