@@ -348,6 +348,26 @@ if __name__ == "__main__":
         help="执行实验2（包含 Rank 与 HCSE/时间自适应消融两个子实验）"
     )
     parser.add_argument(
+        "--exp1-simple",
+        action="store_true",
+        help="仅执行实验1.1（Simple 设置）"
+    )
+    parser.add_argument(
+        "--exp1-hard",
+        action="store_true",
+        help="仅执行实验1.2（Hard 设置）"
+    )
+    parser.add_argument(
+        "--exp2-rank",
+        action="store_true",
+        help="仅执行实验2.1（Rank 消融）"
+    )
+    parser.add_argument(
+        "--exp2-ablation",
+        action="store_true",
+        help="仅执行实验2.2（HCSE / 时间自适应消融）"
+    )
+    parser.add_argument(
         "-t", "--test",
         action="store_true",
         help="测试单个任务（需配合 --dataset / --users / --factorization / --rank / --noise / --seed）"
@@ -387,12 +407,35 @@ if __name__ == "__main__":
         help="仅显示将要删除的日志文件，不实际删除（与 --clean-logs 搭配使用）"
     )
 
-    # wandb 配置说明：
-    # 当前脚本不再通过命令行参数配置 wandb，而是完全依赖环境变量：
-    #   - WANDB_MODE, WANDB_PROJECT, WANDB_ENTITY, WANDB_GROUP, WANDB_TAGS, WANDB_DIR 等；
-    #   - 设置 WANDB_DISABLED=1 可以完全禁用 wandb。
-
     args = parser.parse_args()
+
+    experiment_catalog = {
+        'exp1_simple': ("实验1.1: Simple - 标准数据集 + 10 客户端", EXPERIMENT_1_SIMPLE_CONFIG),
+        'exp1_hard': ("实验1.2: Hard - CIFAR-100，不同客户端数量", EXPERIMENT_1_HARD_CONFIG),
+        'exp2_rank': ("实验2.1: Rank 消融实验（仅 SepFPL）", EXPERIMENT_2_RANK_CONFIG),
+        'exp2_ablation': ("实验2.2: HCSE 与时间自适应隐私分配机制消融实验", EXPERIMENT_2_ABLATION_CONFIG),
+    }
+
+    selected_runs: list[str] = []
+
+    def select_run(key: str):
+        if key in experiment_catalog and key not in selected_runs:
+            selected_runs.append(key)
+
+    if args.exp1:
+        select_run('exp1_simple')
+        select_run('exp1_hard')
+    if args.exp2:
+        select_run('exp2_rank')
+        select_run('exp2_ablation')
+    if args.exp1_simple:
+        select_run('exp1_simple')
+    if args.exp1_hard:
+        select_run('exp1_hard')
+    if args.exp2_rank:
+        select_run('exp2_rank')
+    if args.exp2_ablation:
+        select_run('exp2_ablation')
 
     if args.clean_logs:
         # 清理陈旧日志文件
@@ -408,33 +451,20 @@ if __name__ == "__main__":
         # 下载标准数据集
         download_datasets(root, ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101', 'cifar-100'])
 
-    elif args.exp1:
-        # 执行实验 1（主实验）
-        print("🚀 开始执行实验1...")
-        print("=" * 80)
-        print("实验1.1: Simple - 标准数据集 + 10 客户端")
-        print("=" * 80)
-        run_experiment(EXPERIMENT_1_SIMPLE_CONFIG, gpus=args.gpus)
+    elif selected_runs:
+        total_selected = len(selected_runs)
+        print(f"🚀 已选择 {total_selected} 个实验：")
+        for idx, key in enumerate(selected_runs, 1):
+            desc, _ = experiment_catalog[key]
+            print(f"  {idx}. {desc}")
 
-        print("\n" + "=" * 80)
-        print("实验1.2: Hard - CIFAR-100，不同客户端数量")
-        print("=" * 80)
-        run_experiment(EXPERIMENT_1_HARD_CONFIG, gpus=args.gpus)
-        print("\n✅ 实验1执行完成！")
-
-    elif args.exp2:
-        # 执行实验 2（消融实验）
-        print("🚀 开始执行实验2...")
-        print("=" * 80)
-        print("实验2.1: Rank 消融实验（仅 SepFPL）")
-        print("=" * 80)
-        run_experiment(EXPERIMENT_2_RANK_CONFIG, gpus=args.gpus)
-
-        print("\n" + "=" * 80)
-        print("实验2.2: HCSE 与时间自适应隐私分配机制消融实验")
-        print("=" * 80)
-        run_experiment(EXPERIMENT_2_ABLATION_CONFIG, gpus=args.gpus)
-        print("\n✅ 实验2执行完成！")
+        for idx, key in enumerate(selected_runs, 1):
+            desc, config = experiment_catalog[key]
+            print("\n" + "=" * 80)
+            print(f"[{idx}/{total_selected}] {desc}")
+            print("=" * 80)
+            run_experiment(config, gpus=args.gpus)
+        print(f"\n✅ 所选的 {total_selected} 个实验已全部执行完成！")
 
     elif args.test:
         # 单任务测试模式
@@ -476,9 +506,13 @@ if __name__ == "__main__":
     else:
         # 无任何子命令时，输出可用选项概览
         print("未指定操作。可用选项如下：")
-        print("  --download    : 下载标准数据集")
-        print("  --exp1        : 执行实验1（Simple + Hard）")
-        print("  --exp2        : 执行实验2（Rank + Ablation）")
-        print("  --test        : 测试单个任务（需配合参数）")
-        print("  --clean-logs  : 清理陈旧日志，仅保留最新日志")
-        print("  --dry-run     : 与 --clean-logs 搭配，仅预览待删文件")
+        print("  --download       : 下载标准数据集")
+        print("  --exp1           : 执行实验1（Simple + Hard）")
+        print("  --exp2           : 执行实验2（Rank + Ablation）")
+        print("  --exp1-simple    : 仅执行实验1.1（Simple）")
+        print("  --exp1-hard      : 仅执行实验1.2（Hard）")
+        print("  --exp2-rank      : 仅执行实验2.1（Rank 消融）")
+        print("  --exp2-ablation  : 仅执行实验2.2（HCSE/时间自适应消融）")
+        print("  --test           : 测试单个任务（需配合参数）")
+        print("  --clean-logs     : 清理陈旧日志，仅保留最新日志")
+        print("  --dry-run        : 与 --clean-logs 搭配，仅预览待删文件")
