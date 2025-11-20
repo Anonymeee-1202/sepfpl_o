@@ -8,11 +8,10 @@
 # $5: rank - 矩阵分解的秩
 # $6: noise - 差分隐私噪声级别
 # $7: seed - 随机种子
-# $8: round - 训练轮次（可选，默认 10）
-# $9+: 额外参数（如 --task-id, --wandb-* 等）
-
-# 第8个参数：训练轮次
-ROUND=${8:-10}
+# $8: round - 训练轮次
+# $9: wandb-group - wandb group 参数（必选）
+# $10: task-id - 任务编号标识（必选）
+# $11+: 额外参数
 
 python federated_main.py \
   --root "$1" \
@@ -22,5 +21,7 @@ python federated_main.py \
   --rank "$5" \
   --noise "$6" \
   --seed "$7" \
-  --round "$ROUND" \
-  "${@:9}"  # 传递第9个参数及之后的所有额外参数（如--task-id、--wandb-*等）
+  --round "$8" \
+  --wandb-group "$9" \
+  --task-id "${10}" \
+  "${@:11}"  # 传递第11个参数及之后的所有额外参数
