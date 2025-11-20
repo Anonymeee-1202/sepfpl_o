@@ -2,182 +2,182 @@
 # Terminal 1 tasks (GPU 0) - Total: 60 tasks
 
 # Task 1/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 promptfl 8 0.0 1 30 --task-id "[1/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 promptfl 8 0.0 1 30 exp1 "[1/60]"
 
 # Task 2/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 fedotp 8 0.0 1 30 --task-id "[2/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 fedotp 8 0.0 1 30 exp1 "[2/60]"
 
 # Task 3/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 fedpgp 8 0.0 1 30 --task-id "[3/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 fedpgp 8 0.0 1 30 exp1 "[3/60]"
 
 # Task 4/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 dpfpl 8 0.0 1 30 --task-id "[4/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 dpfpl 8 0.0 1 30 exp1 "[4/60]"
 
 # Task 5/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 sepfpl 8 0.0 1 30 --task-id "[5/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 sepfpl 8 0.0 1 30 exp1 "[5/60]"
 
 # Task 6/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 promptfl 8 0.4 1 30 --task-id "[6/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 promptfl 8 0.4 1 30 exp1 "[6/60]"
 
 # Task 7/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 fedotp 8 0.4 1 30 --task-id "[7/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 fedotp 8 0.4 1 30 exp1 "[7/60]"
 
 # Task 8/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 fedpgp 8 0.4 1 30 --task-id "[8/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 fedpgp 8 0.4 1 30 exp1 "[8/60]"
 
 # Task 9/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 dpfpl 8 0.4 1 30 --task-id "[9/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 dpfpl 8 0.4 1 30 exp1 "[9/60]"
 
 # Task 10/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 sepfpl 8 0.4 1 30 --task-id "[10/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 sepfpl 8 0.4 1 30 exp1 "[10/60]"
 
 # Task 11/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 promptfl 8 0.2 1 30 --task-id "[11/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 promptfl 8 0.2 1 30 exp1 "[11/60]"
 
 # Task 12/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 fedotp 8 0.2 1 30 --task-id "[12/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 fedotp 8 0.2 1 30 exp1 "[12/60]"
 
 # Task 13/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 fedpgp 8 0.2 1 30 --task-id "[13/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 fedpgp 8 0.2 1 30 exp1 "[13/60]"
 
 # Task 14/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 dpfpl 8 0.2 1 30 --task-id "[14/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 dpfpl 8 0.2 1 30 exp1 "[14/60]"
 
 # Task 15/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 sepfpl 8 0.2 1 30 --task-id "[15/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 sepfpl 8 0.2 1 30 exp1 "[15/60]"
 
 # Task 16/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 promptfl 8 0.1 1 30 --task-id "[16/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 promptfl 8 0.1 1 30 exp1 "[16/60]"
 
 # Task 17/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 fedotp 8 0.1 1 30 --task-id "[17/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 fedotp 8 0.1 1 30 exp1 "[17/60]"
 
 # Task 18/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 fedpgp 8 0.1 1 30 --task-id "[18/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 fedpgp 8 0.1 1 30 exp1 "[18/60]"
 
 # Task 19/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 dpfpl 8 0.1 1 30 --task-id "[19/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 dpfpl 8 0.1 1 30 exp1 "[19/60]"
 
 # Task 20/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 sepfpl 8 0.1 1 30 --task-id "[20/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 sepfpl 8 0.1 1 30 exp1 "[20/60]"
 
 # Task 21/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 promptfl 8 0.05 1 30 --task-id "[21/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 promptfl 8 0.05 1 30 exp1 "[21/60]"
 
 # Task 22/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 fedotp 8 0.05 1 30 --task-id "[22/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 fedotp 8 0.05 1 30 exp1 "[22/60]"
 
 # Task 23/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 fedpgp 8 0.05 1 30 --task-id "[23/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 fedpgp 8 0.05 1 30 exp1 "[23/60]"
 
 # Task 24/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 dpfpl 8 0.05 1 30 --task-id "[24/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 dpfpl 8 0.05 1 30 exp1 "[24/60]"
 
 # Task 25/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 sepfpl 8 0.05 1 30 --task-id "[25/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 sepfpl 8 0.05 1 30 exp1 "[25/60]"
 
 # Task 26/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 promptfl 8 0.01 1 30 --task-id "[26/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 promptfl 8 0.01 1 30 exp1 "[26/60]"
 
 # Task 27/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 fedotp 8 0.01 1 30 --task-id "[27/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 fedotp 8 0.01 1 30 exp1 "[27/60]"
 
 # Task 28/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 fedpgp 8 0.01 1 30 --task-id "[28/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 fedpgp 8 0.01 1 30 exp1 "[28/60]"
 
 # Task 29/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 dpfpl 8 0.01 1 30 --task-id "[29/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 dpfpl 8 0.01 1 30 exp1 "[29/60]"
 
 # Task 30/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 25 sepfpl 8 0.01 1 30 --task-id "[30/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 25 sepfpl 8 0.01 1 30 exp1 "[30/60]"
 
 # Task 31/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 promptfl 8 0.0 1 30 --task-id "[31/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 promptfl 8 0.0 1 30 exp1 "[31/60]"
 
 # Task 32/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 fedotp 8 0.0 1 30 --task-id "[32/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 fedotp 8 0.0 1 30 exp1 "[32/60]"
 
 # Task 33/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 fedpgp 8 0.0 1 30 --task-id "[33/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 fedpgp 8 0.0 1 30 exp1 "[33/60]"
 
 # Task 34/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 dpfpl 8 0.0 1 30 --task-id "[34/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 dpfpl 8 0.0 1 30 exp1 "[34/60]"
 
 # Task 35/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 sepfpl 8 0.0 1 30 --task-id "[35/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 sepfpl 8 0.0 1 30 exp1 "[35/60]"
 
 # Task 36/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 promptfl 8 0.4 1 30 --task-id "[36/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 promptfl 8 0.4 1 30 exp1 "[36/60]"
 
 # Task 37/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 fedotp 8 0.4 1 30 --task-id "[37/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 fedotp 8 0.4 1 30 exp1 "[37/60]"
 
 # Task 38/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 fedpgp 8 0.4 1 30 --task-id "[38/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 fedpgp 8 0.4 1 30 exp1 "[38/60]"
 
 # Task 39/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 dpfpl 8 0.4 1 30 --task-id "[39/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 dpfpl 8 0.4 1 30 exp1 "[39/60]"
 
 # Task 40/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 sepfpl 8 0.4 1 30 --task-id "[40/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 sepfpl 8 0.4 1 30 exp1 "[40/60]"
 
 # Task 41/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 promptfl 8 0.2 1 30 --task-id "[41/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 promptfl 8 0.2 1 30 exp1 "[41/60]"
 
 # Task 42/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 fedotp 8 0.2 1 30 --task-id "[42/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 fedotp 8 0.2 1 30 exp1 "[42/60]"
 
 # Task 43/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 fedpgp 8 0.2 1 30 --task-id "[43/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 fedpgp 8 0.2 1 30 exp1 "[43/60]"
 
 # Task 44/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 dpfpl 8 0.2 1 30 --task-id "[44/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 dpfpl 8 0.2 1 30 exp1 "[44/60]"
 
 # Task 45/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 sepfpl 8 0.2 1 30 --task-id "[45/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 sepfpl 8 0.2 1 30 exp1 "[45/60]"
 
 # Task 46/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 promptfl 8 0.1 1 30 --task-id "[46/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 promptfl 8 0.1 1 30 exp1 "[46/60]"
 
 # Task 47/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 fedotp 8 0.1 1 30 --task-id "[47/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 fedotp 8 0.1 1 30 exp1 "[47/60]"
 
 # Task 48/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 fedpgp 8 0.1 1 30 --task-id "[48/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 fedpgp 8 0.1 1 30 exp1 "[48/60]"
 
 # Task 49/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 dpfpl 8 0.1 1 30 --task-id "[49/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 dpfpl 8 0.1 1 30 exp1 "[49/60]"
 
 # Task 50/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 sepfpl 8 0.1 1 30 --task-id "[50/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 sepfpl 8 0.1 1 30 exp1 "[50/60]"
 
 # Task 51/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 promptfl 8 0.05 1 30 --task-id "[51/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 promptfl 8 0.05 1 30 exp1 "[51/60]"
 
 # Task 52/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 fedotp 8 0.05 1 30 --task-id "[52/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 fedotp 8 0.05 1 30 exp1 "[52/60]"
 
 # Task 53/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 fedpgp 8 0.05 1 30 --task-id "[53/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 fedpgp 8 0.05 1 30 exp1 "[53/60]"
 
 # Task 54/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 dpfpl 8 0.05 1 30 --task-id "[54/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 dpfpl 8 0.05 1 30 exp1 "[54/60]"
 
 # Task 55/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 sepfpl 8 0.05 1 30 --task-id "[55/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 sepfpl 8 0.05 1 30 exp1 "[55/60]"
 
 # Task 56/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 promptfl 8 0.01 1 30 --task-id "[56/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 promptfl 8 0.01 1 30 exp1 "[56/60]"
 
 # Task 57/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 fedotp 8 0.01 1 30 --task-id "[57/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 fedotp 8 0.01 1 30 exp1 "[57/60]"
 
 # Task 58/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 fedpgp 8 0.01 1 30 --task-id "[58/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 fedpgp 8 0.01 1 30 exp1 "[58/60]"
 
 # Task 59/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 dpfpl 8 0.01 1 30 --task-id "[59/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 dpfpl 8 0.01 1 30 exp1 "[59/60]"
 
 # Task 60/60
-CUDA_VISIBLE_DEVICES=0 WANDB_MODE=online WANDB_PROJECT=dp-fpl WANDB_GROUP=exp1_hard WANDB_TAGS=experiment:exp1_hard,type:hard WANDB_WATCH=gradients WANDB_WATCH_LOGFREQ=200 WANDB_RUN_NAME=exp1_hard bash srun_main.sh ~/dataset configs/datasets/cifar-100.yaml 50 sepfpl 8 0.01 1 30 --task-id "[60/60]"
+CUDA_VISIBLE_DEVICES=0 bash srun_main.sh /home/featurize/dataset configs/datasets/cifar-100.yaml 50 sepfpl 8 0.01 1 30 exp1 "[60/60]"
 
