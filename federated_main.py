@@ -246,7 +246,8 @@ def save_checkpoint(args, epoch, local_weights, local_acc, neighbor_acc):
     保存模型检查点（包含每个客户端的权重及精度曲线）。
     """
     dataset = args.dataset_config_file.split('/')[-1].split('.')[0]
-    save_dir = os.path.join(os.getcwd(), f'checkpoints/{dataset}')
+    wandb_group = getattr(args, 'wandb_group', None) or 'default'
+    save_dir = os.path.join(os.getcwd(), f'checkpoints/{wandb_group}/{dataset}')
     os.makedirs(save_dir, exist_ok=True)
     save_filename = os.path.join(
         save_dir,
@@ -266,9 +267,10 @@ def load_checkpoint(args):
     从磁盘加载检查点，若不存在则返回默认初始状态。
     """
     dataset = args.dataset_config_file.split('/')[-1].split('.')[0]
+    wandb_group = getattr(args, 'wandb_group', None) or 'default'
     save_filename = os.path.join(
         os.getcwd(),
-        f'/checkpoints/{dataset}/{args.factorization}_{args.rank}_{args.noise}_{args.seed}_{args.num_users}.pth.tar'
+        f'checkpoints/{wandb_group}/{dataset}/{args.factorization}_{args.rank}_{args.noise}_{args.seed}_{args.num_users}.pth.tar'
     )
     if not os.path.exists(save_filename):
         # epoch=0，local_weights 为 num_users 个空 dict，acc 为空列表
@@ -749,7 +751,8 @@ def main(args):
             # ---------- 保存检查点 & 精度曲线 ----------
             save_checkpoint(args, epoch, local_weights, local_acc_list, neighbor_acc_list)
             dataset_name = args.dataset_config_file.split('/')[-1].split('.')[0]
-            output_dir = os.path.join(os.getcwd(), f'outputs/{dataset_name}')
+            wandb_group = getattr(args, 'wandb_group', None) or 'default'
+            output_dir = os.path.join(os.getcwd(), f'outputs/{wandb_group}/{dataset_name}')
             os.makedirs(output_dir, exist_ok=True)
             pickle.dump(
                 [local_acc_list, neighbor_acc_list],

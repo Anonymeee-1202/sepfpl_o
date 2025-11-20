@@ -7,11 +7,11 @@ from collections import defaultdict
 import gdown
 
 from Dassl.dassl.utils import check_isfile
-from utils.logger import get_global_logger, get_logger
+from utils.logger import require_global_logger
 
 
 def _get_dataset_logger():
-    return get_global_logger() or get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
+    return require_global_logger()
 
 
 class Datum:

@@ -1,0 +1,21 @@
+2025-11-20 21:45:11,995 INFO    StreamThr :240708 [internal.py:wandb_internal():85] W&B internal server running at pid: 240708, started at: 2025-11-20 21:45:11.994855
+2025-11-20 21:45:11,999 DEBUG   HandlerThread:240708 [handler.py:handle_request():158] handle_request: status
+2025-11-20 21:45:12,001 INFO    WriterThread:240708 [datastore.py:open_for_write():87] open: /data/liuxin/code/dp-fpl/wandb/run-20251120_214511-cpp4zljf/run-cpp4zljf.wandb
+2025-11-20 21:45:12,002 DEBUG   SenderThread:240708 [sender.py:send():379] send: header
+2025-11-20 21:45:12,002 DEBUG   SenderThread:240708 [sender.py:send():379] send: run
+2025-11-20 21:45:13,619 INFO    SenderThread:240708 [dir_watcher.py:__init__():211] watching files in: /data/liuxin/code/dp-fpl/wandb/run-20251120_214511-cpp4zljf/files
+2025-11-20 21:45:13,619 INFO    SenderThread:240708 [sender.py:_start_run_threads():1188] run started: cpp4zljf with start time 1763646311.993324
+2025-11-20 21:45:13,627 DEBUG   HandlerThread:240708 [handler.py:handle_request():158] handle_request: check_version
+2025-11-20 21:45:13,628 DEBUG   SenderThread:240708 [sender.py:send_request():406] send_request: check_version
+2025-11-20 21:45:18,162 DEBUG   HandlerThread:240708 [handler.py:handle_request():158] handle_request: shutdown
+2025-11-20 21:45:18,162 INFO    HandlerThread:240708 [handler.py:finish():882] shutting down handler
+2025-11-20 21:45:18,629 INFO    SenderThread:240708 [sender.py:finish():1615] shutting down sender
+2025-11-20 21:45:18,629 INFO    WriterThread:240708 [datastore.py:close():296] close: /data/liuxin/code/dp-fpl/wandb/run-20251120_214511-cpp4zljf/run-cpp4zljf.wandb
+2025-11-20 21:45:18,630 INFO    SenderThread:240708 [dir_watcher.py:finish():358] shutting down directory watcher
+2025-11-20 21:45:19,621 INFO    SenderThread:240708 [dir_watcher.py:finish():388] scan: /data/liuxin/code/dp-fpl/wandb/run-20251120_214511-cpp4zljf/files
+2025-11-20 21:45:19,621 INFO    SenderThread:240708 [dir_watcher.py:finish():402] scan save: /data/liuxin/code/dp-fpl/wandb/run-20251120_214511-cpp4zljf/files/config.yaml config.yaml
+2025-11-20 21:45:19,622 INFO    SenderThread:240708 [file_pusher.py:finish():169] shutting down file pusher
+2025-11-20 21:45:19,622 INFO    SenderThread:240708 [file_pusher.py:join():175] waiting for file pusher
+2025-11-20 21:56:36,698 INFO    wandb-upload_0:240708 [upload_job.py:push():130] Uploaded file /data/liuxin/code/dp-fpl/wandb/run-20251120_214511-cpp4zljf/files/config.yaml
+2025-11-20 21:56:37,367 INFO    SenderThread:240708 [file_stream.py:finish():601] file stream finish called
+2025-11-20 21:56:37,603 INFO    SenderThread:240708 [file_stream.py:finish():605] file stream finish is done

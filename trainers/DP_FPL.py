@@ -13,7 +13,7 @@ from clip.simple_tokenizer import SimpleTokenizer as _Tokenizer
 import math
 import time
 import logging
-from utils.logger import get_logger, get_global_logger
+from utils.logger import require_global_logger
 
 _tokenizer = _Tokenizer()
 
@@ -27,7 +27,7 @@ def load_clip_to_cpu(cfg):
     if hasattr(cfg.MODEL.BACKBONE, 'PATH') and cfg.MODEL.BACKBONE.PATH:
         model_path = cfg.MODEL.BACKBONE.PATH
         if os.path.isfile(model_path):
-            logger = get_global_logger() or get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
+            logger = require_global_logger()
             logger.info(f"使用指定的模型路径: {model_path}")
         else:
             raise FileNotFoundError(f"指定的模型文件不存在: {model_path}")
@@ -262,25 +262,8 @@ class DP_FPL(TrainerX):
         cfg = self.cfg
         classnames = self.dm.dataset.classnames
 
-        # 初始化logger，供类中其他方法使用
-        # 参照 logger.py 中的命名规则：{dataset_name}_{factorization}_{rank}_{noise}_{seed}
-        # 从 cfg 中提取信息
-        try:
-            dataset_name = str(cfg.DATASET.NAME).lower() if cfg.DATASET.NAME else 'unknown'
-        except (AttributeError, KeyError):
-            dataset_name = 'unknown'
-        
-        factorization = getattr(cfg, 'FACTORIZATION', 'unknown')
-        rank = getattr(cfg, 'RANK', 'unknown')
-        noise = getattr(cfg, 'NOISE', 'unknown')
-        seed = getattr(cfg, 'SEED', 'unknown')
-        
-        # 构建日志名称：{dataset_name}_{factorization}_{rank}_{noise}_{seed}
-        logger_name = f'{dataset_name}_{factorization}_{rank}_{noise}_{seed}'
-        # 优先使用全局logger，如未初始化则按配置创建并注册
-        self.logger = get_global_logger()
-        if self.logger is None:
-            self.logger = get_logger(logger_name, log_dir='logs', log_to_file=False, log_to_console=True)
+        # 初始化 logger，需确保外部已调用 init_logger_from_args
+        self.logger = require_global_logger()
         
         self.logger.info(f"Loading CLIP (backbone: {cfg.MODEL.BACKBONE.NAME})")
         clip_model = load_clip_to_cpu(cfg)
@@ -375,13 +358,12 @@ class DP_FPL(TrainerX):
                 if hasattr(self, 'rdp_eps_per_batch_list'):
                     logger = getattr(self, 'logger', None)
                     if logger is None:
-                        logger = get_global_logger() or get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
+                        logger = require_global_logger()
                     logger.info(f"[RDP-sepfpl] 轮次 {round_idx + 1}: ε={self.rdp_eps_per_batch_list[round_idx]:.6f}, std={self.std:.6f}")
             else:
                 logger = getattr(self, 'logger', None)
                 if logger is None:
-                    # 如果 logger 未初始化，使用默认名称
-                    logger = get_global_logger() or get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
+                    logger = require_global_logger()
                 logger.warning(f"[RDP-sepfpl] 警告: 轮次 {round_idx + 1} 超出范围，使用最后一轮的标准差")
                 self.std = self.std_per_batch_list[-1]
     
@@ -483,7 +465,7 @@ class DP_FPL(TrainerX):
         batch_info = f"batch {current_batch + 1}/{total_batches}" if total_batches > 0 else f"batch {current_batch + 1}"
         logger = getattr(self, 'logger', None)
         if logger is None:
-            logger = get_global_logger() or get_logger('dp-fpl', log_dir='logs', log_to_file=False, log_to_console=True)
+            logger = require_global_logger()
         # logger.info(f'{client_info} | {batch_info} : {loss_summary}')
         return loss_summary
 

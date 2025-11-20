@@ -1,0 +1,249 @@
+{
+    "os": "Linux-6.8.0-87-generic-x86_64-with-glibc2.39",
+    "python": "3.11.13",
+    "heartbeatAt": "2025-11-20T13:47:05.013455",
+    "startedAt": "2025-11-20T13:46:58.803893",
+    "docker": null,
+    "cuda": null,
+    "args": [
+        "--root",
+        "/home/liuxin25/dataset",
+        "--dataset-config-file",
+        "configs/datasets/cifar-100.yaml",
+        "--num-users",
+        "10",
+        "--factorization",
+        "sepfpl",
+        "--rank",
+        "8",
+        "--noise",
+        "0.1",
+        "--seed",
+        "1",
+        "--round",
+        "3"
+    ],
+    "state": "running",
+    "program": "/data/liuxin/code/dp-fpl/federated_main.py",
+    "codePathLocal": "federated_main.py",
+    "codePath": "federated_main.py",
+    "git": {
+        "remote": "git@gitee.com:anonymeee/dp-fpl.git",
+        "commit": "d29a6863bf728b211b070476f1da741511e6c6b5"
+    },
+    "email": "1712543411@qq.com",
+    "root": "/data/liuxin/code/dp-fpl",
+    "host": "c223",
+    "username": "liuxin25",
+    "executable": "/data/liuxin/miniconda3/envs/sedpfpl/bin/python",
+    "cpu_count": 18,
+    "cpu_count_logical": 36,
+    "cpu_freq": {
+        "current": 1390.5766666666668,
+        "min": 1200.0,
+        "max": 4800.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.109,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 4640.413,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1199.898,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.013,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1388.046,
+            "min": 1200.0,
+            "max": 4800.0
+        },
+        {
+            "current": 1200.0,
+            "min": 1200.0,
+            "max": 4800.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 1759.3481636047363,
+            "used": 1064.4381713867188
+        }
+    },
+    "gpu": "NVIDIA RTX A6000",
+    "gpu_count": 2,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA RTX A6000",
+            "memory_total": 51527024640
+        },
+        {
+            "name": "NVIDIA RTX A6000",
+            "memory_total": 51527024640
+        }
+    ],
+    "memory": {
+        "total": 251.38053512573242
+    }
+}

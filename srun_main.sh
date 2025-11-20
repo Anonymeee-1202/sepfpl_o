@@ -9,19 +9,36 @@
 # $6: noise - 差分隐私噪声级别
 # $7: seed - 随机种子
 # $8: round - 训练轮次
-# $9: wandb-group - wandb group 参数（必选）
-# $10: task-id - 任务编号标识（必选）
+# $9: wandb-group - wandb group 参数（可选，留空则不传递）
+# $10: task-id - 任务编号标识（可选，留空则不传递）
 # $11+: 额外参数
 
-python federated_main.py \
-  --root "$1" \
-  --dataset-config-file "$2" \
-  --num-users "$3" \
-  --factorization "$4" \
-  --rank "$5" \
-  --noise "$6" \
-  --seed "$7" \
-  --round "$8" \
-  --wandb-group "$9" \
-  --task-id "${10}" \
-  "${@:11}"  # 传递第11个参数及之后的所有额外参数
+WAND_GROUP="${9:-}"
+TASK_ID="${10:-}"
+
+PY_ARGS=(
+  --root "$1"
+  --dataset-config-file "$2"
+  --num-users "$3"
+  --factorization "$4"
+  --rank "$5"
+  --noise "$6"
+  --seed "$7"
+  --round "$8"
+)
+
+if [ -n "$WAND_GROUP" ]; then
+  PY_ARGS+=(--wandb-group "$WAND_GROUP")
+fi
+
+if [ -n "$TASK_ID" ]; then
+  PY_ARGS+=(--task-id "$TASK_ID")
+fi
+
+if [ "$#" -ge 11 ]; then
+  for extra_arg in "${@:11}"; do
+    PY_ARGS+=("$extra_arg")
+  done
+fi
+
+python federated_main.py "${PY_ARGS[@]}"
