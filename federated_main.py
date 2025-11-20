@@ -167,8 +167,8 @@ def init_wandb_run(args, cfg, logger):
     if not _should_enable_wandb(args):
         return None
 
-    project = args.wandb_project or os.environ.get('WANDB_PROJECT', 'dp-fpl')
-    entity = args.wandb_entity or os.environ.get('WANDB_ENTITY')
+    project = os.environ.get('WANDB_PROJECT', 'SepFPL')
+    entity = os.environ.get('WANDB_ENTITY')
     group = args.wandb_group or os.environ.get('WANDB_GROUP')
     mode = args.wandb_mode or os.environ.get('WANDB_MODE', 'online')
     run_name = args.wandb_run_name or _default_wandb_run_name(args)
@@ -740,8 +740,6 @@ if __name__ == "__main__":
     default_wandb_mode = os.environ.get('WANDB_MODE', 'online' if _WANDB_AVAILABLE else 'disabled')
     parser.add_argument('--wandb-mode', type=str, default=default_wandb_mode, choices=['online', 'offline', 'disabled'],
                         help='wandb 日志模式：online/offline/disabled')
-    parser.add_argument('--wandb-project', type=str, default=None, help='wandb 项目名称（默认 dp-fpl）')
-    parser.add_argument('--wandb-entity', type=str, default=None, help='wandb entity/团队名称')
     parser.add_argument('--wandb-group', type=str, default=None, help='wandb group，用于实验分组')
     parser.add_argument('--wandb-run-name', type=str, default=None, help='wandb run 名称（默认根据实验参数自动生成）')
     parser.add_argument('--wandb-dir', type=str, default=None, help='wandb 本地缓存目录')

@@ -1,11 +1,12 @@
 import os
 import re
+import shlex
 from pathlib import Path
 from collections import defaultdict
 from datasets import download_standard_datasets
 
 # ==================== 配置参数 ====================
-root = '/root/dataset'  # 数据集路径
+root = '~/dataset'  # 数据集路径
 NUM_TERMINALS = 1  # 并行终端数量（所有实验共用）
 
 # ==================== 实验配置 ====================
@@ -68,17 +69,110 @@ EXPERIMENT_2_ABLATION_CONFIG = {
 # 默认使用实验1 Simple配置（保持向后兼容）
 EXPERIMENT_CONFIG = EXPERIMENT_1_SIMPLE_CONFIG
 
+# ==================== Wandb 自定义配置 ====================
+# 如需自定义 wandb 行为，请在此字典中填写相应键值，可选键：
+# mode / project / entity / group / tags / dir / watch / watch_logfreq 等
+# 为空字典时，将使用 auto_generate_wandb_config 自动生成
+USER_WANDB_CONFIG = {
+    # 默认全部交给 auto_generate_wandb_config 自动生成
+    # 如需自定义，可在此处填写。例如：
+    # 'mode': 'online',
+    # 'project': 'dp-fpl',
+    # 'entity': 'my-team',
+    # 'tags': 'demo,baseline',
+}
+
 
 # ==================== 核心功能函数 ====================
-def run(root, dataset, users, factorization, rank, noise, seed, round=10, gpus=None):
+def auto_generate_wandb_config(user_config=None, experiment_name=None, base_project=None):
+    """自动生成wandb配置
+    
+    根据实验名称和用户配置自动生成合理的wandb配置：
+    - project: 自动生成（基于experiment_name）或使用base_project
+    - group: 自动生成（基于experiment_name）
+    - tags: 自动添加实验相关的标签
+    
+    Args:
+        user_config: 用户提供的wandb配置字典（可选，会覆盖自动生成的配置）
+        experiment_name: 实验名称（如 'exp1_simple'）
+        base_project: 基础项目名称（默认为 'dp-fpl'）
+    
+    Returns:
+        dict: 完整的wandb配置字典
+    """
+    if base_project is None:
+        base_project = 'dp-fpl'
+    
+    auto_config = {
+        'mode': 'online',  # 默认启用online模式
+        'project': base_project,
+        'watch': 'gradients',
+        'watch_logfreq': 200,
+    }
+    
+    # 根据实验名称自动生成group
+    if experiment_name:
+        auto_config['group'] = experiment_name
+    
+    # 根据实验名称添加标签
+    if experiment_name:
+        tags = [f'experiment:{experiment_name}']
+        if 'simple' in experiment_name:
+            tags.append('type:simple')
+        if 'hard' in experiment_name:
+            tags.append('type:hard')
+        if 'ablation' in experiment_name or 'rank' in experiment_name:
+            tags.append('type:ablation')
+        auto_config['tags'] = ','.join(tags)
+    
+    # 用户配置覆盖自动配置
+    if user_config:
+        auto_config.update(user_config)
+    
+    return auto_config
+
+
+def build_wandb_env_prefix(wandb_config=None, experiment_name=None):
+    """构建 wandb 相关的环境变量前缀字符串"""
+    if wandb_config is None:
+        wandb_config = {}
+    env_map = {
+        'mode': 'WANDB_MODE',
+        'project': 'WANDB_PROJECT',
+        'entity': 'WANDB_ENTITY',
+        'group': 'WANDB_GROUP',
+        'run_name': 'WANDB_RUN_NAME',
+        'dir': 'WANDB_DIR',
+        'tags': 'WANDB_TAGS',
+        'watch': 'WANDB_WATCH',
+        'watch_logfreq': 'WANDB_WATCH_LOGFREQ',
+    }
+    env_vars = {}
+    for key, env_key in env_map.items():
+        if key in wandb_config and wandb_config[key] is not None:
+            env_vars[env_key] = wandb_config[key]
+    if experiment_name:
+        env_vars.setdefault('WANDB_GROUP', experiment_name)
+        env_vars.setdefault('WANDB_RUN_NAME', experiment_name)
+    if not env_vars:
+        return ""
+    parts = []
+    for key, value in env_vars.items():
+        if value is None:
+            continue
+        parts.append(f"{key}={shlex.quote(str(value))}")
+    return (" ".join(parts) + " ") if parts else ""
+
+
+def run(root, dataset, users, factorization, rank, noise, seed, round=10, gpus=None, wandb_config=None, experiment_name=None):
     """运行单个实验任务"""
     dataset_yaml = f'configs/datasets/{dataset}.yaml'
     prefix = f"CUDA_VISIBLE_DEVICES={gpus} " if gpus else ""
-    gpu_arg = f" {gpus}" if gpus else ""
-    os.system(f'{prefix}bash srun_main.sh {root} {dataset_yaml} {users} {factorization} {rank} {noise} {seed} {round}{gpu_arg}')
+    env_prefix = build_wandb_env_prefix(wandb_config, experiment_name=experiment_name)
+    os.system(f'{env_prefix}{prefix}bash srun_main.sh {root} {dataset_yaml} {users} {factorization} {rank} {noise} {seed} {round}')
 
 
-def generate_task_commands(config):
+def generate_task_commands(config, env_prefix=""):
     """生成所有任务的命令列表（不带GPU信息，GPU在terminal级别分配）
     
     支持配置项：
@@ -87,6 +181,10 @@ def generate_task_commands(config):
     - rank: 单个rank值
     - rank_list: 多个rank值列表
     注意：消融实验现在通过factorization名称控制（sepfpl_time_adaptive和sepfpl_hcse）
+    
+    Args:
+        config: 实验配置字典
+        wandb_config: wandb配置字典，可选
     """
     tasks = []
     round_num = config.get('round', 20)
@@ -113,7 +211,7 @@ def generate_task_commands(config):
                     
                         for rank in ranks:
                             task_cmd = (
-                                f'bash srun_main.sh {root} configs/datasets/{dataset}.yaml {users} '
+                                f'{env_prefix}bash srun_main.sh {root} configs/datasets/{dataset}.yaml {users} '
                                 f'{factorization} {rank} {noise} {seed} {round_num}'
                             )
                             tasks.append(task_cmd)
@@ -231,27 +329,31 @@ def save_task_files(tasks, config, gpus=None, experiment_name=None):
 
 
 # ==================== 实验相关函数 ====================
-def test_generalization_and_personalization(config=None, gpus=None):
-    """顺序执行个性化和泛化性测试"""
+def generate_task_list(config=None, gpus=None, experiment_name=None, wandb_config=None, auto_wandb=True, base_project=None):
+    """生成任务列表文件，用于多终端并行执行
+    
+    Args:
+        config: 实验配置字典
+        gpus: GPU列表
+        experiment_name: 实验名称（用于自动生成wandb group）
+        wandb_config: wandb配置字典（可选，如果auto_wandb=True会与自动配置合并）
+        auto_wandb: 是否自动生成wandb配置（默认True）
+        base_project: wandb项目名称（默认'dp-fpl'）
+    """
     if config is None:
         config = EXPERIMENT_CONFIG
-    tasks = generate_task_commands(config)
-    # 如果有GPU，为所有任务添加GPU信息
-    if gpus:
-        gpu_list = [x.strip() for x in str(gpus).split(',') if x.strip() != '']
-        if len(gpu_list) == 1:
-            prefix = f"CUDA_VISIBLE_DEVICES={gpu_list[0]} "
-            gpu_arg = f" {gpu_list[0]}"
-            tasks = [f'{prefix}{task}{gpu_arg}' if not task.startswith('CUDA_VISIBLE_DEVICES') else task for task in tasks]
-    for task in tasks:
-        os.system(task)
-
-
-def generate_task_list(config=None, gpus=None, experiment_name=None):
-    """生成任务列表文件，用于多终端并行执行"""
-    if config is None:
-        config = EXPERIMENT_CONFIG
-    tasks = generate_task_commands(config)
+    
+    # 自动生成或合并wandb配置
+    if auto_wandb:
+        auto_config = auto_generate_wandb_config(
+            user_config=wandb_config,
+            experiment_name=experiment_name,
+            base_project=base_project
+        )
+        wandb_config = auto_config
+    
+    env_prefix = build_wandb_env_prefix(wandb_config, experiment_name=experiment_name)
+    tasks = generate_task_commands(config, env_prefix=env_prefix)
     save_task_files(tasks, config, gpus=gpus, experiment_name=experiment_name)
     
     print(f"\n📊 Total tasks: {len(tasks)}")
@@ -392,6 +494,11 @@ if __name__ == "__main__":
     parser.add_argument("--clean-logs", action="store_true", help="清理陈旧的日志文件，只保留相同参数下最新的日志")
     parser.add_argument("--log-dir", type=str, default='logs', help="日志文件目录（配合 --clean-logs 使用）")
     parser.add_argument("--dry-run", action="store_true", help="仅显示将要删除的文件，不实际删除（配合 --clean-logs 使用）")
+    
+    # 注意：wandb 配置现在完全通过环境变量或自动配置处理
+    # 可以通过环境变量设置：WANDB_MODE, WANDB_PROJECT, WANDB_ENTITY, WANDB_GROUP, WANDB_TAGS, WANDB_DIR 等
+    # 设置 WANDB_DISABLED=1 可以禁用 wandb
+    
     args = parser.parse_args()
 
     # 所有实验配置映射
@@ -414,11 +521,26 @@ if __name__ == "__main__":
     elif args.download:
         download_datasets(root, ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101', 'cifar-100'])
     elif args.generate_tasks:
-        # 生成所有实验的task_list
+        user_wandb_config = USER_WANDB_CONFIG.copy()
+        wandb_mode = str(user_wandb_config.get('mode', 'auto')).lower()
         print("🚀 正在为所有实验生成任务列表...")
+        if wandb_mode == 'disabled':
+            print("📊 Wandb: 已禁用（USER_WANDB_CONFIG）")
+        elif user_wandb_config:
+            print("📊 Wandb: 使用 USER_WANDB_CONFIG 进行自定义")
+        else:
+            print("📊 Wandb: 使用自动配置（基于实验名称自动生成 group/tags）")
+        
         for exp_name, exp_config in all_experiments.items():
             print(f"\n📝 生成实验: {exp_name}")
-            generate_task_list(config=exp_config, gpus=args.gpus, experiment_name=exp_name)
+            generate_task_list(
+                config=exp_config, 
+                gpus=args.gpus, 
+                experiment_name=exp_name,
+                wandb_config=user_wandb_config,
+                auto_wandb=True,
+                base_project=user_wandb_config.get('project')
+            )
         print(f"\n✅ 所有实验的任务列表已生成完成！")
     elif args.test:
         # 测试单个任务
@@ -440,15 +562,28 @@ if __name__ == "__main__":
             print(f"   训练轮次: {args.round}")
             if args.gpus:
                 print(f"   GPU: {args.gpus}")
+            
+            wandb_config = USER_WANDB_CONFIG.copy()
+            if wandb_config:
+                print(f"   Wandb: {wandb_config.get('mode', 'auto')} mode")
+                if wandb_config.get('project'):
+                    print(f"   Wandb Project: {wandb_config['project']}")
+            else:
+                print(f"   Wandb: 自动配置")
             print()
+            
             # 使用第一个GPU（如果指定了多个）
             gpu_for_test = None
             if args.gpus:
                 gpu_list = [x.strip() for x in str(args.gpus).split(',') if x.strip() != '']
                 if len(gpu_list) > 0:
                     gpu_for_test = gpu_list[0]
-            run(root, args.dataset, args.users, args.factorization, 
-                args.rank, args.noise, args.seed, args.round, gpu_for_test)
+            run(
+                root, args.dataset, args.users, args.factorization,
+                args.rank, args.noise, args.seed, args.round, gpu_for_test,
+                wandb_config=wandb_config if wandb_config else None,
+                experiment_name=args.dataset or 'manual_test'
+            )
             print("\n✅ 任务执行完成！")
     else:
         print("未指定操作。")
