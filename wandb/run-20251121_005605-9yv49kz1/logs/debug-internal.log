@@ -1,0 +1,183 @@
+2025-11-21 00:56:05,257 INFO    StreamThr :907483 [internal.py:wandb_internal():85] W&B internal server running at pid: 907483, started at: 2025-11-21 00:56:05.256374
+2025-11-21 00:56:05,259 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: status
+2025-11-21 00:56:05,261 INFO    WriterThread:907483 [datastore.py:open_for_write():87] open: /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/run-9yv49kz1.wandb
+2025-11-21 00:56:05,261 DEBUG   SenderThread:907483 [sender.py:send():379] send: header
+2025-11-21 00:56:05,262 DEBUG   SenderThread:907483 [sender.py:send():379] send: run
+2025-11-21 00:56:10,263 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: keepalive
+2025-11-21 00:56:10,852 INFO    SenderThread:907483 [dir_watcher.py:__init__():211] watching files in: /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files
+2025-11-21 00:56:10,853 INFO    SenderThread:907483 [sender.py:_start_run_threads():1188] run started: 9yv49kz1 with start time 1763657765.255202
+2025-11-21 00:56:10,853 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: status_report
+2025-11-21 00:56:10,859 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: check_version
+2025-11-21 00:56:10,860 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: check_version
+2025-11-21 00:56:12,765 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: run_start
+2025-11-21 00:56:12,799 DEBUG   HandlerThread:907483 [system_info.py:__init__():26] System info init
+2025-11-21 00:56:12,799 DEBUG   HandlerThread:907483 [system_info.py:__init__():41] System info init done
+2025-11-21 00:56:12,799 INFO    HandlerThread:907483 [system_monitor.py:probe():214] Collecting system info
+2025-11-21 00:56:12,852 DEBUG   HandlerThread:907483 [system_info.py:probe():152] Probing system
+2025-11-21 00:56:12,853 DEBUG   HandlerThread:907483 [system_info.py:_probe_git():137] Probing git
+2025-11-21 00:56:12,864 DEBUG   HandlerThread:907483 [system_info.py:_probe_git():145] Probing git done
+2025-11-21 00:56:12,864 DEBUG   HandlerThread:907483 [system_info.py:probe():200] Probing system done
+2025-11-21 00:56:12,864 DEBUG   HandlerThread:907483 [system_monitor.py:probe():223] {'os': 'Linux-5.15.0-139-generic-x86_64-with-glibc2.31', 'python': '3.11.14', 'heartbeatAt': '2025-11-20T16:56:12.852659', 'startedAt': '2025-11-20T16:56:05.251271', 'docker': None, 'cuda': None, 'args': ('--root', '/home/liuxin25/dataset', '--dataset-config-file', 'configs/datasets/caltech-101.yaml', '--num-users', '10', '--factorization', 'sepfpl_time_adaptive', '--rank', '16', '--noise', '0.4', '--seed', '1', '--round', '30', '--wandb-group', 'exp2', '--task-id', '[15/120]'), 'state': 'running', 'program': '/date/liuxin/code/dp-fpl/federated_main.py', 'codePathLocal': 'federated_main.py', 'codePath': 'federated_main.py', 'git': {'remote': 'git@gitee.com:anonymeee/dp-fpl.git', 'commit': '849607f1801f08fe34bda33117f428f2dc5b831c'}, 'email': '1712543411@qq.com', 'root': '/date/liuxin/code/dp-fpl', 'host': 'c224', 'username': 'liuxin25', 'executable': '/date/liuxin/miniconda3/envs/sepfpl/bin/python', 'cpu_count': 32, 'cpu_count_logical': 64, 'cpu_freq': {'current': 1278.88675, 'min': 800.0, 'max': 3500.0}, 'cpu_freq_per_core': [{'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 900.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 3500.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 3500.0, 'min': 800.0, 'max': 3500.0}, {'current': 3500.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 3500.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 3500.0, 'min': 800.0, 'max': 3500.0}, {'current': 3500.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 3500.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 3500.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 3500.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 900.0, 'min': 800.0, 'max': 3500.0}, {'current': 1057.167, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 3500.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}, {'current': 800.0, 'min': 800.0, 'max': 3500.0}], 'disk': {'/': {'total': 1758.8579597473145, 'used': 1658.5804824829102}}, 'gpu': 'NVIDIA A800-SXM4-80GB', 'gpu_count': 2, 'gpu_devices': [{'name': 'NVIDIA A800-SXM4-80GB', 'memory_total': 85899345920}, {'name': 'NVIDIA A800-SXM4-80GB', 'memory_total': 85899345920}], 'memory': {'total': 503.3057746887207}}
+2025-11-21 00:56:12,864 INFO    HandlerThread:907483 [system_monitor.py:probe():224] Finished collecting system info
+2025-11-21 00:56:12,864 INFO    HandlerThread:907483 [system_monitor.py:probe():227] Publishing system info
+2025-11-21 00:56:12,864 DEBUG   HandlerThread:907483 [system_info.py:_save_conda():209] Saving list of conda packages installed into the current environment
+2025-11-21 00:56:13,857 INFO    Thread-12 :907483 [dir_watcher.py:_on_file_created():271] file/dir created: /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/conda-environment.yaml
+2025-11-21 00:56:14,632 DEBUG   HandlerThread:907483 [system_info.py:_save_conda():224] Saving conda packages done
+2025-11-21 00:56:14,634 INFO    HandlerThread:907483 [system_monitor.py:probe():229] Finished publishing system info
+2025-11-21 00:56:14,643 DEBUG   SenderThread:907483 [sender.py:send():379] send: files
+2025-11-21 00:56:14,643 INFO    SenderThread:907483 [sender.py:_save_file():1454] saving file wandb-metadata.json with policy now
+2025-11-21 00:56:14,735 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: python_packages
+2025-11-21 00:56:14,736 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: stop_status
+2025-11-21 00:56:14,736 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: python_packages
+2025-11-21 00:56:14,739 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: stop_status
+2025-11-21 00:56:14,744 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-21 00:56:14,855 INFO    Thread-12 :907483 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/conda-environment.yaml
+2025-11-21 00:56:14,856 INFO    Thread-12 :907483 [dir_watcher.py:_on_file_created():271] file/dir created: /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/requirements.txt
+2025-11-21 00:56:14,856 INFO    Thread-12 :907483 [dir_watcher.py:_on_file_created():271] file/dir created: /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/wandb-metadata.json
+2025-11-21 00:56:15,960 DEBUG   SenderThread:907483 [sender.py:send():379] send: telemetry
+2025-11-21 00:56:15,960 DEBUG   SenderThread:907483 [sender.py:send():379] send: telemetry
+2025-11-21 00:56:15,964 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: status_report
+2025-11-21 00:56:15,968 DEBUG   SenderThread:907483 [sender.py:send():379] send: exit
+2025-11-21 00:56:15,968 INFO    SenderThread:907483 [sender.py:send_exit():586] handling exit code: 1
+2025-11-21 00:56:15,968 INFO    SenderThread:907483 [sender.py:send_exit():588] handling runtime: 2
+2025-11-21 00:56:15,970 INFO    SenderThread:907483 [sender.py:_save_file():1454] saving file wandb-summary.json with policy end
+2025-11-21 00:56:15,971 INFO    SenderThread:907483 [sender.py:send_exit():594] send defer
+2025-11-21 00:56:15,971 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: defer
+2025-11-21 00:56:15,971 INFO    HandlerThread:907483 [handler.py:handle_request_defer():184] handle defer: 0
+2025-11-21 00:56:15,972 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: defer
+2025-11-21 00:56:15,972 INFO    SenderThread:907483 [sender.py:send_request_defer():610] handle sender defer: 0
+2025-11-21 00:56:15,972 INFO    SenderThread:907483 [sender.py:transition_state():614] send defer: 1
+2025-11-21 00:56:15,972 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: defer
+2025-11-21 00:56:15,972 INFO    HandlerThread:907483 [handler.py:handle_request_defer():184] handle defer: 1
+2025-11-21 00:56:15,972 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: defer
+2025-11-21 00:56:15,972 INFO    SenderThread:907483 [sender.py:send_request_defer():610] handle sender defer: 1
+2025-11-21 00:56:15,972 INFO    SenderThread:907483 [sender.py:transition_state():614] send defer: 2
+2025-11-21 00:56:15,972 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: defer
+2025-11-21 00:56:15,973 INFO    HandlerThread:907483 [handler.py:handle_request_defer():184] handle defer: 2
+2025-11-21 00:56:15,973 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: defer
+2025-11-21 00:56:15,973 INFO    SenderThread:907483 [sender.py:send_request_defer():610] handle sender defer: 2
+2025-11-21 00:56:15,973 INFO    SenderThread:907483 [sender.py:transition_state():614] send defer: 3
+2025-11-21 00:56:15,973 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: defer
+2025-11-21 00:56:15,973 INFO    HandlerThread:907483 [handler.py:handle_request_defer():184] handle defer: 3
+2025-11-21 00:56:15,973 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: defer
+2025-11-21 00:56:15,973 INFO    SenderThread:907483 [sender.py:send_request_defer():610] handle sender defer: 3
+2025-11-21 00:56:15,973 INFO    SenderThread:907483 [sender.py:transition_state():614] send defer: 4
+2025-11-21 00:56:15,974 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: defer
+2025-11-21 00:56:15,974 INFO    HandlerThread:907483 [handler.py:handle_request_defer():184] handle defer: 4
+2025-11-21 00:56:15,974 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: defer
+2025-11-21 00:56:15,974 INFO    SenderThread:907483 [sender.py:send_request_defer():610] handle sender defer: 4
+2025-11-21 00:56:15,974 INFO    SenderThread:907483 [sender.py:transition_state():614] send defer: 5
+2025-11-21 00:56:15,974 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: defer
+2025-11-21 00:56:15,974 INFO    HandlerThread:907483 [handler.py:handle_request_defer():184] handle defer: 5
+2025-11-21 00:56:15,975 DEBUG   SenderThread:907483 [sender.py:send():379] send: summary
+2025-11-21 00:56:15,975 INFO    SenderThread:907483 [sender.py:_save_file():1454] saving file wandb-summary.json with policy end
+2025-11-21 00:56:15,975 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: defer
+2025-11-21 00:56:15,975 INFO    SenderThread:907483 [sender.py:send_request_defer():610] handle sender defer: 5
+2025-11-21 00:56:15,975 INFO    SenderThread:907483 [sender.py:transition_state():614] send defer: 6
+2025-11-21 00:56:15,976 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: defer
+2025-11-21 00:56:15,976 INFO    HandlerThread:907483 [handler.py:handle_request_defer():184] handle defer: 6
+2025-11-21 00:56:15,976 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: defer
+2025-11-21 00:56:15,976 INFO    SenderThread:907483 [sender.py:send_request_defer():610] handle sender defer: 6
+2025-11-21 00:56:15,981 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: status_report
+2025-11-21 00:56:16,189 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: poll_exit
+2025-11-21 00:56:16,419 INFO    SenderThread:907483 [sender.py:transition_state():614] send defer: 7
+2025-11-21 00:56:16,419 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: poll_exit
+2025-11-21 00:56:16,420 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: defer
+2025-11-21 00:56:16,420 INFO    HandlerThread:907483 [handler.py:handle_request_defer():184] handle defer: 7
+2025-11-21 00:56:16,420 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: defer
+2025-11-21 00:56:16,421 INFO    SenderThread:907483 [sender.py:send_request_defer():610] handle sender defer: 7
+2025-11-21 00:56:16,645 INFO    wandb-upload_0:907483 [upload_job.py:push():130] Uploaded file /tmp/tmp2smy674dwandb/0fhagdbe-wandb-metadata.json
+2025-11-21 00:56:16,856 INFO    Thread-12 :907483 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/config.yaml
+2025-11-21 00:56:16,857 INFO    Thread-12 :907483 [dir_watcher.py:_on_file_created():271] file/dir created: /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/wandb-summary.json
+2025-11-21 00:56:16,857 INFO    Thread-12 :907483 [dir_watcher.py:_on_file_created():271] file/dir created: /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/output.log
+2025-11-21 00:56:17,189 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: poll_exit
+2025-11-21 00:56:17,987 INFO    SenderThread:907483 [sender.py:transition_state():614] send defer: 8
+2025-11-21 00:56:17,988 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: poll_exit
+2025-11-21 00:56:17,988 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: defer
+2025-11-21 00:56:17,988 INFO    HandlerThread:907483 [handler.py:handle_request_defer():184] handle defer: 8
+2025-11-21 00:56:17,989 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: defer
+2025-11-21 00:56:17,989 INFO    SenderThread:907483 [sender.py:send_request_defer():610] handle sender defer: 8
+2025-11-21 00:56:17,989 INFO    SenderThread:907483 [job_builder.py:build():440] Attempting to build job artifact
+2025-11-21 00:56:17,989 INFO    SenderThread:907483 [job_builder.py:_get_source_type():569] is repo sourced job
+2025-11-21 00:56:18,021 INFO    SenderThread:907483 [job_builder.py:build():545] adding wandb-job metadata file
+2025-11-21 00:56:18,023 INFO    SenderThread:907483 [sender.py:transition_state():614] send defer: 9
+2025-11-21 00:56:18,023 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: defer
+2025-11-21 00:56:18,024 INFO    HandlerThread:907483 [handler.py:handle_request_defer():184] handle defer: 9
+2025-11-21 00:56:18,024 DEBUG   SenderThread:907483 [sender.py:send():379] send: artifact
+2025-11-21 00:56:18,190 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: poll_exit
+2025-11-21 00:56:18,857 INFO    Thread-12 :907483 [dir_watcher.py:_on_file_modified():288] file/dir modified: /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/output.log
+2025-11-21 00:56:21,502 INFO    SenderThread:907483 [sender.py:send_artifact():1537] sent artifact job-git_gitee.com_anonymeee_dp-fpl.git_federated_main.py - {'id': 'QXJ0aWZhY3Q6MjI2OTMyODEwMQ==', 'state': 'COMMITTED', 'artifactSequence': {'id': 'QXJ0aWZhY3RDb2xsZWN0aW9uOjc5ODAyMTU4Nw==', 'latestArtifact': {'id': 'QXJ0aWZhY3Q6MjI2OTMzNjc1NQ==', 'versionIndex': 7}}}
+2025-11-21 00:56:21,503 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: defer
+2025-11-21 00:56:21,503 INFO    SenderThread:907483 [sender.py:send_request_defer():610] handle sender defer: 9
+2025-11-21 00:56:21,503 INFO    SenderThread:907483 [dir_watcher.py:finish():358] shutting down directory watcher
+2025-11-21 00:56:21,503 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: status_report
+2025-11-21 00:56:21,859 INFO    SenderThread:907483 [dir_watcher.py:finish():388] scan: /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files
+2025-11-21 00:56:21,860 INFO    SenderThread:907483 [dir_watcher.py:finish():402] scan save: /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/wandb-summary.json wandb-summary.json
+2025-11-21 00:56:21,860 INFO    SenderThread:907483 [dir_watcher.py:finish():402] scan save: /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/output.log output.log
+2025-11-21 00:56:21,861 INFO    SenderThread:907483 [dir_watcher.py:finish():402] scan save: /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/config.yaml config.yaml
+2025-11-21 00:56:21,870 INFO    SenderThread:907483 [dir_watcher.py:finish():402] scan save: /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/wandb-metadata.json wandb-metadata.json
+2025-11-21 00:56:21,875 INFO    SenderThread:907483 [dir_watcher.py:finish():402] scan save: /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/requirements.txt requirements.txt
+2025-11-21 00:56:21,875 INFO    SenderThread:907483 [dir_watcher.py:finish():402] scan save: /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/conda-environment.yaml conda-environment.yaml
+2025-11-21 00:56:21,875 INFO    SenderThread:907483 [sender.py:transition_state():614] send defer: 10
+2025-11-21 00:56:21,875 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: poll_exit
+2025-11-21 00:56:21,876 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: defer
+2025-11-21 00:56:21,880 INFO    HandlerThread:907483 [handler.py:handle_request_defer():184] handle defer: 10
+2025-11-21 00:56:21,881 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: defer
+2025-11-21 00:56:21,881 INFO    SenderThread:907483 [sender.py:send_request_defer():610] handle sender defer: 10
+2025-11-21 00:56:21,881 INFO    SenderThread:907483 [file_pusher.py:finish():169] shutting down file pusher
+2025-11-21 00:56:22,193 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: poll_exit
+2025-11-21 00:56:22,194 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: poll_exit
+2025-11-21 00:56:22,930 INFO    wandb-upload_1:907483 [upload_job.py:push():130] Uploaded file /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/wandb-summary.json
+2025-11-21 00:56:22,944 INFO    wandb-upload_0:907483 [upload_job.py:push():130] Uploaded file /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/output.log
+2025-11-21 00:56:23,195 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: poll_exit
+2025-11-21 00:56:23,196 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: poll_exit
+2025-11-21 00:56:23,460 INFO    wandb-upload_2:907483 [upload_job.py:push():130] Uploaded file /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/config.yaml
+2025-11-21 00:56:23,848 INFO    wandb-upload_3:907483 [upload_job.py:push():130] Uploaded file /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/requirements.txt
+2025-11-21 00:56:24,195 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: poll_exit
+2025-11-21 00:56:24,196 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: poll_exit
+2025-11-21 00:56:24,725 INFO    wandb-upload_4:907483 [upload_job.py:push():130] Uploaded file /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/files/conda-environment.yaml
+2025-11-21 00:56:24,925 INFO    Thread-11 (_thread_body):907483 [sender.py:transition_state():614] send defer: 11
+2025-11-21 00:56:24,926 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: defer
+2025-11-21 00:56:24,927 INFO    HandlerThread:907483 [handler.py:handle_request_defer():184] handle defer: 11
+2025-11-21 00:56:24,927 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: defer
+2025-11-21 00:56:24,928 INFO    SenderThread:907483 [sender.py:send_request_defer():610] handle sender defer: 11
+2025-11-21 00:56:24,928 INFO    SenderThread:907483 [file_pusher.py:join():175] waiting for file pusher
+2025-11-21 00:56:24,928 INFO    SenderThread:907483 [sender.py:transition_state():614] send defer: 12
+2025-11-21 00:56:24,928 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: defer
+2025-11-21 00:56:24,929 INFO    HandlerThread:907483 [handler.py:handle_request_defer():184] handle defer: 12
+2025-11-21 00:56:24,929 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: defer
+2025-11-21 00:56:24,929 INFO    SenderThread:907483 [sender.py:send_request_defer():610] handle sender defer: 12
+2025-11-21 00:56:24,929 INFO    SenderThread:907483 [file_stream.py:finish():601] file stream finish called
+2025-11-21 00:56:25,196 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: poll_exit
+2025-11-21 00:56:25,685 INFO    SenderThread:907483 [file_stream.py:finish():605] file stream finish is done
+2025-11-21 00:56:25,685 INFO    SenderThread:907483 [sender.py:transition_state():614] send defer: 13
+2025-11-21 00:56:25,685 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: poll_exit
+2025-11-21 00:56:25,686 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: defer
+2025-11-21 00:56:25,686 INFO    HandlerThread:907483 [handler.py:handle_request_defer():184] handle defer: 13
+2025-11-21 00:56:25,687 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: defer
+2025-11-21 00:56:25,687 INFO    SenderThread:907483 [sender.py:send_request_defer():610] handle sender defer: 13
+2025-11-21 00:56:25,687 INFO    SenderThread:907483 [sender.py:transition_state():614] send defer: 14
+2025-11-21 00:56:25,687 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: defer
+2025-11-21 00:56:25,688 INFO    HandlerThread:907483 [handler.py:handle_request_defer():184] handle defer: 14
+2025-11-21 00:56:25,689 DEBUG   SenderThread:907483 [sender.py:send():379] send: final
+2025-11-21 00:56:25,689 DEBUG   SenderThread:907483 [sender.py:send():379] send: footer
+2025-11-21 00:56:25,689 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: defer
+2025-11-21 00:56:25,689 INFO    SenderThread:907483 [sender.py:send_request_defer():610] handle sender defer: 14
+2025-11-21 00:56:25,690 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: poll_exit
+2025-11-21 00:56:25,691 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: poll_exit
+2025-11-21 00:56:25,692 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: server_info
+2025-11-21 00:56:25,692 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: poll_exit
+2025-11-21 00:56:25,694 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: get_summary
+2025-11-21 00:56:25,694 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: server_info
+2025-11-21 00:56:25,694 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: sampled_history
+2025-11-21 00:56:25,698 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: internal_messages
+2025-11-21 00:56:26,051 DEBUG   SenderThread:907483 [sender.py:send_request():406] send_request: poll_exit
+2025-11-21 00:56:26,052 INFO    MainThread:907483 [wandb_run.py:_footer_history_summary_info():4016] rendering history
+2025-11-21 00:56:26,052 INFO    MainThread:907483 [wandb_run.py:_footer_history_summary_info():4048] rendering summary
+2025-11-21 00:56:26,053 INFO    MainThread:907483 [wandb_run.py:_footer_sync_info():3975] logging synced files
+2025-11-21 00:56:26,053 DEBUG   HandlerThread:907483 [handler.py:handle_request():158] handle_request: shutdown
+2025-11-21 00:56:26,054 INFO    HandlerThread:907483 [handler.py:finish():882] shutting down handler
+2025-11-21 00:56:26,693 INFO    WriterThread:907483 [datastore.py:close():296] close: /date/liuxin/code/dp-fpl/wandb/run-20251121_005605-9yv49kz1/run-9yv49kz1.wandb
+2025-11-21 00:56:27,052 INFO    SenderThread:907483 [sender.py:finish():1615] shutting down sender
+2025-11-21 00:56:27,052 INFO    SenderThread:907483 [file_pusher.py:finish():169] shutting down file pusher
+2025-11-21 00:56:27,052 INFO    SenderThread:907483 [file_pusher.py:join():175] waiting for file pusher

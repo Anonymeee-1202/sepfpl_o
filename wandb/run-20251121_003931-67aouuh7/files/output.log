@@ -1,0 +1,35 @@
+
+[32m00:39:36[39m | [1mINFO[22m | [36mcaltech-101_sepfpl_time_adaptive_8_0.4_10_[14/120][39m | [1m[RDP-sepfpl] 轮次 1: ε=0.000743, std=11.463021
+Traceback (most recent call last):
+  File "/date/liuxin/code/dp-fpl/federated_main.py", line 919, in <module>
+    main(args)
+  File "/date/liuxin/code/dp-fpl/federated_main.py", line 434, in main
+    loss_summary = local_trainer.train_forward(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/code/dp-fpl/trainers/DP_FPL.py", line 462, in train_forward
+    loss_summary = self.forward_pass(batch)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/code/dp-fpl/trainers/DP_FPL.py", line 376, in forward_pass
+    logits = self.model(image)
+             ^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/miniconda3/envs/sepfpl/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/miniconda3/envs/sepfpl/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1786, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/code/dp-fpl/trainers/DP_FPL.py", line 240, in forward
+    client_prompt = self.prompt_learner() # [100,77,512] = [n_cls, clip prompt token limit, ctx_dim]
+                    ^^^^^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/miniconda3/envs/sepfpl/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/miniconda3/envs/sepfpl/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1786, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/code/dp-fpl/trainers/DP_FPL.py", line 199, in forward
+    local_u_ctx, local_v_ctx, residual = factorize_ctx(self.local_ctx.data, self.rank)
+                                                       ^^^^^^^^^^^^^^
+  File "/date/liuxin/miniconda3/envs/sepfpl/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1964, in __getattr__
+    raise AttributeError(
+AttributeError: 'PromptLearner' object has no attribute 'local_ctx'

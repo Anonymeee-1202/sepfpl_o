@@ -1,0 +1,52 @@
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | Loading trainer: DP_FPL
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | Loading dataset: OxfordPets
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | Reading split from %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | Creating a baseline federated dataset
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | class_num %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | Creating a baseline federated dataset
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | class_num %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | user class dict total %s
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | idx: %s, output_dict_len: %d
+2025-11-21 06:59:21 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | Loading CLIP (backbone: ViT-B/16)
+2025-11-21 06:59:23 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | Building custom CLIP
+2025-11-21 06:59:23 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | Turning off gradients in both the image and the text encoder
+2025-11-21 06:59:24 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | [wandb] 正在初始化实验：project=SepFPL, name=oxford_pets-sepfpl_time_adaptive-rank16-noise0.1-seed1-users10-95/120, mode=online
+2025-11-21 06:59:29 | INFO | oxford_pets_sepfpl_time_adaptive_16_0.1_10_[95/120] | [RDP-sepfpl] 轮次 1: ε=0.000186, std=22.926042

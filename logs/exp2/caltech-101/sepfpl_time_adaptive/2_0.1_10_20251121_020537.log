@@ -1,0 +1,52 @@
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | Loading trainer: DP_FPL
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | Loading dataset: Caltech101
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | Reading split from %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | Creating a baseline federated dataset
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | class_num %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | Creating a baseline federated dataset
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | class_num %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | user class dict total %s
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | idx: %s, output_dict_len: %d
+2025-11-21 02:05:37 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | Loading CLIP (backbone: ViT-B/16)
+2025-11-21 02:05:39 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | Building custom CLIP
+2025-11-21 02:05:39 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | Turning off gradients in both the image and the text encoder
+2025-11-21 02:05:39 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | [wandb] 正在初始化实验：project=SepFPL, name=caltech-101-sepfpl_time_adaptive-rank2-noise0.1-seed1-users10-32/120, mode=online
+2025-11-21 02:05:45 | INFO | caltech-101_sepfpl_time_adaptive_2_0.1_10_[32/120] | [RDP-sepfpl] 轮次 1: ε=0.000186, std=22.926042
