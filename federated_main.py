@@ -232,6 +232,7 @@ def init_wandb_run(args, cfg, logger):
         "name": run_name,
         "tags": tags,
         "config": config_payload,
+        "dir": os.path.expanduser('~/data/sepfpl/wandb'),
         "settings": wandb.Settings(start_method="thread", _disable_stats=True),
     }
     # 去除值为 None 的键，以避免 wandb 报错
@@ -247,7 +248,7 @@ def save_checkpoint(args, epoch, local_weights, local_acc, neighbor_acc):
     """
     dataset = args.dataset_config_file.split('/')[-1].split('.')[0]
     wandb_group = getattr(args, 'wandb_group', None) or 'default'
-    save_dir = os.path.join(os.getcwd(), f'checkpoints/{wandb_group}/{dataset}')
+    save_dir = os.path.join(os.path.expanduser('~/data/sepfpl/checkpoints'), wandb_group, dataset)
     os.makedirs(save_dir, exist_ok=True)
     save_filename = os.path.join(
         save_dir,
@@ -269,8 +270,10 @@ def load_checkpoint(args):
     dataset = args.dataset_config_file.split('/')[-1].split('.')[0]
     wandb_group = getattr(args, 'wandb_group', None) or 'default'
     save_filename = os.path.join(
-        os.getcwd(),
-        f'checkpoints/{wandb_group}/{dataset}/{args.factorization}_{args.rank}_{args.noise}_{args.seed}_{args.num_users}.pth.tar'
+        os.path.expanduser('~/data/sepfpl/checkpoints'),
+        wandb_group,
+        dataset,
+        f'{args.factorization}_{args.rank}_{args.noise}_{args.seed}_{args.num_users}.pth.tar'
     )
     if not os.path.exists(save_filename):
         # epoch=0，local_weights 为 num_users 个空 dict，acc 为空列表
@@ -289,7 +292,7 @@ def load_checkpoint(args):
 def main(args):
     # ====== 初始化日志与配置 ======
     # 日志会将命令行参数与关键信息打印并写入文件，便于后续复现
-    logger = init_logger_from_args(args, log_dir='logs', log_to_file=True, log_to_console=True)
+    logger = init_logger_from_args(args, log_dir=os.path.expanduser('~/data/sepfpl/logs'), log_to_file=True, log_to_console=True)
 
     cfg = setup_cfg(args)
     if cfg.SEED >= 0:
@@ -752,7 +755,7 @@ def main(args):
             save_checkpoint(args, epoch, local_weights, local_acc_list, neighbor_acc_list)
             dataset_name = args.dataset_config_file.split('/')[-1].split('.')[0]
             wandb_group = getattr(args, 'wandb_group', None) or 'default'
-            output_dir = os.path.join(os.getcwd(), f'outputs/{wandb_group}/{dataset_name}')
+            output_dir = os.path.join(os.path.expanduser('~/data/sepfpl/outputs'), wandb_group, dataset_name)
             os.makedirs(output_dir, exist_ok=True)
             pickle.dump(
                 [local_acc_list, neighbor_acc_list],
