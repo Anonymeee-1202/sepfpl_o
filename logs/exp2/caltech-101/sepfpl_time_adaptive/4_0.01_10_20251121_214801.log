@@ -1,0 +1,256 @@
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | Loading trainer: DP_FPL
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | Loading dataset: Caltech101
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | Reading split from %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | Creating a baseline federated dataset
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | class_num %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | Creating a baseline federated dataset
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | class_num %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | user class dict total %s
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | idx: %s, output_dict_len: %d
+2025-11-21 21:48:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | Loading CLIP (backbone: ViT-B/16)
+2025-11-21 21:48:04 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | Building custom CLIP
+2025-11-21 21:48:04 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | Turning off gradients in both the image and the text encoder
+2025-11-21 21:48:04 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [wandb] 正在初始化实验：project=SepFPL, name=caltech-101-sepfpl_time_adaptive-rank4-noise0.01-seed1-users10-26/60, mode=offline
+2025-11-21 21:48:07 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 1: ε=0.000019, std=72.498511
+2025-11-21 21:48:31 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 1/30] 训练耗时: 23.88s | 平均训练准确率: 54.82
+2025-11-21 21:48:31 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 2: ε=0.000038, std=50.383500
+2025-11-21 21:48:56 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 2/30] 训练耗时: 25.25s | 平均训练准确率: 52.90
+2025-11-21 21:48:56 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 3: ε=0.000059, std=40.723062
+2025-11-21 21:49:21 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 3/30] 训练耗时: 25.38s | 平均训练准确率: 53.57
+2025-11-21 21:49:21 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 4: ε=0.000080, std=35.014473
+2025-11-21 21:49:45 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 4/30] 训练耗时: 23.92s | 平均训练准确率: 53.97
+2025-11-21 21:49:45 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 5: ε=0.000101, std=31.143673
+2025-11-21 21:50:09 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 5/30] 训练耗时: 23.82s | 平均训练准确率: 54.55
+2025-11-21 21:50:09 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 6: ε=0.000122, std=28.300863
+2025-11-21 21:50:30 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 6/30] 训练耗时: 21.05s | 平均训练准确率: 52.50
+2025-11-21 21:50:30 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 7: ε=0.000143, std=26.100728
+2025-11-21 21:50:52 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 7/30] 训练耗时: 21.97s | 平均训练准确率: 53.44
+2025-11-21 21:50:52 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 8: ε=0.000165, std=24.333627
+2025-11-21 21:51:17 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 8/30] 训练耗时: 24.65s | 平均训练准确率: 53.35
+2025-11-21 21:51:17 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 9: ε=0.000187, std=22.874508
+2025-11-21 21:51:40 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 9/30] 训练耗时: 23.57s | 平均训练准确率: 54.02
+2025-11-21 21:51:40 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 10: ε=0.000208, std=21.643579
+2025-11-21 21:52:04 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 10/30] 训练耗时: 23.35s | 平均训练准确率: 52.77
+2025-11-21 21:52:04 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 11: ε=0.000230, std=20.587230
+2025-11-21 21:52:27 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 11/30] 训练耗时: 23.66s | 平均训练准确率: 54.69
+2025-11-21 21:52:27 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 12: ε=0.000252, std=19.667943
+2025-11-21 21:52:52 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 12/30] 训练耗时: 24.52s | 平均训练准确率: 54.20
+2025-11-21 21:52:52 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 13: ε=0.000275, std=18.858573
+2025-11-21 21:53:17 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 13/30] 训练耗时: 24.97s | 平均训练准确率: 55.13
+2025-11-21 21:53:17 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 14: ε=0.000297, std=18.138938
+2025-11-21 21:53:40 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 14/30] 训练耗时: 23.17s | 平均训练准确率: 53.44
+2025-11-21 21:53:40 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 15: ε=0.000319, std=17.493680
+2025-11-21 21:54:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 15/30] 训练耗时: 21.13s | 平均训练准确率: 53.53
+2025-11-21 21:54:01 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 16: ε=0.000341, std=16.910876
+2025-11-21 21:54:21 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 16/30] 训练耗时: 20.09s | 平均训练准确率: 53.44
+2025-11-21 21:54:21 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 17: ε=0.000364, std=16.381113
+2025-11-21 21:54:44 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 17/30] 训练耗时: 22.57s | 平均训练准确率: 53.93
+2025-11-21 21:54:44 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 18: ε=0.000386, std=15.896848
+2025-11-21 21:55:07 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 18/30] 训练耗时: 23.37s | 平均训练准确率: 52.95
+2025-11-21 21:55:07 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 19: ε=0.000409, std=15.451955
+2025-11-21 21:55:32 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 19/30] 训练耗时: 24.88s | 平均训练准确率: 53.57
+2025-11-21 21:55:32 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 20: ε=0.000432, std=15.041403
+2025-11-21 21:55:55 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 20/30] 训练耗时: 23.50s | 平均训练准确率: 53.44
+2025-11-21 21:55:55 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 21: ε=0.000454, std=14.661012
+2025-11-21 21:56:20 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 21/30] 训练耗时: 24.60s | 平均训练准确率: 53.35
+2025-11-21 21:56:20 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 22: ε=0.000477, std=14.307283
+2025-11-21 21:56:43 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 22/30] 训练耗时: 22.90s | 平均训练准确率: 53.75
+2025-11-21 21:56:43 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 23: ε=0.000500, std=13.977258
+2025-11-21 21:57:07 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 23/30] 训练耗时: 23.99s | 平均训练准确率: 53.97
+2025-11-21 21:57:07 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 24: ε=0.000523, std=13.668416
+2025-11-21 21:57:29 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 24/30] 训练耗时: 21.66s | 平均训练准确率: 54.02
+2025-11-21 21:57:29 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 25: ε=0.000546, std=13.378597
+2025-11-21 21:57:48 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 25/30] 训练耗时: 19.44s | 平均训练准确率: 53.12
+2025-11-21 21:57:48 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 26: ε=0.000569, std=13.105937
+2025-11-21 21:58:09 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 26/30] 训练耗时: 20.58s | 平均训练准确率: 53.88
+2025-11-21 21:58:09 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 27: ε=0.000592, std=12.848816
+2025-11-21 21:58:29 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 27/30] 训练耗时: 20.17s | 平均训练准确率: 53.44
+2025-11-21 21:58:29 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 28: ε=0.000615, std=12.605820
+2025-11-21 21:58:49 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 28/30] 训练耗时: 20.67s | 平均训练准确率: 53.57
+2025-11-21 21:58:49 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | 
+2025-11-21 21:58:49 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | ================================================================================
+2025-11-21 21:58:49 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] |                     TEST START - Epoch 28/30
+2025-11-21 21:58:49 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | ================================================================================
+2025-11-21 21:58:49 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | 
+2025-11-21 22:01:44 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | 
+================= Local Test Results ==================
++----------+----------+------------+----------+
+| Client   | Accuracy | Error Rate | Macro F1 |
++----------+----------+------------+----------+
+| Client 0 |    40.85 |      59.15 |    58.25 |
+| Client 1 |    90.91 |       9.09 |    93.91 |
+| Client 2 |    58.44 |      41.56 |    65.32 |
+| Client 3 |    47.53 |      52.47 |    54.11 |
+| Client 4 |    82.81 |      17.19 |    79.56 |
+| Client 5 |    80.89 |      19.11 |    83.48 |
+| Client 6 |    70.76 |      29.24 |    76.49 |
+| Client 7 |    68.07 |      31.93 |    74.86 |
+| Client 8 |    92.29 |       7.71 |    84.82 |
+| Client 9 |    82.04 |      17.96 |    77.67 |
+| Average  |    71.46 |      28.54 |    74.85 |
++----------+----------+------------+----------+
+
+2025-11-21 22:01:44 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | 
+================= Neighbor Test Results ==================
++----------+----------+------------+----------+
+| Client   | Accuracy | Error Rate | Macro F1 |
++----------+----------+------------+----------+
+| Client 0 |    69.51 |      30.49 |    63.81 |
+| Client 1 |    65.05 |      34.95 |    59.14 |
+| Client 2 |    69.15 |      30.85 |    65.73 |
+| Client 3 |    72.08 |      27.92 |    68.30 |
+| Client 4 |    72.64 |      27.36 |    68.79 |
+| Client 5 |    76.13 |      23.87 |    70.60 |
+| Client 6 |    76.81 |      23.19 |    70.22 |
+| Client 7 |    78.17 |      21.83 |    71.30 |
+| Client 8 |    75.17 |      24.83 |    69.65 |
+| Client 9 |    78.71 |      21.29 |    72.12 |
+| Average  |    73.34 |      26.66 |    67.97 |
++----------+----------+------------+----------+
+
+2025-11-21 22:01:44 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | 
+2025-11-21 22:01:44 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | ================================================================================
+2025-11-21 22:01:44 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] |                     TEST FINISH - Epoch 28/30
+2025-11-21 22:01:44 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] |                     测试耗时: 174.77s
+2025-11-21 22:01:44 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | ================================================================================
+2025-11-21 22:01:44 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | 
+2025-11-21 22:01:44 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 29: ε=0.000638, std=12.375710
+2025-11-21 22:02:03 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 29/30] 训练耗时: 19.09s | 平均训练准确率: 59.15
+2025-11-21 22:02:03 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | 
+2025-11-21 22:02:03 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | ================================================================================
+2025-11-21 22:02:03 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] |                     TEST START - Epoch 29/30
+2025-11-21 22:02:03 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | ================================================================================
+2025-11-21 22:02:03 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | 
+2025-11-21 22:04:56 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | 
+================= Local Test Results ==================
++----------+----------+------------+----------+
+| Client   | Accuracy | Error Rate | Macro F1 |
++----------+----------+------------+----------+
+| Client 0 |    35.59 |      64.41 |    57.45 |
+| Client 1 |    55.68 |      44.32 |    62.49 |
+| Client 2 |    40.26 |      59.74 |    44.18 |
+| Client 3 |     9.88 |      90.12 |    10.00 |
+| Client 4 |    88.24 |      11.76 |    87.25 |
+| Client 5 |    72.61 |      27.39 |    75.67 |
+| Client 6 |    32.75 |      67.25 |    38.64 |
+| Client 7 |    84.16 |      15.84 |    68.52 |
+| Client 8 |    90.84 |       9.16 |    79.33 |
+| Client 9 |    74.76 |      25.24 |    70.33 |
+| Average  |    58.48 |      41.52 |    59.38 |
++----------+----------+------------+----------+
+
+2025-11-21 22:04:56 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | 
+================= Neighbor Test Results ==================
++----------+----------+------------+----------+
+| Client   | Accuracy | Error Rate | Macro F1 |
++----------+----------+------------+----------+
+| Client 0 |    70.33 |      29.67 |    56.66 |
+| Client 1 |    64.26 |      35.74 |    53.85 |
+| Client 2 |    49.89 |      50.11 |    43.99 |
+| Client 3 |    35.00 |      65.00 |    34.67 |
+| Client 4 |    54.86 |      45.14 |    46.71 |
+| Client 5 |    67.68 |      32.32 |    56.31 |
+| Client 6 |    73.37 |      26.63 |    63.90 |
+| Client 7 |    69.00 |      31.00 |    61.85 |
+| Client 8 |    68.78 |      31.22 |    60.39 |
+| Client 9 |    72.60 |      27.40 |    62.12 |
+| Average  |    62.58 |      37.42 |    54.04 |
++----------+----------+------------+----------+
+
+2025-11-21 22:04:56 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | 
+2025-11-21 22:04:56 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | ================================================================================
+2025-11-21 22:04:56 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] |                     TEST FINISH - Epoch 29/30
+2025-11-21 22:04:56 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] |                     测试耗时: 173.05s
+2025-11-21 22:04:56 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | ================================================================================
+2025-11-21 22:04:56 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | 
+2025-11-21 22:04:56 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [RDP-sepfpl] 轮次 30: ε=0.000661, std=12.157392
+2025-11-21 22:05:16 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | [Epoch 30/30] 训练耗时: 19.93s | 平均训练准确率: 50.85
+2025-11-21 22:05:16 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | 
+2025-11-21 22:05:16 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | ================================================================================
+2025-11-21 22:05:16 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] |                     TEST START - Epoch 30/30
+2025-11-21 22:05:16 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | ================================================================================
+2025-11-21 22:05:16 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | 
+2025-11-21 22:08:08 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | 
+================= Local Test Results ==================
++----------+----------+------------+----------+
+| Client   | Accuracy | Error Rate | Macro F1 |
++----------+----------+------------+----------+
+| Client 0 |    40.85 |      59.15 |    67.06 |
+| Client 1 |    26.70 |      73.30 |    33.06 |
+| Client 2 |    19.48 |      80.52 |    24.47 |
+| Client 3 |    23.46 |      76.54 |    28.81 |
+| Client 4 |    84.62 |      15.38 |    85.82 |
+| Client 5 |    77.07 |      22.93 |    80.29 |
+| Client 6 |    43.86 |      56.14 |    53.73 |
+| Client 7 |    77.97 |      22.03 |    61.43 |
+| Client 8 |    88.43 |      11.57 |    78.97 |
+| Client 9 |    75.73 |      24.27 |    70.96 |
+| Average  |    55.82 |      44.18 |    58.46 |
++----------+----------+------------+----------+
+
+2025-11-21 22:08:08 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | 
+================= Neighbor Test Results ==================
++----------+----------+------------+----------+
+| Client   | Accuracy | Error Rate | Macro F1 |
++----------+----------+------------+----------+
+| Client 0 |    68.01 |      31.99 |    59.70 |
+| Client 1 |    37.00 |      63.00 |    31.59 |
+| Client 2 |    28.47 |      71.53 |    22.28 |
+| Client 3 |    41.03 |      58.97 |    37.68 |
+| Client 4 |    52.23 |      47.77 |    48.20 |
+| Client 5 |    68.54 |      31.46 |    60.50 |
+| Client 6 |    72.36 |      27.64 |    61.70 |
+| Client 7 |    71.32 |      28.68 |    65.78 |
+| Client 8 |    70.29 |      29.71 |    64.22 |
+| Client 9 |    74.19 |      25.81 |    65.93 |
+| Average  |    58.35 |      41.65 |    51.76 |
++----------+----------+------------+----------+
+
+2025-11-21 22:08:08 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | 
+2025-11-21 22:08:08 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | ================================================================================
+2025-11-21 22:08:08 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] |                     TEST FINISH - Epoch 30/30
+2025-11-21 22:08:08 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] |                     测试耗时: 171.58s
+2025-11-21 22:08:08 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | ================================================================================
+2025-11-21 22:08:08 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | 
+2025-11-21 22:08:08 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | maximum test local acc: 71.459
+2025-11-21 22:08:08 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | mean of local acc: 61.917
+2025-11-21 22:08:08 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | maximum test neighbor acc: 73.340
+2025-11-21 22:08:08 | INFO | caltech-101_sepfpl_time_adaptive_4_0.01_10_[26/60] | mean of neighbor acc: 64.754

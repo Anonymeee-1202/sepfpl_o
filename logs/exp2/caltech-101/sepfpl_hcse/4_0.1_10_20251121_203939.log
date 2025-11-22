@@ -1,0 +1,226 @@
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | Loading trainer: DP_FPL
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | Loading dataset: Caltech101
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | Reading split from %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | Creating a baseline federated dataset
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | class_num %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | Creating a baseline federated dataset
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | class_num %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | user class dict total %s
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | idx: %s, output_dict_len: %d
+2025-11-21 20:39:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | Loading CLIP (backbone: ViT-B/16)
+2025-11-21 20:39:41 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | Building custom CLIP
+2025-11-21 20:39:41 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | Turning off gradients in both the image and the text encoder
+2025-11-21 20:39:41 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [wandb] 正在初始化实验：project=SepFPL, name=caltech-101-sepfpl_hcse-rank4-noise0.1-seed1-users10-15/60, mode=offline
+2025-11-21 20:40:03 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 1/30] 训练耗时: 19.24s | 平均训练准确率: 66.16
+2025-11-21 20:40:21 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 2/30] 训练耗时: 18.33s | 平均训练准确率: 65.98
+2025-11-21 20:40:39 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 3/30] 训练耗时: 17.86s | 平均训练准确率: 65.94
+2025-11-21 20:40:58 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 4/30] 训练耗时: 19.38s | 平均训练准确率: 66.21
+2025-11-21 20:41:17 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 5/30] 训练耗时: 18.23s | 平均训练准确率: 66.83
+2025-11-21 20:41:35 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 6/30] 训练耗时: 18.31s | 平均训练准确率: 67.32
+2025-11-21 20:41:53 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 7/30] 训练耗时: 18.28s | 平均训练准确率: 66.88
+2025-11-21 20:42:11 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 8/30] 训练耗时: 17.81s | 平均训练准确率: 67.99
+2025-11-21 20:42:30 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 9/30] 训练耗时: 18.57s | 平均训练准确率: 65.31
+2025-11-21 20:42:48 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 10/30] 训练耗时: 17.95s | 平均训练准确率: 66.29
+2025-11-21 20:43:05 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 11/30] 训练耗时: 17.71s | 平均训练准确率: 66.12
+2025-11-21 20:43:23 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 12/30] 训练耗时: 17.59s | 平均训练准确率: 67.46
+2025-11-21 20:43:41 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 13/30] 训练耗时: 17.63s | 平均训练准确率: 67.19
+2025-11-21 20:43:58 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 14/30] 训练耗时: 17.80s | 平均训练准确率: 65.89
+2025-11-21 20:44:16 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 15/30] 训练耗时: 17.72s | 平均训练准确率: 67.01
+2025-11-21 20:44:35 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 16/30] 训练耗时: 18.57s | 平均训练准确率: 66.29
+2025-11-21 20:44:53 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 17/30] 训练耗时: 18.08s | 平均训练准确率: 67.90
+2025-11-21 20:45:12 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 18/30] 训练耗时: 18.92s | 平均训练准确率: 65.98
+2025-11-21 20:45:31 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 19/30] 训练耗时: 19.64s | 平均训练准确率: 66.52
+2025-11-21 20:45:50 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 20/30] 训练耗时: 18.68s | 平均训练准确率: 65.94
+2025-11-21 20:46:10 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 21/30] 训练耗时: 19.58s | 平均训练准确率: 67.46
+2025-11-21 20:46:29 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 22/30] 训练耗时: 18.96s | 平均训练准确率: 66.29
+2025-11-21 20:46:47 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 23/30] 训练耗时: 18.72s | 平均训练准确率: 66.74
+2025-11-21 20:47:06 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 24/30] 训练耗时: 18.91s | 平均训练准确率: 66.29
+2025-11-21 20:47:25 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 25/30] 训练耗时: 18.35s | 平均训练准确率: 65.94
+2025-11-21 20:47:43 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 26/30] 训练耗时: 18.04s | 平均训练准确率: 67.05
+2025-11-21 20:48:01 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 27/30] 训练耗时: 18.56s | 平均训练准确率: 65.94
+2025-11-21 20:48:20 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 28/30] 训练耗时: 18.87s | 平均训练准确率: 65.71
+2025-11-21 20:48:20 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | 
+2025-11-21 20:48:20 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | ================================================================================
+2025-11-21 20:48:20 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] |                     TEST START - Epoch 28/30
+2025-11-21 20:48:20 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | ================================================================================
+2025-11-21 20:48:20 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | 
+2025-11-21 20:50:40 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | 
+================= Local Test Results ==================
++----------+----------+------------+----------+
+| Client   | Accuracy | Error Rate | Macro F1 |
++----------+----------+------------+----------+
+| Client 0 |    57.89 |      42.11 |    76.29 |
+| Client 1 |    91.48 |       8.52 |    89.53 |
+| Client 2 |    67.53 |      32.47 |    71.29 |
+| Client 3 |    80.25 |      19.75 |    81.25 |
+| Client 4 |    91.40 |       8.60 |    91.96 |
+| Client 5 |    85.99 |      14.01 |    86.75 |
+| Client 6 |    76.02 |      23.98 |    81.43 |
+| Client 7 |    90.10 |       9.90 |    77.97 |
+| Client 8 |    88.67 |      11.33 |    81.40 |
+| Client 9 |    86.41 |      13.59 |    84.40 |
+| Average  |    81.57 |      18.43 |    82.23 |
++----------+----------+------------+----------+
+
+2025-11-21 20:50:40 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | 
+================= Neighbor Test Results ==================
++----------+----------+------------+----------+
+| Client   | Accuracy | Error Rate | Macro F1 |
++----------+----------+------------+----------+
+| Client 0 |    86.69 |      13.31 |    78.85 |
+| Client 1 |    80.78 |      19.22 |    74.78 |
+| Client 2 |    82.82 |      17.18 |    77.26 |
+| Client 3 |    82.20 |      17.80 |    76.72 |
+| Client 4 |    81.73 |      18.27 |    75.97 |
+| Client 5 |    81.11 |      18.89 |    74.87 |
+| Client 6 |    81.78 |      18.22 |    75.17 |
+| Client 7 |    78.60 |      21.40 |    74.51 |
+| Client 8 |    78.68 |      21.32 |    73.77 |
+| Client 9 |    80.04 |      19.96 |    74.73 |
+| Average  |    81.44 |      18.56 |    75.67 |
++----------+----------+------------+----------+
+
+2025-11-21 20:50:40 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | 
+2025-11-21 20:50:40 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | ================================================================================
+2025-11-21 20:50:40 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] |                     TEST FINISH - Epoch 28/30
+2025-11-21 20:50:40 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] |                     测试耗时: 140.47s
+2025-11-21 20:50:40 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | ================================================================================
+2025-11-21 20:50:40 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | 
+2025-11-21 20:51:00 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 29/30] 训练耗时: 19.21s | 平均训练准确率: 70.40
+2025-11-21 20:51:00 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | 
+2025-11-21 20:51:00 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | ================================================================================
+2025-11-21 20:51:00 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] |                     TEST START - Epoch 29/30
+2025-11-21 20:51:00 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | ================================================================================
+2025-11-21 20:51:00 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | 
+2025-11-21 20:53:17 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | 
+================= Local Test Results ==================
++----------+----------+------------+----------+
+| Client   | Accuracy | Error Rate | Macro F1 |
++----------+----------+------------+----------+
+| Client 0 |    67.67 |      32.33 |    81.56 |
+| Client 1 |    93.75 |       6.25 |    94.00 |
+| Client 2 |    66.88 |      33.12 |    69.43 |
+| Client 3 |    82.10 |      17.90 |    83.55 |
+| Client 4 |    91.86 |       8.14 |    90.58 |
+| Client 5 |    95.54 |       4.46 |    97.14 |
+| Client 6 |    84.21 |      15.79 |    88.17 |
+| Client 7 |    95.79 |       4.21 |    91.96 |
+| Client 8 |    96.87 |       3.13 |    95.28 |
+| Client 9 |    92.72 |       7.28 |    92.50 |
+| Average  |    86.74 |      13.26 |    88.42 |
++----------+----------+------------+----------+
+
+2025-11-21 20:53:17 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | 
+================= Neighbor Test Results ==================
++----------+----------+------------+----------+
+| Client   | Accuracy | Error Rate | Macro F1 |
++----------+----------+------------+----------+
+| Client 0 |    90.13 |       9.87 |    84.21 |
+| Client 1 |    86.15 |      13.85 |    82.11 |
+| Client 2 |    88.23 |      11.77 |    85.17 |
+| Client 3 |    87.06 |      12.94 |    83.52 |
+| Client 4 |    86.45 |      13.55 |    83.08 |
+| Client 5 |    86.09 |      13.91 |    82.54 |
+| Client 6 |    87.18 |      12.82 |    84.10 |
+| Client 7 |    84.86 |      15.14 |    82.88 |
+| Client 8 |    84.24 |      15.76 |    81.87 |
+| Client 9 |    85.44 |      14.56 |    83.00 |
+| Average  |    86.58 |      13.42 |    83.25 |
++----------+----------+------------+----------+
+
+2025-11-21 20:53:17 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | 
+2025-11-21 20:53:17 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | ================================================================================
+2025-11-21 20:53:17 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] |                     TEST FINISH - Epoch 29/30
+2025-11-21 20:53:17 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] |                     测试耗时: 137.36s
+2025-11-21 20:53:17 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | ================================================================================
+2025-11-21 20:53:17 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | 
+2025-11-21 20:53:34 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | [Epoch 30/30] 训练耗时: 17.35s | 平均训练准确率: 75.80
+2025-11-21 20:53:34 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | 
+2025-11-21 20:53:34 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | ================================================================================
+2025-11-21 20:53:34 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] |                     TEST START - Epoch 30/30
+2025-11-21 20:53:34 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | ================================================================================
+2025-11-21 20:53:34 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | 
+2025-11-21 20:55:52 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | 
+================= Local Test Results ==================
++----------+----------+------------+----------+
+| Client   | Accuracy | Error Rate | Macro F1 |
++----------+----------+------------+----------+
+| Client 0 |    74.44 |      25.56 |    83.26 |
+| Client 1 |    92.61 |       7.39 |    91.96 |
+| Client 2 |    66.88 |      33.12 |    69.43 |
+| Client 3 |    80.86 |      19.14 |    81.88 |
+| Client 4 |    91.40 |       8.60 |    91.50 |
+| Client 5 |    95.54 |       4.46 |    97.14 |
+| Client 6 |    79.53 |      20.47 |    85.62 |
+| Client 7 |    94.80 |       5.20 |    90.85 |
+| Client 8 |    91.33 |       8.67 |    85.75 |
+| Client 9 |    92.23 |       7.77 |    93.77 |
+| Average  |    85.96 |      14.04 |    87.12 |
++----------+----------+------------+----------+
+
+2025-11-21 20:55:52 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | 
+================= Neighbor Test Results ==================
++----------+----------+------------+----------+
+| Client   | Accuracy | Error Rate | Macro F1 |
++----------+----------+------------+----------+
+| Client 0 |    88.14 |      11.86 |    80.43 |
+| Client 1 |    86.33 |      13.67 |    81.08 |
+| Client 2 |    88.19 |      11.81 |    83.87 |
+| Client 3 |    87.06 |      12.94 |    82.28 |
+| Client 4 |    85.74 |      14.26 |    80.90 |
+| Client 5 |    83.62 |      16.38 |    79.26 |
+| Client 6 |    85.09 |      14.91 |    80.52 |
+| Client 7 |    82.29 |      17.71 |    79.68 |
+| Client 8 |    83.32 |      16.68 |    80.52 |
+| Client 9 |    84.02 |      15.98 |    81.20 |
+| Average  |    85.38 |      14.62 |    80.97 |
++----------+----------+------------+----------+
+
+2025-11-21 20:55:52 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | 
+2025-11-21 20:55:52 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | ================================================================================
+2025-11-21 20:55:52 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] |                     TEST FINISH - Epoch 30/30
+2025-11-21 20:55:52 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] |                     测试耗时: 137.82s
+2025-11-21 20:55:52 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | ================================================================================
+2025-11-21 20:55:52 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | 
+2025-11-21 20:55:52 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | maximum test local acc: 86.739
+2025-11-21 20:55:52 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | mean of local acc: 84.759
+2025-11-21 20:55:52 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | maximum test neighbor acc: 86.584
+2025-11-21 20:55:52 | INFO | caltech-101_sepfpl_hcse_4_0.1_10_[15/60] | mean of neighbor acc: 84.469

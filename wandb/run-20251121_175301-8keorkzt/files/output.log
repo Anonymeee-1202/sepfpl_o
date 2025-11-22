@@ -1,0 +1,58 @@
+
+[32m17:53:06[39m | [1mINFO[22m | [36mcaltech-101_sepfpl_time_adaptive_1_0.4_10_[2/60][39m | [1m[RDP-sepfpl] 轮次 1: ε=0.000743, std=11.463021
+
+
+
+
+Traceback (most recent call last):
+  File "/date/liuxin/code/dp-fpl/federated_main.py", line 919, in <module>
+    main(args)
+  File "/date/liuxin/code/dp-fpl/federated_main.py", line 434, in main
+    loss_summary = local_trainer.train_forward(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/code/dp-fpl/trainers/DP_FPL.py", line 461, in train_forward
+    batch = next(train_iter)
+            ^^^^^^^^^^^^^^^^
+  File "/date/liuxin/miniconda3/envs/sepfpl/lib/python3.11/site-packages/torch/utils/data/dataloader.py", line 732, in __next__
+    data = self._next_data()
+           ^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/miniconda3/envs/sepfpl/lib/python3.11/site-packages/torch/utils/data/dataloader.py", line 788, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/miniconda3/envs/sepfpl/lib/python3.11/site-packages/torch/utils/data/_utils/fetch.py", line 52, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/miniconda3/envs/sepfpl/lib/python3.11/site-packages/torch/utils/data/_utils/fetch.py", line 52, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+            ~~~~~~~~~~~~^^^^^
+  File "/date/liuxin/code/dp-fpl/Dassl/dassl/data/data_manager.py", line 252, in __getitem__
+    img = self._transform_image(self.transform, img0)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/code/dp-fpl/Dassl/dassl/data/data_manager.py", line 266, in _transform_image
+    img_list.append(tfm(img0))
+                    ^^^^^^^^^
+  File "/date/liuxin/miniconda3/envs/sepfpl/lib/python3.11/site-packages/torchvision/transforms/transforms.py", line 95, in __call__
+    img = t(img)
+          ^^^^^^
+  File "/date/liuxin/miniconda3/envs/sepfpl/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/miniconda3/envs/sepfpl/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1786, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/miniconda3/envs/sepfpl/lib/python3.11/site-packages/torchvision/transforms/transforms.py", line 973, in forward
+    return F.resized_crop(img, i, j, h, w, self.size, self.interpolation, antialias=self.antialias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/miniconda3/envs/sepfpl/lib/python3.11/site-packages/torchvision/transforms/functional.py", line 650, in resized_crop
+    img = resize(img, size, interpolation, antialias=antialias)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/miniconda3/envs/sepfpl/lib/python3.11/site-packages/torchvision/transforms/functional.py", line 477, in resize
+    return F_pil.resize(img, size=output_size, interpolation=pil_interpolation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/miniconda3/envs/sepfpl/lib/python3.11/site-packages/torchvision/transforms/_functional_pil.py", line 253, in resize
+    return img.resize(tuple(size[::-1]), interpolation)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/date/liuxin/miniconda3/envs/sepfpl/lib/python3.11/site-packages/PIL/Image.py", line 2321, in resize
+    return self._new(self.im.resize(size, resample, box))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

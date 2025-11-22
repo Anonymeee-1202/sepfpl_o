@@ -1,0 +1,256 @@
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | Loading trainer: DP_FPL
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | Loading dataset: OxfordPets
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | Reading split from %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | Creating a baseline federated dataset
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | class_num %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | Creating a baseline federated dataset
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | class_num %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | user class dict total %s
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | idx: %s, output_dict_len: %d
+2025-11-22 04:12:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | Loading CLIP (backbone: ViT-B/16)
+2025-11-22 04:12:10 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | Building custom CLIP
+2025-11-22 04:12:10 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | Turning off gradients in both the image and the text encoder
+2025-11-22 04:12:10 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [wandb] 正在初始化实验：project=SepFPL, name=oxford_pets-sepfpl_time_adaptive-rank8-noise0.1-seed1-users10-48/60, mode=offline
+2025-11-22 04:12:13 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 1: ε=0.000186, std=22.926042
+2025-11-22 04:12:28 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 1/30] 训练耗时: 15.12s | 平均训练准确率: 51.41
+2025-11-22 04:12:28 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 2: ε=0.000385, std=15.932662
+2025-11-22 04:12:43 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 2/30] 训练耗时: 14.75s | 平均训练准确率: 53.12
+2025-11-22 04:12:43 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 3: ε=0.000589, std=12.877763
+2025-11-22 04:12:54 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 3/30] 训练耗时: 11.08s | 平均训练准确率: 50.94
+2025-11-22 04:12:54 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 4: ε=0.000797, std=11.072548
+2025-11-22 04:13:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 4/30] 训练耗时: 12.84s | 平均训练准确率: 50.31
+2025-11-22 04:13:07 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 5: ε=0.001007, std=9.848494
+2025-11-22 04:13:18 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 5/30] 训练耗时: 11.38s | 平均训练准确率: 52.50
+2025-11-22 04:13:18 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 6: ε=0.001219, std=8.949519
+2025-11-22 04:13:28 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 6/30] 训练耗时: 9.32s | 平均训练准确率: 52.03
+2025-11-22 04:13:28 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 7: ε=0.001433, std=8.253775
+2025-11-22 04:13:37 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 7/30] 训练耗时: 8.81s | 平均训练准确率: 52.50
+2025-11-22 04:13:37 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 8: ε=0.001649, std=7.694968
+2025-11-22 04:13:47 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 8/30] 训练耗时: 9.97s | 平均训练准确率: 51.88
+2025-11-22 04:13:47 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 9: ε=0.001866, std=7.233555
+2025-11-22 04:13:55 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 9/30] 训练耗时: 8.93s | 平均训练准确率: 51.41
+2025-11-22 04:13:55 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 10: ε=0.002085, std=6.844301
+2025-11-22 04:14:05 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 10/30] 训练耗时: 9.75s | 平均训练准确率: 50.47
+2025-11-22 04:14:05 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 11: ε=0.002304, std=6.510254
+2025-11-22 04:14:19 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 11/30] 训练耗时: 13.67s | 平均训练准确率: 50.94
+2025-11-22 04:14:19 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 12: ε=0.002525, std=6.219550
+2025-11-22 04:14:29 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 12/30] 训练耗时: 9.97s | 平均训练准确率: 51.25
+2025-11-22 04:14:29 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 13: ε=0.002746, std=5.963604
+2025-11-22 04:14:37 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 13/30] 训练耗时: 8.35s | 平均训练准确率: 52.81
+2025-11-22 04:14:37 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 14: ε=0.002968, std=5.736036
+2025-11-22 04:14:46 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 14/30] 训练耗时: 8.91s | 平均训练准确率: 53.44
+2025-11-22 04:14:46 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 15: ε=0.003191, std=5.531987
+2025-11-22 04:14:57 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 15/30] 训练耗时: 11.28s | 平均训练准确率: 52.50
+2025-11-22 04:14:57 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 16: ε=0.003415, std=5.347688
+2025-11-22 04:15:14 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 16/30] 训练耗时: 16.18s | 平均训练准确率: 52.34
+2025-11-22 04:15:14 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 17: ε=0.003639, std=5.180163
+2025-11-22 04:15:29 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 17/30] 训练耗时: 15.69s | 平均训练准确率: 52.66
+2025-11-22 04:15:29 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 18: ε=0.003864, std=5.027025
+2025-11-22 04:15:45 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 18/30] 训练耗时: 15.46s | 平均训练准确率: 53.44
+2025-11-22 04:15:45 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 19: ε=0.004090, std=4.886337
+2025-11-22 04:16:01 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 19/30] 训练耗时: 16.76s | 平均训练准确率: 50.31
+2025-11-22 04:16:01 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 20: ε=0.004316, std=4.756509
+2025-11-22 04:16:18 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 20/30] 训练耗时: 16.90s | 平均训练准确率: 50.47
+2025-11-22 04:16:18 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 21: ε=0.004543, std=4.636219
+2025-11-22 04:16:34 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 21/30] 训练耗时: 15.48s | 平均训练准确率: 54.22
+2025-11-22 04:16:34 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 22: ε=0.004771, std=4.524360
+2025-11-22 04:16:50 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 22/30] 训练耗时: 16.16s | 平均训练准确率: 51.09
+2025-11-22 04:16:50 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 23: ε=0.004999, std=4.419997
+2025-11-22 04:17:09 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 23/30] 训练耗时: 18.67s | 平均训练准确率: 51.72
+2025-11-22 04:17:09 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 24: ε=0.005227, std=4.322333
+2025-11-22 04:17:24 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 24/30] 训练耗时: 15.59s | 平均训练准确率: 50.78
+2025-11-22 04:17:24 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 25: ε=0.005456, std=4.230684
+2025-11-22 04:17:41 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 25/30] 训练耗时: 16.98s | 平均训练准确率: 51.56
+2025-11-22 04:17:41 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 26: ε=0.005685, std=4.144461
+2025-11-22 04:17:59 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 26/30] 训练耗时: 17.95s | 平均训练准确率: 52.34
+2025-11-22 04:17:59 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 27: ε=0.005915, std=4.063152
+2025-11-22 04:18:16 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 27/30] 训练耗时: 17.00s | 平均训练准确率: 53.12
+2025-11-22 04:18:16 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 28: ε=0.006146, std=3.986310
+2025-11-22 04:18:33 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 28/30] 训练耗时: 17.25s | 平均训练准确率: 51.56
+2025-11-22 04:18:33 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | 
+2025-11-22 04:18:33 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | ================================================================================
+2025-11-22 04:18:33 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] |                     TEST START - Epoch 28/30
+2025-11-22 04:18:33 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | ================================================================================
+2025-11-22 04:18:33 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | 
+2025-11-22 04:39:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | 
+================= Local Test Results ==================
++----------+----------+------------+----------+
+| Client   | Accuracy | Error Rate | Macro F1 |
++----------+----------+------------+----------+
+| Client 0 |    63.41 |      36.59 |    67.78 |
+| Client 1 |    51.88 |      48.12 |    54.86 |
+| Client 2 |    83.80 |      16.20 |    89.87 |
+| Client 3 |    87.66 |      12.34 |    91.69 |
+| Client 4 |    72.02 |      27.98 |    71.69 |
+| Client 5 |    68.42 |      31.58 |    71.30 |
+| Client 6 |    47.50 |      52.50 |    49.08 |
+| Client 7 |    92.00 |       8.00 |    95.38 |
+| Client 8 |    95.75 |       4.25 |    97.69 |
+| Client 9 |   100.00 |       0.00 |   100.00 |
+| Average  |    76.24 |      23.76 |    78.94 |
++----------+----------+------------+----------+
+
+2025-11-22 04:39:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | 
+================= Neighbor Test Results ==================
++----------+----------+------------+----------+
+| Client   | Accuracy | Error Rate | Macro F1 |
++----------+----------+------------+----------+
+| Client 0 |    74.40 |      25.60 |    70.14 |
+| Client 1 |    74.71 |      25.29 |    71.69 |
+| Client 2 |    71.49 |      28.51 |    65.81 |
+| Client 3 |    71.30 |      28.70 |    68.05 |
+| Client 4 |    73.59 |      26.41 |    68.08 |
+| Client 5 |    74.71 |      25.29 |    69.36 |
+| Client 6 |    77.61 |      22.39 |    73.73 |
+| Client 7 |    72.65 |      27.35 |    68.25 |
+| Client 8 |    72.84 |      27.16 |    67.30 |
+| Client 9 |    74.95 |      25.05 |    69.46 |
+| Average  |    73.83 |      26.17 |    69.19 |
++----------+----------+------------+----------+
+
+2025-11-22 04:39:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | 
+2025-11-22 04:39:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | ================================================================================
+2025-11-22 04:39:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] |                     TEST FINISH - Epoch 28/30
+2025-11-22 04:39:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] |                     测试耗时: 1234.75s
+2025-11-22 04:39:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | ================================================================================
+2025-11-22 04:39:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | 
+2025-11-22 04:39:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 29: ε=0.006376, std=3.913543
+2025-11-22 04:39:27 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 29/30] 训练耗时: 18.58s | 平均训练准确率: 65.78
+2025-11-22 04:39:27 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | 
+2025-11-22 04:39:27 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | ================================================================================
+2025-11-22 04:39:27 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] |                     TEST START - Epoch 29/30
+2025-11-22 04:39:27 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | ================================================================================
+2025-11-22 04:39:27 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | 
+2025-11-22 05:03:17 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | 
+================= Local Test Results ==================
++----------+----------+------------+----------+
+| Client   | Accuracy | Error Rate | Macro F1 |
++----------+----------+------------+----------+
+| Client 0 |    61.15 |      38.85 |    66.69 |
+| Client 1 |    48.37 |      51.63 |    48.74 |
+| Client 2 |    82.26 |      17.74 |    87.32 |
+| Client 3 |    73.05 |      26.95 |    82.24 |
+| Client 4 |    72.02 |      27.98 |    70.24 |
+| Client 5 |    49.12 |      50.88 |    49.62 |
+| Client 6 |    47.75 |      52.25 |    44.86 |
+| Client 7 |    72.50 |      27.50 |    73.70 |
+| Client 8 |    97.00 |       3.00 |    98.48 |
+| Client 9 |   100.00 |       0.00 |   100.00 |
+| Average  |    70.32 |      29.68 |    72.19 |
++----------+----------+------------+----------+
+
+2025-11-22 05:03:17 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | 
+================= Neighbor Test Results ==================
++----------+----------+------------+----------+
+| Client   | Accuracy | Error Rate | Macro F1 |
++----------+----------+------------+----------+
+| Client 0 |    67.43 |      32.57 |    59.92 |
+| Client 1 |    69.51 |      30.49 |    64.18 |
+| Client 2 |    65.64 |      34.36 |    58.46 |
+| Client 3 |    67.08 |      32.92 |    61.55 |
+| Client 4 |    67.59 |      32.41 |    60.63 |
+| Client 5 |    71.28 |      28.72 |    64.57 |
+| Client 6 |    71.86 |      28.14 |    66.82 |
+| Client 7 |    69.53 |      30.47 |    63.17 |
+| Client 8 |    66.93 |      33.07 |    60.08 |
+| Client 9 |    70.19 |      29.81 |    63.22 |
+| Average  |    68.70 |      31.30 |    62.26 |
++----------+----------+------------+----------+
+
+2025-11-22 05:03:17 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | 
+2025-11-22 05:03:17 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | ================================================================================
+2025-11-22 05:03:17 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] |                     TEST FINISH - Epoch 29/30
+2025-11-22 05:03:17 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] |                     测试耗时: 1429.91s
+2025-11-22 05:03:17 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | ================================================================================
+2025-11-22 05:03:17 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | 
+2025-11-22 05:03:17 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [RDP-sepfpl] 轮次 30: ε=0.006607, std=3.844505
+2025-11-22 05:03:37 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | [Epoch 30/30] 训练耗时: 19.80s | 平均训练准确率: 56.09
+2025-11-22 05:03:37 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | 
+2025-11-22 05:03:37 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | ================================================================================
+2025-11-22 05:03:37 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] |                     TEST START - Epoch 30/30
+2025-11-22 05:03:37 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | ================================================================================
+2025-11-22 05:03:37 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | 
+2025-11-22 05:27:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | 
+================= Local Test Results ==================
++----------+----------+------------+----------+
+| Client   | Accuracy | Error Rate | Macro F1 |
++----------+----------+------------+----------+
+| Client 0 |    70.93 |      29.07 |    72.67 |
+| Client 1 |    53.88 |      46.12 |    57.54 |
+| Client 2 |    84.58 |      15.42 |    89.88 |
+| Client 3 |    84.13 |      15.87 |    88.79 |
+| Client 4 |    72.54 |      27.46 |    72.27 |
+| Client 5 |    63.41 |      36.59 |    71.43 |
+| Client 6 |    49.75 |      50.25 |    51.49 |
+| Client 7 |    68.50 |      31.50 |    71.26 |
+| Client 8 |    96.00 |       4.00 |    97.83 |
+| Client 9 |   100.00 |       0.00 |   100.00 |
+| Average  |    74.37 |      25.63 |    77.32 |
++----------+----------+------------+----------+
+
+2025-11-22 05:27:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | 
+================= Neighbor Test Results ==================
++----------+----------+------------+----------+
+| Client   | Accuracy | Error Rate | Macro F1 |
++----------+----------+------------+----------+
+| Client 0 |    74.37 |      25.63 |    69.30 |
+| Client 1 |    76.36 |      23.64 |    72.78 |
+| Client 2 |    73.17 |      26.83 |    68.22 |
+| Client 3 |    73.96 |      26.04 |    71.46 |
+| Client 4 |    75.42 |      24.58 |    70.81 |
+| Client 5 |    74.62 |      25.38 |    69.38 |
+| Client 6 |    74.03 |      25.97 |    69.99 |
+| Client 7 |    70.82 |      29.18 |    64.54 |
+| Client 8 |    66.47 |      33.53 |    59.72 |
+| Client 9 |    68.06 |      31.94 |    61.10 |
+| Average  |    72.73 |      27.27 |    67.73 |
++----------+----------+------------+----------+
+
+2025-11-22 05:27:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | 
+2025-11-22 05:27:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | ================================================================================
+2025-11-22 05:27:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] |                     TEST FINISH - Epoch 30/30
+2025-11-22 05:27:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] |                     测试耗时: 1411.20s
+2025-11-22 05:27:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | ================================================================================
+2025-11-22 05:27:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | 
+2025-11-22 05:27:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | maximum test local acc: 76.244
+2025-11-22 05:27:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | mean of local acc: 73.646
+2025-11-22 05:27:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | maximum test neighbor acc: 73.826
+2025-11-22 05:27:08 | INFO | oxford_pets_sepfpl_time_adaptive_8_0.1_10_[48/60] | mean of neighbor acc: 71.753

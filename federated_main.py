@@ -200,7 +200,7 @@ def init_wandb_run(args, cfg, logger):
 
     project = 'SepFPL'
     group = args.wandb_group       # 实验分组名称
-    mode = 'online'                # 默认为 online 模式
+    mode = 'offline'                # 默认为 online 模式
     run_name = _default_wandb_run_name(args)
     tags = _prepare_wandb_tags(args)
 

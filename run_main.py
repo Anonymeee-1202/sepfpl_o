@@ -51,9 +51,10 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         'exp_name': 'exp2',
         'seed_list': [1],
         'dataset_list': ['caltech-101', 'oxford_pets'],
-        'factorization_list': ['dpfpl', 'sepfpl_hcse', 'sepfpl_time_adaptive', 'sepfpl'],
         'noise_list': [0.4, 0.1, 0.01],
         'rank_list': [1, 2, 4, 8, 16],
+        # 'factorization_list': ['dpfpl', 'sepfpl_hcse', 'sepfpl_time_adaptive', 'sepfpl'],
+        'factorization_list': ['sepfpl_hcse', 'sepfpl_time_adaptive'],
         'num_users_list': [10],
         'round': 30,
     },
@@ -170,13 +171,13 @@ def generate_batch_script(
     
     # Grid Search 笛卡尔积
     combinations = list(itertools.product(
-        seed_list, dataset_list, users_list, noise_list, factorization_list, rank_list
+        seed_list, dataset_list, users_list, noise_list, rank_list, factorization_list
     ))
     total_tasks = len(combinations)
     
     # 2. 生成任务列表
     tasks = []
-    for idx, (seed, dataset, users, noise, factorization, rank) in enumerate(combinations, 1):
+    for idx, (seed, dataset, users, noise, rank, factorization) in enumerate(combinations, 1):
         # 轮询分配 GPU (如果 gpu_pool 为空则为 None)
         gpu_assigned = gpu_pool[(idx - 1) % len(gpu_pool)] if gpu_pool else None
         

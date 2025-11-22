@@ -153,11 +153,11 @@ class PromptLearner(nn.Module):
         self.global_ctx = nn.Parameter(global_ctx_vectors)
 
         # local u and v context vectors
-        if self.factorization in ['fedotp', 'dplora', 'dpfpl', 'sepfpl']:
+        if self.factorization in ['fedotp', 'dplora', 'dpfpl', 'sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']:
             local_ctx_vectors = torch.empty(n_ctx, ctx_dim, dtype=dtype) # n_ctx = 16, ctx_dim = 512
             nn.init.normal_(local_ctx_vectors, std=0.02)
             self.local_ctx = nn.Parameter(local_ctx_vectors)
-        if self.factorization in ['fedpgp', 'dplora', 'dpfpl', 'sepfpl']:
+        if self.factorization in ['fedpgp', 'dplora', 'dpfpl', 'sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']:
             local_u_ctx_vectors = torch.empty(n_ctx, self.rank, dtype=dtype)
             nn.init.normal_(local_u_ctx_vectors, std=0.02)
             self.local_u_ctx = nn.Parameter(local_u_ctx_vectors)
