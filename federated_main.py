@@ -602,7 +602,32 @@ def main(args):
     # --- 结束总结 ---
     logger.info("Training Finished.")
     if local_acc_list:
+        local_window = min(10, len(local_acc_list))
+        local_best_avg = -float('inf')
+        local_best_range = (0, local_window - 1)
+        for start in range(0, len(local_acc_list) - local_window + 1):
+            window_avg = sum(local_acc_list[start:start + local_window]) / local_window
+            if window_avg > local_best_avg:
+                local_best_avg = window_avg
+                local_best_range = (start, start + local_window - 1)
+        logger.info(
+            f"Local best {local_window}-epoch window: Epoch {local_best_range[0] + 1}-{local_best_range[1] + 1} | "
+            f"Avg Local Acc: {local_best_avg:.2f}%"
+        )
         logger.info(f"Best Local Acc: {max(local_acc_list):.2f}%")
+    if neighbor_acc_list:
+        neighbor_window = min(10, len(neighbor_acc_list))
+        neighbor_best_avg = -float('inf')
+        neighbor_best_range = (0, neighbor_window - 1)
+        for start in range(0, len(neighbor_acc_list) - neighbor_window + 1):
+            window_avg = sum(neighbor_acc_list[start:start + neighbor_window]) / neighbor_window
+            if window_avg > neighbor_best_avg:
+                neighbor_best_avg = window_avg
+                neighbor_best_range = (start, start + neighbor_window - 1)
+        logger.info(
+            f"Neighbor best {neighbor_window}-epoch window: Epoch {neighbor_best_range[0] + 1}-{neighbor_best_range[1] + 1} | "
+            f"Avg Neighbor Acc: {neighbor_best_avg:.2f}%"
+        )
     if wandb_run:
         wandb_run.finish()
 
