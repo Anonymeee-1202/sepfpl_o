@@ -210,7 +210,7 @@ class PromptLearner(nn.Module):
         # 仅在启用HCSE时叠加cluster_ctx（根据factorization自动判断）
         use_hcse = (self.factorization in ['sepfpl', 'sepfpl_hcse'])
         if getattr(self, 'cluster_ctx', None) is not None and use_hcse:
-            client_ctx = client_ctx + 0.5 * self.cluster_ctx
+            client_ctx = client_ctx + self.cluster_ctx
         if client_ctx.dim() == 2:
             client_ctx = client_ctx.unsqueeze(0).expand(self.n_cls, -1, -1)
         client_prompt = torch.cat(
