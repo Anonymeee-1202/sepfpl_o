@@ -51,6 +51,7 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         'exp_name': 'exp2',
         'seed_list': [1],
         'dataset_list': ['caltech-101', 'oxford_pets'],
+        # 'factorization_list': ['sepfpl_time_adaptive', 'sepfpl'],
         'factorization_list': ['dpfpl', 'sepfpl_hcse', 'sepfpl_time_adaptive', 'sepfpl'],
         'noise_list': [0.4, 0.1, 0.01],
         'rank_list': [1, 2, 4, 8, 16],

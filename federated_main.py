@@ -232,7 +232,7 @@ def init_wandb_run(args, cfg, logger):
         "name": run_name,
         "tags": tags,
         "config": config_payload,
-        "dir": os.path.expanduser('~/data/sepfpl/wandb'),
+        "dir": os.path.expanduser('~/data/sepfpl/'),
         "settings": wandb.Settings(start_method="thread", _disable_stats=True),
     }
     # 去除值为 None 的键，以避免 wandb 报错
