@@ -170,13 +170,13 @@ def generate_batch_script(
     
     # Grid Search 笛卡尔积
     combinations = list(itertools.product(
-        seed_list, dataset_list, users_list, noise_list, factorization_list, rank_list
+        seed_list, dataset_list, users_list, rank_list, noise_list, factorization_list
     ))
     total_tasks = len(combinations)
     
     # 2. 生成任务列表
     tasks = []
-    for idx, (seed, dataset, users, noise, factorization, rank) in enumerate(combinations, 1):
+    for idx, (seed, dataset, users, rank, noise, factorization) in enumerate(combinations, 1):
         # 轮询分配 GPU (如果 gpu_pool 为空则为 None)
         gpu_assigned = gpu_pool[(idx - 1) % len(gpu_pool)] if gpu_pool else None
         

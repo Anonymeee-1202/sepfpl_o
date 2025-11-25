@@ -833,7 +833,7 @@ if __name__ == "__main__":
                         help='差分隐私高斯噪声尺度（标准差）')
     parser.add_argument('--rdp-alpha', type=float, default=2.0,
                         help='RDP（Rényi DP）阶数 α')
-    parser.add_argument('--rdp-p', type=float, default=1.05,
+    parser.add_argument('--rdp-p', type=float, default=1.01,
                         help='sepfpl 中时间自适应隐私预算分配的幂次 p')
 
     # ====== 数据集相关参数 ======

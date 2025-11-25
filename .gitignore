@@ -9,8 +9,20 @@ dist/
 build/
 
 # Checkpoints and outputs
-# checkpoints/
-# outputs/
+checkpoints/
+outputs/
+logs/
+wandb/
+
+# Visualization outputs
+hcse/advanced_visualization_output/
+hcse/visualization_output/
+
+# Model files
+*.pth.tar
+*.pth
+*.ckpt
+*.pkl
 
 # Datasets (optional, if you don't want to upload large files)
 # dataset/
@@ -27,5 +39,5 @@ build/
 Thumbs.db
 
 # Logs
-# *.log
+*.log
 
