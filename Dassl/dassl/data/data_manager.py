@@ -2,6 +2,7 @@ import torch
 import torchvision.transforms as T
 from tabulate import tabulate
 from torch.utils.data import Dataset as TorchDataset
+import random
 
 from Dassl.dassl.utils import read_image
 from Dassl.dassl.data.datasets import DATASET_REGISTRY
@@ -129,11 +130,16 @@ class DataManager:
         # Build federated fed_test_neighbor_loader_x
         fed_test_neighbor_loader_x_dict = defaultdict()
         if dataset.federated_test_x:
+            sample_ratio = 1.0 / cfg.DATASET.USERS
             for idx in range(cfg.DATASET.USERS):
                 data_source = []
                 for idx2 in range(cfg.DATASET.USERS):
                     if idx2 != idx:
-                        data_source += dataset.federated_test_x[idx2]
+                        neighbor_data = dataset.federated_test_x[idx2]
+                        # 采样数据，采样比例为 1/cfg.DATASET.USERS
+                        sample_size = max(1, int(len(neighbor_data) * sample_ratio))
+                        sampled_data = random.sample(neighbor_data, sample_size)
+                        data_source += sampled_data
                 fed_test_neighbor_loader_x = build_data_loader(
                     cfg,
                     sampler_type=cfg.DATALOADER.TEST.SAMPLER,

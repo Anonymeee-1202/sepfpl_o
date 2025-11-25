@@ -33,7 +33,7 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         'noise_list': [0.0, 0.4, 0.2, 0.1, 0.05, 0.01],
         'rank_list': [8],
         'num_users_list': [10],
-        'round': 30,
+        'round': 50,
     },
     # 实验1.2: Hard (CIFAR-100 + 扩展性测试)
     'EXPERIMENT_1_HARD': {
@@ -56,7 +56,7 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         'noise_list': [0.4, 0.1, 0.01],
         'rank_list': [1, 2, 4, 8, 16],
         'num_users_list': [10],
-        'round': 30,
+        'round': 40,
     },
 }
 

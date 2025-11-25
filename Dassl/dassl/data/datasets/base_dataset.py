@@ -171,7 +171,7 @@ class DatasetBase:
         else:
             raise NotImplementedError("不支持的文件格式")
 
-        logger.info("文件已解压至 {}".format(osp.dirname(dst)))
+        logger.info(f"文件已解压至 {osp.dirname(dst)}")
 
     def generate_fewshot_dataset(
         self, *data_sources, num_shots=-1, repeat=False
@@ -194,13 +194,13 @@ class DatasetBase:
         logger.info(f"正在创建 {num_shots}-shot 数据集")
 
         output = []
-        logger.info("data_sources 长度: %d", len(data_sources))
+        logger.info(f"data_sources 长度: {len(data_sources)}")
 
         for data_source in data_sources:
-            logger.info("当前 data_source 长度: %d", len(data_source))
+            logger.info(f"当前 data_source 长度: {len(data_source)}")
             # 按类别将数据分组
             tracker = self.split_dataset_by_label(data_source)
-            logger.info("包含类别的数量: %d", len(tracker))
+            logger.info(f"包含类别的数量: {len(tracker)}")
             dataset = []
 
             for label, items in tracker.items():
@@ -255,7 +255,7 @@ class DatasetBase:
         else:
             user_class_dict = defaultdict(list) # 存储每个用户被分配到的类别ID列表
             class_num = self.get_num_classes(data_sources[0])
-            logger.info("总类别数: %d", class_num)
+            logger.info(f"总类别数: {class_num}")
             
             # 基础分配：每个用户平均分到的类别数
             class_per_user = int(round(class_num / num_users))
@@ -276,8 +276,8 @@ class DatasetBase:
                 
                 # Fold 计算：用于将用户分组，组内共享特定的重复类
                 fold = int(num_users / num_shots) if num_shots > 0 else 0 
-                logger.info("重复类别数: %d", repeat_num)
-                logger.info("Fold 数: %d", fold)
+                logger.info(f"重复类别数: {repeat_num}")
+                logger.info(f"Fold 数: {fold}")
 
                 if fold > 0:
                     client_idx_fold = defaultdict(list)
@@ -321,7 +321,7 @@ class DatasetBase:
                             else:
                                 user_class_dict[idx].extend(class_repeat_list)
                             
-                            logger.info("User %d repeat part: %s", idx, user_class_dict[idx])
+                            logger.info(f"User {idx} repeat part: {user_class_dict[idx]}")
 
                             # 1.2 添加私有(不重复)部分
                             if idx == num_users - 1:
@@ -331,9 +331,9 @@ class DatasetBase:
                                 segment = class_norepeat_list[idx * class_per_user : (idx + 1) * class_per_user]
                                 user_class_dict[idx].extend(segment)
                             
-                            logger.info("User %d non-repeat part: %s", idx, segment)
+                            logger.info(f"User {idx} non-repeat part: {segment}")
 
-                    logger.info("User %d total classes: %s", idx, user_class_dict[idx])
+                    logger.info(f"User {idx} total classes: {user_class_dict[idx]}")
 
                     # --- 步骤 2: 根据类别列表进行数据采样 ---
                     dataset = []
@@ -362,7 +362,7 @@ class DatasetBase:
                                 dataset.extend(sampled_items)
 
                     output_dict[idx] = dataset
-                    logger.info("idx: %s, output_dict_len: %d", idx, len(output_dict[idx]))
+                    logger.info(f"idx: {idx}, output_dict_len: {len(output_dict[idx])}")
 
         return output_dict
 
@@ -385,7 +385,7 @@ class DatasetBase:
         sample_order = defaultdict(list)   # 记录每个类别样本的分配顺序索引
 
         class_num = self.get_num_classes(data_sources[0])
-        logger.info("类别总数: %d", class_num)
+        logger.info(f"类别总数: {class_num}")
         
         class_per_user = int(round(class_num / num_users))
         class_list = list(range(0, class_num))
@@ -400,8 +400,8 @@ class DatasetBase:
             class_per_user = int(round((class_num - repeat_num) / num_users))
             
             fold = int(num_users / num_shots) if num_shots > 0 else 0
-            logger.info("repeat_num: %d", repeat_num)
-            logger.info("fold: %d", fold)
+            logger.info(f"repeat_num: {repeat_num}")
+            logger.info(f"fold: {fold}")
 
             if fold > 0:
                 client_idx_fold = defaultdict(list)
@@ -449,7 +449,7 @@ class DatasetBase:
                         else:
                             user_class_dict[idx].extend(class_repeat_list)
 
-                        logger.info("User %d repeat part: %s", idx, user_class_dict[idx])
+                        logger.info(f"User {idx} repeat part: {user_class_dict[idx]}")
 
                         if idx == num_users - 1:
                             segment = class_norepeat_list[idx * class_per_user : class_num - repeat_num]
@@ -458,9 +458,9 @@ class DatasetBase:
                             segment = class_norepeat_list[idx * class_per_user : (idx + 1) * class_per_user]
                             user_class_dict[idx].extend(segment)
                         
-                        logger.info("User %d non-repeat part: %s", idx, segment)
+                        logger.info(f"User {idx} non-repeat part: {segment}")
 
-                logger.info("User %d total classes: %s", idx, user_class_dict[idx])
+                logger.info(f"User {idx} total classes: {user_class_dict[idx]}")
 
                 dataset = []
 
@@ -499,7 +499,7 @@ class DatasetBase:
                                     dataset.extend(sampled_items)
 
                 output_dict[idx] = dataset
-                logger.info("idx: %s, output_dict_len: %d", idx, len(output_dict[idx]))
+                logger.info(f"idx: {idx}, output_dict_len: {len(output_dict[idx])}")
 
         return output_dict
 
