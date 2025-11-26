@@ -619,137 +619,141 @@ def main(args):
                 step=epoch + 1,
             )
         # ==================== 测试阶段 ====================
-        show_test_details = getattr(args, "test_verbose_log", False)
-        test_start_time = time.time()
-        if show_test_details:
-            logger.info("")
-            logger.info("=" * 80)
-            logger.info(f"                    TEST START - Epoch {epoch + 1}/{max_epoch}")
-            logger.info("=" * 80)
-            logger.info("")
-        local_trainer.set_model_mode("eval")
+        # 前2个epoch训练完后执行第一次测试，之后在奇数epoch时测试，或者最后一轮也测试
+        should_test = (epoch % 2 == 1) or (epoch == max_epoch - 1)
+        
+        if should_test:
+            show_test_details = getattr(args, "test_verbose_log", False)
+            test_start_time = time.time()
+            if show_test_details:
+                logger.info("")
+                logger.info("=" * 80)
+                logger.info(f"                    TEST START - Epoch {epoch + 1}/{max_epoch}")
+                logger.info("=" * 80)
+                logger.info("")
+            local_trainer.set_model_mode("eval")
 
-        results_local = []                    # 每个客户端的本地测试结果
-        results_neighbor = [] if not dirichlet else None  # 邻居测试结果（Dirichlet 场景下可选）
-        avg_neighbor_acc = None
+            results_local = []                    # 每个客户端的本地测试结果
+            results_neighbor = [] if not dirichlet else None  # 邻居测试结果（Dirichlet 场景下可选）
+            avg_neighbor_acc = None
 
-        test_range = tqdm(idxs_users, desc=f"Epoch {epoch + 1}/{max_epoch} [Test]", leave=False)
-        for idx in test_range:
-            # 将 buffer 中存储的 prompt 参数同步回各客户端的权重
-            for key, buffer in key_to_buffer.items():
-                if buffer is None:
-                    continue
-                value = buffer[idx]
-                if value is None:
-                    continue
-                if key != 'prompt_learner.global_ctx' and key not in local_weights[idx]:
-                    continue
-                local_weights[idx][key] = value
+            test_range = tqdm(idxs_users, desc=f"Epoch {epoch + 1}/{max_epoch} [Test]", leave=False)
+            for idx in test_range:
+                # 将 buffer 中存储的 prompt 参数同步回各客户端的权重
+                for key, buffer in key_to_buffer.items():
+                    if buffer is None:
+                        continue
+                    value = buffer[idx]
+                    if value is None:
+                        continue
+                    if key != 'prompt_learner.global_ctx' and key not in local_weights[idx]:
+                        continue
+                    local_weights[idx][key] = value
 
-            local_trainer.model.load_state_dict(local_weights[idx], strict=False)
+                local_trainer.model.load_state_dict(local_weights[idx], strict=False)
 
-            # local split：评估个性化性能
-            results_local.append(local_trainer.test(idx=idx, split='local'))
-            # neighbor split：评估泛化到"邻居"数据的能力（仅在非 Dirichlet 场景使用）
-            if results_neighbor is not None:
-                results_neighbor.append(local_trainer.test(idx=idx, split='neighbor'))
+                # local split：评估个性化性能
+                results_local.append(local_trainer.test(idx=idx, split='local'))
+                # neighbor split：评估泛化到"邻居"数据的能力（仅在非 Dirichlet 场景使用）
+                if results_neighbor is not None:
+                    results_neighbor.append(local_trainer.test(idx=idx, split='neighbor'))
 
-            # 动态更新测试进度条中的平均精度信息
-            local_acc = [res[0] for res in results_local]
-            avg_local_acc = sum(local_acc) / len(local_acc) if local_acc else 0.0
-            postfix_dict = {'local_acc': f'{avg_local_acc:.2f}%'}
-            if results_neighbor is not None and len(results_neighbor) > 0:
-                neighbor_acc = [res[0] for res in results_neighbor]
-                avg_neighbor_acc = sum(neighbor_acc) / len(neighbor_acc) if neighbor_acc else 0.0
-                postfix_dict['neighbor_acc'] = f'{avg_neighbor_acc:.2f}%'
-            else:
-                postfix_dict['neighbor_acc'] = 'N/A'
-            test_range.set_postfix(postfix_dict)
+                # 动态更新测试进度条中的平均精度信息
+                local_acc = [res[0] for res in results_local]
+                avg_local_acc = sum(local_acc) / len(local_acc) if local_acc else 0.0
+                postfix_dict = {'local_acc': f'{avg_local_acc:.2f}%'}
+                if results_neighbor is not None and len(results_neighbor) > 0:
+                    neighbor_acc = [res[0] for res in results_neighbor]
+                    avg_neighbor_acc = sum(neighbor_acc) / len(neighbor_acc) if neighbor_acc else 0.0
+                    postfix_dict['neighbor_acc'] = f'{avg_neighbor_acc:.2f}%'
+                else:
+                    postfix_dict['neighbor_acc'] = 'N/A'
+                test_range.set_postfix(postfix_dict)
 
-        # ---------- 将测试结果格式化为 PrettyTable 表格 ----------
-        def format_results_table(results_list, title, client_ids):
-            """使用 PrettyTable 格式化测试结果为表格字符串。"""
-            if not results_list:
-                return ""
+            # ---------- 将测试结果格式化为 PrettyTable 表格 ----------
+            def format_results_table(results_list, title, client_ids):
+                """使用 PrettyTable 格式化测试结果为表格字符串。"""
+                if not results_list:
+                    return ""
 
-            num_metrics = len(results_list[0])
-            metric_names = ['Accuracy', 'Error Rate', 'Macro F1']
-            if num_metrics > 3:
-                metric_names.extend([f'Metric {i+4}' for i in range(num_metrics - 3)])
+                num_metrics = len(results_list[0])
+                metric_names = ['Accuracy', 'Error Rate', 'Macro F1']
+                if num_metrics > 3:
+                    metric_names.extend([f'Metric {i+4}' for i in range(num_metrics - 3)])
 
-            table = PrettyTable()
-            table.field_names = ['Client'] + metric_names[:num_metrics]
-            table.align['Client'] = 'l'
-            for name in metric_names[:num_metrics]:
-                table.align[name] = 'r'
+                table = PrettyTable()
+                table.field_names = ['Client'] + metric_names[:num_metrics]
+                table.align['Client'] = 'l'
+                for name in metric_names[:num_metrics]:
+                    table.align[name] = 'r'
 
-            # 每个客户端一行
-            for idx, res in enumerate(results_list):
-                client_id = client_ids[idx] if idx < len(client_ids) else idx
-                row = [f'Client {client_id}'] + [f'{val:.2f}' for val in res[:num_metrics]]
-                table.add_row(row)
+                # 每个客户端一行
+                for idx, res in enumerate(results_list):
+                    client_id = client_ids[idx] if idx < len(client_ids) else idx
+                    row = [f'Client {client_id}'] + [f'{val:.2f}' for val in res[:num_metrics]]
+                    table.add_row(row)
 
-            # 最后一行为平均值
-            avg_values = []
-            for i in range(num_metrics):
-                avg_val = sum([res[i] for res in results_list]) / len(results_list) if results_list else 0.0
-                avg_values.append(avg_val)
-            avg_row = ['Average'] + [f'{val:.2f}' for val in avg_values]
-            table.add_row(avg_row)
+                # 最后一行为平均值
+                avg_values = []
+                for i in range(num_metrics):
+                    avg_val = sum([res[i] for res in results_list]) / len(results_list) if results_list else 0.0
+                    avg_values.append(avg_val)
+                avg_row = ['Average'] + [f'{val:.2f}' for val in avg_values]
+                table.add_row(avg_row)
 
-            table_str = f"\n{title}\n{table.get_string()}\n"
-            return table_str
+                table_str = f"\n{title}\n{table.get_string()}\n"
+                return table_str
 
-        # Local 测试结果
-        local_table = format_results_table(
-            results_local,
-            "================= Local Test Results ==================",
-            idxs_users
-        )
-        if show_test_details:
-            logger.info(local_table)
-
-        local_acc = [res[0] for res in results_local]
-        avg_local_acc = sum(local_acc) / len(local_acc) if local_acc else 0.0
-        local_acc_list.append(avg_local_acc)
-
-        # Neighbor 测试结果（若存在）
-        if results_neighbor is not None:
-            neighbor_table = format_results_table(
-                results_neighbor,
-                "================= Neighbor Test Results ==================",
+            # Local 测试结果
+            local_table = format_results_table(
+                results_local,
+                "================= Local Test Results ==================",
                 idxs_users
             )
             if show_test_details:
-                logger.info(neighbor_table)
+                logger.info(local_table)
 
-            neighbor_acc = [res[0] for res in results_neighbor]
-            avg_neighbor_acc = sum(neighbor_acc) / len(neighbor_acc) if neighbor_acc else 0.0
-            neighbor_acc_list.append(avg_neighbor_acc)
+            local_acc = [res[0] for res in results_local]
+            avg_local_acc = sum(local_acc) / len(local_acc) if local_acc else 0.0
+            local_acc_list.append(avg_local_acc)
 
-        test_duration = time.time() - test_start_time
-        if show_test_details:
-            logger.info("")
-            logger.info("=" * 80)
-            logger.info(f"                    TEST FINISH - Epoch {epoch + 1}/{max_epoch}")
-            logger.info(f"                    测试耗时: {test_duration:.2f}s")
-            logger.info("=" * 80)
-            logger.info("")
-        else:
-            neighbor_summary = f"{avg_neighbor_acc:.2f}%" if avg_neighbor_acc is not None else "N/A"
-            logger.info(
-                f"[Epoch {epoch + 1}/{max_epoch}] 测试耗时: {test_duration:.2f}s | "
-                f"local_acc: {avg_local_acc:.2f}% | neighbor_acc: {neighbor_summary}"
-            )
-        if wandb_run:
-            log_payload = {
-                "test/epoch": epoch + 1,
-                "test/local_acc_avg": avg_local_acc,
-                "test/duration_sec": test_duration,
-            }
+            # Neighbor 测试结果（若存在）
             if results_neighbor is not None:
-                log_payload["test/neighbor_acc_avg"] = avg_neighbor_acc
-            wandb.log(log_payload, step=epoch + 1)
+                neighbor_table = format_results_table(
+                    results_neighbor,
+                    "================= Neighbor Test Results ==================",
+                    idxs_users
+                )
+                if show_test_details:
+                    logger.info(neighbor_table)
+
+                neighbor_acc = [res[0] for res in results_neighbor]
+                avg_neighbor_acc = sum(neighbor_acc) / len(neighbor_acc) if neighbor_acc else 0.0
+                neighbor_acc_list.append(avg_neighbor_acc)
+
+            test_duration = time.time() - test_start_time
+            if show_test_details:
+                logger.info("")
+                logger.info("=" * 80)
+                logger.info(f"                    TEST FINISH - Epoch {epoch + 1}/{max_epoch}")
+                logger.info(f"                    测试耗时: {test_duration:.2f}s")
+                logger.info("=" * 80)
+                logger.info("")
+            else:
+                neighbor_summary = f"{avg_neighbor_acc:.2f}%" if avg_neighbor_acc is not None else "N/A"
+                logger.info(
+                    f"[Epoch {epoch + 1}/{max_epoch}] 测试耗时: {test_duration:.2f}s | "
+                    f"local_acc: {avg_local_acc:.2f}% | neighbor_acc: {neighbor_summary}"
+                )
+            if wandb_run:
+                log_payload = {
+                    "test/epoch": epoch + 1,
+                    "test/local_acc_avg": avg_local_acc,
+                    "test/duration_sec": test_duration,
+                }
+                if results_neighbor is not None:
+                    log_payload["test/neighbor_acc_avg"] = avg_neighbor_acc
+                wandb.log(log_payload, step=epoch + 1)
 
         # ---------- 保存检查点 & 精度曲线 ----------
         save_checkpoint(args, epoch, local_weights, local_acc_list, neighbor_acc_list)
