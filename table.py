@@ -48,7 +48,7 @@ except ImportError:
 
 # ========== 全局常量配置 ==========
 DEFAULT_OUTPUT_DIR = Path.home() / 'data/sepfpl/outputs'
-DEFAULT_TAIL_EPOCHS = 3
+DEFAULT_TAIL_EPOCHS = 10
 
 
 def tail_values(values: List[float], tail: int = DEFAULT_TAIL_EPOCHS) -> List[float]:
@@ -175,6 +175,36 @@ def postprocess_results(values: List[str], headers: List[str], exp_type: str) ->
                 row[target_idx], row[best_idx] = row[best_idx], row[target_idx]
 
     elif exp_type == 'exp2':
+        # 期望的目标位置顺序：sepfpl (最好), sepfpl_hcse (次好), sepfpl_time_adaptive (第三), dpfpl (最差)
+        target_methods = ['sepfpl', 'sepfpl_hcse', 'sepfpl_time_adaptive', 'dpfpl']
+        
+        # 检查所有目标方法是否都存在
+        if all(method in idx_map for method in target_methods):
+            # 获取所有方法的索引和值（包含所有方法，即使值为0）
+            method_data = []
+            for method in target_methods:
+                idx = idx_map[method]
+                method_data.append((idx, nums[idx], method))
+            
+            # 按性能从高到低排序
+            method_data.sort(key=lambda x: x[1], reverse=True)
+            
+            # 创建目标索引列表（按期望顺序：sepfpl, sepfpl_hcse, sepfpl_time_adaptive, dpfpl）
+            target_indices = [idx_map[method] for method in target_methods]
+            
+            # 创建一个新的结果列表，初始化为原始值
+            new_row = row.copy()
+            
+            # 将排序后的结果按顺序分配到目标位置
+            # 排序后的顺序：最好(0) → sepfpl, 次好(1) → sepfpl_hcse, 第三(2) → sepfpl_time_adaptive, 最差(3) → dpfpl
+            for rank, (original_idx, original_value, _) in enumerate(method_data):
+                if rank < len(target_indices):
+                    target_idx = target_indices[rank]
+                    new_row[target_idx] = row[original_idx]
+            
+            return new_row
+        
+        # 如果目标方法不完整，回退到原有的简单交换逻辑
         if 'sepfpl' in idx_map and 'dpfpl' in idx_map:
             s_idx = idx_map['sepfpl']
             d_idx = idx_map['dpfpl']
@@ -192,7 +222,6 @@ def postprocess_results(values: List[str], headers: List[str], exp_type: str) ->
 
     return row
 
-
 def generate_tables(config_key: str, config: Dict[str, Any], output_dir: Path, tail_epochs: int, enable_postprocess: bool = True):
     exp_name = config.get('exp_name', 'default')
     dataset_list = config.get('dataset_list', [])
@@ -202,8 +231,7 @@ def generate_tables(config_key: str, config: Dict[str, Any], output_dir: Path, t
     rank_list = config.get('rank_list', [8])
     num_users_list = config.get('num_users_list', [config.get('num_users', 10)])
 
-    # 简单判定实验类型 (Exp 2 通常包含 "exp_2" 字符，或者 rank_list > 1)
-    # 如果 config_key 包含 'exp_2' 强制设为 exp2，否则根据 rank 数量判定
+    # 判定实验类型
     if 'exp_2' in config_key or len(rank_list) > 1:
         exp_type = 'exp2'
     else:
@@ -219,56 +247,65 @@ def generate_tables(config_key: str, config: Dict[str, Any], output_dir: Path, t
                 header_info += f" | Users: {num_users}"
             print(f"\n>>> {header_info}")
 
-            # ========== Exp 2 逻辑: 多 Rank ==========
-            # 要求：同一 Rank 下，不同 Noise 和不同 Method 的对比。即行=Noise，列=Methods
+            # ==========================================
+            # Exp 2 逻辑: 多 Rank 场景 (长格式表格)
+            # 结构：列 = [Rank, Noise, Method1, Method2, ...]
+            # ==========================================
             if len(rank_list) > 1:
-                # 针对每个 Rank 单独出一张表，表内 Noise 变化
-                for rank in rank_list:
-                    print(f'\n🔹 Rank={rank}')
-                    headers = ['Noise'] + factorization_list
-                    t_local = PrettyTable(headers)
-                    t_neighbor = PrettyTable(headers)
+                # 分别处理 Local 和 Neighbor
+                for acc_type, use_neighbor in [('Local', False), ('Neighbor', True)]:
+                    print(f'\n📊 {acc_type} Accuracy ({dataset})')
                     
-                    for noise in noise_list:
-                        # 1. 获取该 Rank 和 Noise 下所有方法的数据
-                        l_list, n_list = read_scheme(
-                            exp_name, dataset, rank, noise, factorization_list, 
-                            seed_list, num_users, output_dir, tail_epochs
-                        )
-                        
-                        # 2. 根据开关决定是否应用后处理
-                        if enable_postprocess:
-                            l_proc = postprocess_results(l_list, factorization_list, exp_type)
-                            n_proc = postprocess_results(n_list, factorization_list, exp_type)
-                        else:
-                            l_proc = l_list
-                            n_proc = n_list
-                        
-                        # 3. 添加到表格（行是 noise，列是 method）
-                        t_local.add_row([noise] + l_proc)
-                        t_neighbor.add_row([noise] + n_proc)
+                    # 1. 构建表头
+                    # 前两列固定为 Rank 和 Noise，后面是各个方法名
+                    headers = ['Rank', 'Noise'] + factorization_list
+                    table = PrettyTable(headers)
                     
-                    print(' [Local Accuracy]')
-                    print(t_local)
-                    print(' [Neighbor Accuracy]')
-                    print(t_neighbor)
+                    # 2. 嵌套循环构建行 (Rank -> Noise)
+                    for rank in rank_list:
+                        rank_display = '16 (Full)' if rank == 16 else rank
+                        
+                        for noise in noise_list:
+                            # 读取该 Dataset, Rank, Noise 下所有 Method 的数据
+                            l_list, n_list = read_scheme(
+                                exp_name, dataset, rank, noise, factorization_list, 
+                                seed_list, num_users, output_dir, tail_epochs
+                            )
+                            
+                            # 选择 Local 或 Neighbor
+                            current_vals = n_list if use_neighbor else l_list
+                            
+                            # 后处理 (排序/置换)
+                            if enable_postprocess:
+                                processed_vals = postprocess_results(current_vals, factorization_list, exp_type)
+                            else:
+                                processed_vals = current_vals
+                            
+                            # 构建行: [Rank, Noise] + [Val1, Val2, Val3, Val4]
+                            row = [rank_display, noise] + processed_vals
+                            table.add_row(row)
+                        
+                        # (可选) 如果要在不同 Rank 之间加分割线，可以在这里处理，
+                        # 但 PrettyTable 默认样式通常足够清晰
+                    
+                    print(table)
 
-            # ========== Exp 1 逻辑: 单 Rank (变 Noise) ==========
-            # 要求：行=Noise，列=Methods
+            # ==========================================
+            # Exp 1 逻辑: 单 Rank (通常是变 Noise)
+            # ==========================================
             else:
                 rank = rank_list[0]
                 headers = ['Noise'] + factorization_list
+                
                 t_local = PrettyTable(headers)
                 t_neighbor = PrettyTable(headers)
                 
                 for noise in noise_list:
-                    # 1. 获取该 Noise 下所有方法的数据
                     l_list, n_list = read_scheme(
                         exp_name, dataset, rank, noise, factorization_list, 
                         seed_list, num_users, output_dir, tail_epochs
                     )
                     
-                    # 2. 根据开关决定是否应用后处理
                     if enable_postprocess:
                         l_proc = postprocess_results(l_list, factorization_list, exp_type)
                         n_proc = postprocess_results(n_list, factorization_list, exp_type)
@@ -285,7 +322,6 @@ def generate_tables(config_key: str, config: Dict[str, Any], output_dir: Path, t
                 print(t_neighbor)
             
             print("-" * 40)
-
 
 def main():
     parser = argparse.ArgumentParser(description="SepFPL 实验结果生成工具", formatter_class=argparse.ArgumentDefaultsHelpFormatter)

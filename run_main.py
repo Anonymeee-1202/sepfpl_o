@@ -35,6 +35,16 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         'num_users_list': [10],
         'round': 40,
     },
+    # 'EXPERIMENT_1_SIMPLE': {
+    #     'exp_name': 'exp1-simple',
+    #     'seed_list': [1],
+    #     'dataset_list': ['oxford_flowers'],
+    #     'factorization_list': ['promptfl', 'fedotp', 'fedpgp','sepfpl'],
+    #     'noise_list': [0.01],
+    #     'rank_list': [8],
+    #     'num_users_list': [10],
+    #     'round': 40,
+    # },
     # 实验1.2: Hard (CIFAR-100 + 扩展性测试)
     'EXPERIMENT_1_HARD': {
         'exp_name': 'exp1-hard',
@@ -51,7 +61,7 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         'exp_name': 'exp2',
         'seed_list': [1],
         'dataset_list': ['caltech-101', 'oxford_pets'],
-        'factorization_list': ['dpfpl', 'sepfpl_hcse', 'sepfpl_time_adaptive', 'sepfpl'],
+        'factorization_list': ['dpfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse', 'sepfpl'],
         'noise_list': [0.4, 0.1, 0.01],
         'rank_list': [1, 2, 4, 8, 16],
         'num_users_list': [10],

@@ -845,7 +845,7 @@ if __name__ == "__main__":
                         help="全局通信轮数（federated rounds）")
     parser.add_argument('--num-users', type=int, default=10,
                         help="客户端数量")
-    parser.add_argument('--lr', type=float, default=0.001,
+    parser.add_argument('--lr', type=float, default=0.0001,
                         help='学习率（learning rate）')
     parser.add_argument('--train-batch-size', type=int, default=32,
                         help="训练 batch size（仅在 useall=True 时生效）")
