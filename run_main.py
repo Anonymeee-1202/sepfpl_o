@@ -35,16 +35,6 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         'num_users_list': [10],
         'round': 40,
     },
-    # 'EXPERIMENT_1_SIMPLE': {
-    #     'exp_name': 'exp1-simple',
-    #     'seed_list': [1],
-    #     'dataset_list': ['oxford_flowers'],
-    #     'factorization_list': ['promptfl', 'fedotp', 'fedpgp','sepfpl'],
-    #     'noise_list': [0.01],
-    #     'rank_list': [8],
-    #     'num_users_list': [10],
-    #     'round': 40,
-    # },
     # 实验1.2: Hard (CIFAR-100 + 扩展性测试)
     'EXPERIMENT_1_HARD': {
         'exp_name': 'exp1-hard',
@@ -67,6 +57,19 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         'num_users_list': [10],
         'round': 40,
     },
+    # 实验3: MIA (Membership Inference Attack) 攻击评估
+    'EXPERIMENT_3_MIA': {
+        'exp_name': 'exp3-mia',
+        'seed_list': [1],
+        'dataset_list': ['caltech-101', 'oxford_pets', 'oxford_flowers'],
+        'factorization_list': ['sepfpl'],
+        'noise_list': [0.0, 0.4, 0.2, 0.1, 0.05, 0.01],
+        'rank_list': [8],
+        'num_users_list': [10],
+        'round': 5,
+        'shadow_start_seed': 0,  # Shadow 数据生成的起始 seed
+        'shadow_end_seed': 1,   # Shadow 数据生成的结束 seed（包含）
+    },
 }
 
 # 命令行参数映射表
@@ -76,8 +79,10 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
 EXP_ARG_MAP = {
     'exp1': (['EXPERIMENT_1_SIMPLE', 'EXPERIMENT_1_HARD'], "实验1 (Simple + Hard)"),
     'exp2': (['EXPERIMENT_2_ABLATION'], "实验2 (Rank + Ablation 合并)"),
+    'exp3': (['EXPERIMENT_3_MIA'], "实验3 (MIA 攻击评估)"),
     'exp1_simple': (['EXPERIMENT_1_SIMPLE'], "实验1.1 (Simple)"),
     'exp1_hard': (['EXPERIMENT_1_HARD'], "实验1.2 (Hard)"),
+    'exp3_mia': (['EXPERIMENT_3_MIA'], "实验3 (MIA 攻击评估)"),
 }
 
 
@@ -146,6 +151,239 @@ def run_single_task(
         subprocess.run(cmd_str, shell=True, check=True)
     except subprocess.CalledProcessError as e:
         print(f"❌ 测试任务失败，退出码: {e.returncode}")
+
+
+def _construct_mia_shell_command(
+    dataset: str, users: int, factorization: str, rank: int,
+    noise: float, seed: int, round_num: int, exp_name: str,
+    task_id: str, step: str, shadow_start_seed: int = 0, shadow_end_seed: int = 49
+) -> str:
+    """
+    构建 MIA 实验的 shell 命令。
+    
+    step: 'target' (训练目标模型), 'shadow' (生成shadow数据), 
+          'train_attack' (训练攻击模型，训练完成后自动测试), 'test_attack' (单独测试攻击模型，用于仅测试已训练的模型)
+    """
+    dataset_yaml = f'configs/datasets/{dataset}.yaml'
+    
+    if step == 'target':
+        # 训练目标模型（MIA 实验时跳过测试以加快训练速度）
+        parts = [
+            "bash", "srun_main.sh",
+            shlex.quote(ROOT_DIR),
+            shlex.quote(dataset_yaml),
+            str(users),
+            shlex.quote(factorization),
+            str(rank),
+            str(noise),
+            str(seed),
+            str(round_num),
+            shlex.quote(exp_name) if exp_name else '""',
+            shlex.quote(task_id) if task_id else '""',
+            "--skip-test"  # MIA 实验时跳过测试
+        ]
+    elif step == 'shadow':
+        # 生成 shadow 数据
+        parts = [
+            "bash", "srun_generate_shadow.sh",
+            shlex.quote(ROOT_DIR),
+            shlex.quote(dataset_yaml),
+            str(users),
+            shlex.quote(factorization),
+            str(rank),
+            str(noise),
+            str(shadow_start_seed),
+            str(shadow_end_seed),
+            str(round_num),
+            shlex.quote(exp_name) if exp_name else '""',
+            shlex.quote(task_id) if task_id else '""'
+        ]
+    elif step == 'train_attack':
+        # 训练 MIA 攻击模型（训练完成后自动测试，需要测试相关参数）
+        parts = [
+            "bash", "srun_mia.sh",
+            "train",
+            shlex.quote(ROOT_DIR),
+            shlex.quote(dataset_yaml),
+            str(users),
+            shlex.quote(factorization),
+            str(rank),
+            str(noise),
+            str(seed),
+            str(round_num),
+            shlex.quote(exp_name) if exp_name else '""',
+            shlex.quote(task_id) if task_id else '""'
+        ]
+    elif step == 'test_attack':
+        # 单独测试 MIA 攻击模型（用于仅测试已训练的模型，正常流程中训练会自动包含测试）
+        parts = [
+            "bash", "srun_mia.sh",
+            "test",
+            shlex.quote(ROOT_DIR),
+            shlex.quote(dataset_yaml),
+            str(users),
+            shlex.quote(factorization),
+            str(rank),
+            str(noise),
+            str(seed),
+            str(round_num),
+            shlex.quote(exp_name) if exp_name else '""',
+            shlex.quote(task_id) if task_id else '""'
+        ]
+    else:
+        raise ValueError(f"Unknown MIA step: {step}")
+    
+    return " ".join(parts)
+
+
+def generate_mia_batch_script(
+    config: Dict[str, Any],
+    gpus: Optional[str] = None,
+    script_dir: str = "scripts",
+) -> Tuple[List[Dict[str, Any]], Optional[str]]:
+    """
+    生成 MIA 实验的批量执行脚本。
+    
+    MIA 实验包括两个步骤：
+    1. 生成 shadow 数据（训练多个 shadow 模型）
+    2. 训练 MIA 攻击模型（训练完成后自动进行测试）
+    
+    注意：不需要单独的测试步骤，因为训练完成后会自动测试。
+    """
+    # 1. 准备参数网格
+    seed_list = config.get('seed_list', [1])
+    dataset_list = config.get('dataset_list', [])
+    factorization_list = config.get('factorization_list', [])
+    noise_list = config.get('noise_list', [0.0])
+    users_list = config.get('num_users_list') or [config.get('num_users', 10)]
+    rank_list = config.get('rank_list') or [config.get('rank', 8)]
+    round_num = config.get('round', 20)
+    exp_name = config.get('exp_name', 'default_exp')
+    shadow_start_seed = config.get('shadow_start_seed', 0)
+    shadow_end_seed = config.get('shadow_end_seed', 49)
+
+    # 解析 GPU 列表
+    gpu_pool = [g.strip() for g in str(gpus).split(',') if g.strip()] if gpus else []
+    
+    # Grid Search 笛卡尔积
+    combinations = list(itertools.product(
+        seed_list, dataset_list, users_list, rank_list, noise_list, factorization_list
+    ))
+    total_tasks = len(combinations)
+    
+    # 2. 生成任务列表（每个参数组合对应一个完整的 MIA 流程）
+    tasks = []
+    for idx, (seed, dataset, users, rank, noise, factorization) in enumerate(combinations, 1):
+        task_id = f"[{idx}/{total_tasks}]"
+        desc = f"{dataset} | {factorization} | r={rank} n={noise} u={users} s={seed}"
+        
+        # 为每个参数组合生成两个步骤的命令
+        # 注意：不需要单独的 target 步骤，因为 srun_generate_shadow.sh 已经包含了训练 shadow 模型的过程
+        # 不需要单独的 test_attack 步骤，因为训练完成后会自动进行测试
+        steps = [
+            ('shadow', _construct_mia_shell_command(
+                dataset, users, factorization, rank, noise, seed, round_num,
+                exp_name, task_id, 'shadow', shadow_start_seed, shadow_end_seed
+            )),
+            ('train_attack', _construct_mia_shell_command(
+                dataset, users, factorization, rank, noise, seed, round_num,
+                exp_name, task_id, 'train_attack', shadow_start_seed, shadow_end_seed
+            )),
+        ]
+        
+        # 轮询分配 GPU
+        gpu_assigned = gpu_pool[(idx - 1) % len(gpu_pool)] if gpu_pool else None
+        
+        tasks.append({
+            "task_id": task_id,
+            "description": desc,
+            "gpu": gpu_assigned,
+            "steps": steps,  # 包含两个步骤的命令
+        })
+
+    if not tasks:
+        return [], None
+
+    # 3. 按 GPU 对任务进行分组
+    tasks_by_gpu: Dict[Optional[str], List[Dict[str, Any]]] = defaultdict(list)
+    for task in tasks:
+        gpu_key = task['gpu'] if task['gpu'] else 'none'
+        tasks_by_gpu[gpu_key].append(task)
+
+    # 4. 编写 Shell 脚本内容
+    script_path_obj = Path(script_dir)
+    script_path_obj.mkdir(parents=True, exist_ok=True)
+    
+    exp_name_safe = exp_name.replace(' ', '_').replace('/', '_')
+    filename = f"task_list_{exp_name_safe}.sh"
+    file_path = script_path_obj / filename
+    
+    with open(file_path, 'w', encoding='utf-8') as f:
+        # Shell 脚本头部
+        f.write("#!/bin/bash\n\n")
+        f.write(f"# MIA 实验任务列表: {exp_name}\n")
+        f.write(f"# 生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"# 任务总数: {total_tasks}\n")
+        f.write("# 每个任务包含 2 个步骤：生成shadow数据（包含训练shadow模型） -> 训练攻击模型（训练完成后自动测试）\n")
+        f.write("# 执行策略: 不同 GPU 的任务并行执行；同一 GPU 的任务串行执行。\n")
+        f.write("# --------------------------------------------------------------------\n\n")
+        
+        # Logic A: 简单顺序执行
+        if len(tasks_by_gpu) <= 1:
+            f.write("# 顺序执行模式 (无 GPU 或单 GPU)\n")
+            for task in tasks:
+                f.write(f"echo '▶️  正在执行任务 {task['task_id']}: {task['description']}'\n")
+                prefix = f"CUDA_VISIBLE_DEVICES={task['gpu']} " if task['gpu'] else ""
+                
+                # 执行两个步骤
+                step_names = ['生成Shadow数据', '训练攻击模型（含测试）']
+                for (step, cmd), step_name in zip(task['steps'], step_names):
+                    f.write(f"echo '  --> 步骤: {step_name}'\n")
+                    f.write(f"{prefix}{cmd}\n")
+                    f.write(f"if [ $? -ne 0 ]; then\n")
+                    f.write(f"  echo '❌ 步骤失败: {step_name}'\n")
+                    f.write(f"  exit 1\n")
+                    f.write(f"fi\n")
+                    f.write(f"echo '  ✅ {step_name} 完成'\n\n")
+        
+        # Logic B: 并行执行 (多 GPU)
+        else:
+            f.write("# 并行执行模式 (多 GPU)\n\n")
+            
+            # 定义每个 GPU 的 Worker 函数
+            for gpu_key, gpu_tasks in sorted(tasks_by_gpu.items()):
+                func_name = f"run_gpu_{gpu_key}" if gpu_key != 'none' else "run_cpu"
+                f.write(f"{func_name}() {{\n")
+                f.write(f"    echo \"[Worker {gpu_key}] 启动\"\n")
+                for task in gpu_tasks:
+                    f.write(f"    # {task['task_id']} {task['description']}\n")
+                    prefix = f"CUDA_VISIBLE_DEVICES={task['gpu']} " if task['gpu'] else ""
+                    
+                    # 执行两个步骤
+                    step_names = ['生成Shadow数据', '训练攻击模型（含测试）']
+                    for (step, cmd), step_name in zip(task['steps'], step_names):
+                        f.write(f"    echo '  --> [{task['task_id']}] {step_name}'\n")
+                        f.write(f"    {prefix}{cmd}\n")
+                        f.write(f"    if [ $? -ne 0 ]; then\n")
+                        f.write(f"      echo '❌ [{task['task_id']}] {step_name} 失败'\n")
+                        f.write(f"      return 1\n")
+                        f.write(f"    fi\n")
+                        f.write(f"    echo '  ✅ [{task['task_id']}] {step_name} 完成'\n")
+                f.write(f"    echo \"[Worker {gpu_key}] 完成\"\n")
+                f.write(f"}}\n\n")
+            
+            # 后台启动所有 Worker
+            f.write("echo '🚀 启动后台并行任务...'\n")
+            for gpu_key in sorted(tasks_by_gpu.keys()):
+                func_name = f"run_gpu_{gpu_key}" if gpu_key != 'none' else "run_cpu"
+                f.write(f"{func_name} &\n")
+            
+            # 等待
+            f.write("\nwait\n")
+            f.write("echo '✅ 所有任务已执行完毕。'\n")
+
+    file_path.chmod(0o755)
+    return tasks, str(file_path)
 
 
 def generate_batch_script(
@@ -417,7 +655,11 @@ if __name__ == "__main__":
             cfg = EXPERIMENT_CONFIGS[key]
             print(f"\n处理配置: {cfg.get('exp_name', key)}")
             
-            tasks, path = generate_batch_script(cfg, gpus=args.gpus)
+            # 判断是否为 MIA 实验
+            if key == 'EXPERIMENT_3_MIA':
+                tasks, path = generate_mia_batch_script(cfg, gpus=args.gpus)
+            else:
+                tasks, path = generate_batch_script(cfg, gpus=args.gpus)
             
             if path:
                 print(f"  ✅ 生成任务数: {len(tasks)}。脚本路径: {path}")

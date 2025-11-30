@@ -289,6 +289,70 @@ def load_checkpoint(args):
     return epoch, local_weights, local_acc, neighbor_acc
 
 
+def generate_shadow_data(args, local_trainer, local_weights, logger):
+    """
+    生成 Shadow 数据用于 MIA 攻击模型训练。
+    
+    在训练完成后，收集模型对训练集和测试集的预测结果，保存为 shadow 数据。
+    """
+    import torch.nn.functional as F
+    
+    dataset_name = args.dataset_config_file.split('/')[-1].split('.')[0]
+    wandb_group = getattr(args, 'wandb_group', None) or 'default'
+    output_dir = os.path.join(os.path.expanduser('~/data/sepfpl/outputs'), wandb_group, dataset_name)
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # 使用最大客户端的模型来生成 shadow 数据
+    max_idx = local_trainer.max_idx
+    
+    # 加载训练好的模型权重
+    local_trainer.model.load_state_dict(local_weights[max_idx], strict=False)
+    local_trainer.set_model_mode("eval")
+    
+    # 收集预测结果
+    shadow_data = []
+    
+    logger.info("正在收集训练集预测结果...")
+    train_loader = local_trainer.fed_train_loader_x_dict[max_idx]
+    for batch_idx, batch in enumerate(train_loader):
+        images = batch["img"].to(local_trainer.device)
+        labels = batch["label"].to(local_trainer.device)
+        
+        with torch.no_grad():
+            outputs = local_trainer.model_inference(images)
+            predictions = F.softmax(outputs, dim=1)
+        
+        for pred, label in zip(predictions.cpu(), labels.cpu()):
+            # (prediction, membership=1, label)
+            shadow_data.append((pred, torch.tensor(1), label))
+    
+    logger.info("正在收集测试集预测结果...")
+    test_loader = local_trainer.fed_test_local_loader_x_dict[max_idx]
+    for batch_idx, batch in enumerate(test_loader):
+        images = batch["img"].to(local_trainer.device)
+        labels = batch["label"].to(local_trainer.device)
+        
+        with torch.no_grad():
+            outputs = local_trainer.model_inference(images)
+            predictions = F.softmax(outputs, dim=1)
+        
+        for pred, label in zip(predictions.cpu(), labels.cpu()):
+            # (prediction, membership=0, label)
+            shadow_data.append((pred, torch.tensor(0), label))
+    
+    # 保存 shadow 数据
+    shadow_file = os.path.join(output_dir, f"shadow_{args.noise}_{args.seed}.pkl")
+    with open(shadow_file, 'wb') as f:
+        pickle.dump(shadow_data, f)
+    
+    train_count = sum(1 for _, m, _ in shadow_data if m.item() == 1)
+    test_count = sum(1 for _, m, _ in shadow_data if m.item() == 0)
+    logger.info(f"✅ Shadow 数据已保存: {shadow_file}")
+    logger.info(f"   总样本数: {len(shadow_data)}")
+    logger.info(f"   训练集样本: {train_count}")
+    logger.info(f"   测试集样本: {test_count}")
+
+
 def main(args):
     # ====== 初始化日志与配置 ======
     # 日志会将命令行参数与关键信息打印并写入文件，便于后续复现
@@ -348,10 +412,6 @@ def main(args):
         # 已经训练到最后一轮，无需继续
         return
 
-    # 预先计算全局噪声标准差（若启用 DP）
-    if args.noise > 0:
-        std = local_trainer.std / cfg.DATASET.USERS
-
     # ====== 统计每轮最大 batch 数，用于进度条显示 ======
     train_loaders = getattr(local_trainer, "fed_train_loader_x_dict", {})
     if train_loaders:
@@ -401,6 +461,12 @@ def main(args):
         # ---------- 时间自适应隐私分配：根据轮数更新噪声标准差 ----------
         if use_time_adaptive_flag and hasattr(local_trainer, 'update_std_for_round'):
             local_trainer.update_std_for_round(epoch)
+        
+        # ---------- 计算当前 epoch 的全局噪声标准差（若启用 DP） ----------
+        # 注意：如果使用时间自适应，local_trainer.std 会在 update_std_for_round 中更新
+        # 因此需要在这里重新计算 std，而不是在训练循环之前计算
+        if args.noise > 0:
+            std = local_trainer.std / cfg.DATASET.USERS
 
         # ---------- 为每个客户端准备数据迭代器 ----------
         data_iters = []
@@ -620,7 +686,8 @@ def main(args):
             )
         # ==================== 测试阶段 ====================
         # 前2个epoch训练完后执行第一次测试，之后在奇数epoch时测试，或者最后一轮也测试
-        should_test = (epoch % 2 == 1) or (epoch == max_epoch - 1)
+        # 如果设置了 --skip-test，则跳过测试
+        should_test = not getattr(args, 'skip_test', False) and ((epoch % 2 == 1) or (epoch == max_epoch - 1))
         
         if should_test:
             show_test_details = getattr(args, "test_verbose_log", False)
@@ -771,6 +838,19 @@ def main(args):
                 'wb'
             )
         )
+
+    # ==================== 生成 Shadow 数据（如果启用） ====================
+    if getattr(args, 'generate_shadow', False):
+        logger.info("=" * 80)
+        logger.info("开始生成 Shadow 数据...")
+        logger.info("=" * 80)
+        try:
+            # 使用训练完成后的最终权重生成 shadow 数据
+            # 注意：local_weights 在训练循环中会不断更新，训练结束后已经是最新的
+            generate_shadow_data(args, local_trainer, local_weights, logger)
+        except Exception as e:
+            logger.error(f"生成 Shadow 数据时出现错误: {e}", exc_info=True)
+        logger.info("=" * 80)
 
     # ==================== 训练结束，记录 summary ====================
     best_window_msg = None
@@ -951,6 +1031,18 @@ if __name__ == "__main__":
     parser.add_argument(
         '--wandb-group', type=str, default=None,
         help='wandb 中的实验分组名（group），用于组织一组相关实验'
+    )
+
+    # ====== 测试控制参数 ======
+    parser.add_argument(
+        '--skip-test', action='store_true', default=False,
+        help='跳过测试阶段（默认进行测试）'
+    )
+    
+    # ====== Shadow 数据生成参数 ======
+    parser.add_argument(
+        '--generate-shadow', action='store_true', default=False,
+        help='训练完成后生成 Shadow 数据（用于 MIA 攻击模型训练）'
     )
 
     args = parser.parse_args()

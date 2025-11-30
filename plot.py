@@ -17,6 +17,8 @@ from typing import List, Dict, Any, Optional, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 # 尝试导入外部配置
 try:
@@ -566,6 +568,179 @@ def plot_exp2_bar_charts(output_dir: Path = DEFAULT_OUTPUT_DIR,
             plt.close()
 
 
+# ========== 图3（新增）: Exp2 多维分面折线图 ==========
+
+def plot_exp2_faceted_linechart(output_dir: Path, tail_epochs: int, fig_dir: Path, use_neighbor: bool = False):
+    
+    # --- 样式设置 ---
+    plt.rcParams.update({
+        'font.family': 'serif',
+        'font.serif': ['Times New Roman'],
+        'mathtext.fontset': 'stix',
+        'grid.color': '#DDDDDD',
+        'grid.linewidth': 0.5,
+    })
+
+    config = EXPERIMENT_CONFIGS['EXPERIMENT_2_ABLATION']
+    datasets = config['dataset_list']
+    methods = config['factorization_list']
+    rank_list = config['rank_list']
+    noise_list = config['noise_list'] # [0.4, 0.1, 0.01]
+    
+    # 颜色与标记
+    method_colors = {
+        'dpfpl': '#7f7f7f', 'sepfpl_time_adaptive': '#1f77b4', 
+        'sepfpl_hcse': '#2ca02c', 'sepfpl': '#d62728'
+    }
+    method_markers = {'dpfpl': 'o', 'sepfpl_time_adaptive': 's', 'sepfpl_hcse': '^', 'sepfpl': 'D'}
+    
+    # 坐标映射
+    rank_indices = np.arange(len(rank_list))
+    #为了拉大Y轴视觉距离，我们放大间隔：0, 1.5, 3
+    noise_indices = np.arange(len(noise_list)) * 1.5 
+
+    for dataset in datasets:
+        fig = plt.figure(figsize=(14, 10))
+        ax = fig.add_subplot(111, projection='3d')
+        
+        # 1. 准备数据 - 读取真实数据
+        data_matrix = {m: np.zeros((len(noise_list), len(rank_list))) for m in methods}
+        
+        # 读取真实数据
+        exp_name = config['exp_name']
+        seed_list = config['seed_list']
+        num_users = config['num_users_list'][0]
+        exp_type = 'exp2'
+        
+        for method in methods:
+            for n_i, noise in enumerate(noise_list):
+                for r_i, rank in enumerate(rank_list):
+                    try:
+                        l_list, n_list = read_scheme(
+                            exp_name, dataset, rank, noise, methods,
+                            seed_list, num_users, output_dir, tail_epochs
+                        )
+                        
+                        # 使用后处理
+                        l_proc = postprocess_results(l_list, methods, exp_type)
+                        n_proc = postprocess_results(n_list, methods, exp_type)
+                        
+                        stat_list = n_proc if use_neighbor else l_proc
+                        method_idx = methods.index(method)
+                        stat_str = stat_list[method_idx] if method_idx < len(stat_list) else "N/A"
+                        
+                        if stat_str and stat_str != "N/A":
+                            parts = stat_str.split('±')
+                            mean_val = float(parts[0].strip())
+                            data_matrix[method][n_i, r_i] = mean_val
+                        else:
+                            data_matrix[method][n_i, r_i] = 0.0
+                    except Exception as e:
+                        print(f"Error reading data for {method}, rank {rank}, noise {noise}: {e}")
+                        data_matrix[method][n_i, r_i] = 0.0
+
+        # 计算 Z 轴范围
+        all_vals = [v for m in methods for row in data_matrix[m] for v in row if v > 0]
+        z_min = min(all_vals) - 5
+        z_max = max(all_vals) + 2
+
+        # 2. 绘制 "视觉地板" (Shelves) - 策略一
+        # 为每个 Noise Level 画一个不同颜色的半透明平面
+        # 为不同的noise值定义不同的背景色
+        noise_bg_colors = ['#e3f2fd', '#fff3e0', '#f3e5f5']  # 蓝色、橙色、紫色的浅色版本
+        
+        for n_idx_raw, y_pos in enumerate(noise_indices):
+            # 创建矩形顶点: (x_min, y, z_min) -> (x_max, y, z_min) -> ...
+            x_min, x_max = -0.5, len(rank_list) - 0.5
+            
+            # 根据noise索引选择对应的背景色
+            bg_color = noise_bg_colors[n_idx_raw % len(noise_bg_colors)]
+            
+            # 画平面上的网格线（伪地板）
+            ax.plot([x_min, x_max], [y_pos, y_pos], [z_min, z_min], color='gray', alpha=0.3, linewidth=1)
+            
+            # (可选) 添加一个淡淡的面，使用不同的背景色
+            verts = [[(x_min, y_pos, z_min), (x_max, y_pos, z_min), 
+                      (x_max, y_pos+0.5, z_min), (x_min, y_pos+0.5, z_min)]] #稍微有些宽度
+            poly = Poly3DCollection(verts, alpha=0.15, facecolor=bg_color)
+            ax.add_collection3d(poly)
+            
+            # 在地板左侧标注 Noise 值
+            ax.text(x_min - 0.5, y_pos, z_min, f"$\\epsilon={noise_list[n_idx_raw]}$", 
+                    fontsize=12, fontweight='bold', color='#333333', ha='right')
+
+        # 3. 绘制曲线 (Stadium Ordering) - 策略二
+        # 我们按 Noise 列表顺序绘制。
+        # 假设 noise_list = [0.4, 0.1, 0.01]。
+        # 0.4 (Acc低) 在 y=0 (前排)。0.01 (Acc高) 在 y=3 (后排)。
+        # Matplotlib 3D 的遮挡计算有时不完美，但在这种排列下，低不挡高，效果最好。
+        
+        for n_i, noise_val in enumerate(noise_list):
+            y_pos = noise_indices[n_i]
+            
+            for method in methods:
+                ys = data_matrix[method][n_i, :]
+                if np.sum(ys) == 0: continue
+                
+                color = method_colors.get(method, 'k')
+                marker = method_markers.get(method, 'o')
+                
+                # --- 策略三：垂直帘幕 (Ribbons) ---
+                # 只给特定的方法（比如你的方法 sepfpl）加帘子，或者给所有加但非常淡
+                if method == 'sepfpl': 
+                    # 构建多边形顶点
+                    verts = []
+                    for i, r_idx in enumerate(rank_indices):
+                        verts.append((r_idx, y_pos, ys[i])) # 顶线
+                    for i, r_idx in enumerate(reversed(rank_indices)):
+                        verts.append((r_idx, y_pos, z_min)) # 底线
+                    
+                    poly = Poly3DCollection([verts], alpha=0.15, facecolor=color)
+                    ax.add_collection3d(poly)
+
+                # 绘制实线
+                label = method if n_i == 0 else None
+                ax.plot(rank_indices, [y_pos]*len(rank_list), ys, 
+                        color=color, marker=marker, markersize=6, 
+                        linewidth=2, alpha=1.0, label=label, zorder=10 + n_i)
+                
+                # 绘制投影线 (Drop lines)
+                for r_i, val in enumerate(ys):
+                    ax.plot([r_i, r_i], [y_pos, y_pos], [z_min, val], 
+                            color=color, linewidth=0.5, alpha=0.3, linestyle=':')
+
+        # 4. 美化
+        ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        
+        ax.set_xlabel('\nRank ($r$)', fontweight='bold')
+        ax.set_zlabel('\nAccuracy (%)', fontweight='bold')
+        
+        # Y轴不需要刻度了，因为我们直接在地板上标了字
+        ax.set_yticks([]) 
+        ax.set_ylabel('\nNoise Level ($\\epsilon$)', fontweight='bold', labelpad=0)
+
+        ax.set_xticks(rank_indices)
+        ax.set_xticklabels([str(r) if r!=16 else 'Full' for r in rank_list])
+        ax.set_zlim(z_min, z_max)
+        
+        # 视角调整：拉高仰角，看得清“地板”的间隔
+        ax.view_init(elev=30, azim=-60)
+        
+        # 图例
+        ax.legend(loc='upper center', bbox_to_anchor=(0.5, 0.95), ncol=4, frameon=False)
+        
+        # 保存
+        fig_dir.mkdir(parents=True, exist_ok=True)
+        acc_type = 'neighbor' if use_neighbor else 'local'
+        output_path = fig_dir / f'exp2_{dataset}_{acc_type}_3d_linechart.pdf'
+        plt.tight_layout()
+        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        print(f"✅ Exp2 3D折线图已保存: {output_path}")
+        plt.close()
+
+
 # ========== 主函数 ==========
 
 def main():
@@ -577,14 +752,16 @@ def main():
     
     parser.add_argument("--plot1", action="store_true", help="绘制图1: Exp1噪声折线图")
     parser.add_argument("--plot2", action="store_true", help="绘制图2: Exp2柱状图（后处理数据）")
+    parser.add_argument("--plot3", action="store_true", help="绘制图3: Exp2多维分面折线图")
     parser.add_argument("--all", action="store_true", help="绘制所有图表")
+    parser.add_argument("--use-neighbor", action="store_true", help="使用Neighbor Accuracy（仅对plot3有效）")
     parser.add_argument("--no-postprocess", action="store_true", 
                        help="禁用后处理（仅对plot1有效，默认启用后处理）")
     
     args = parser.parse_args()
     
-    if not (args.plot1 or args.plot2 or args.all):
-        print("⚠️  未指定要绘制的图表，使用 --all 绘制所有图表，或使用 --plot1/--plot2 选择特定图表")
+    if not (args.plot1 or args.plot2 or args.plot3 or args.all):
+        print("⚠️  未指定要绘制的图表，使用 --all 绘制所有图表，或使用 --plot1/--plot2/--plot3 选择特定图表")
         args.all = True
     
     use_postprocess = not args.no_postprocess  # 默认启用后处理
@@ -596,6 +773,10 @@ def main():
     if args.all or args.plot2:
         print("\n📊 正在绘制图2: Exp2柱状图（后处理数据）...")
         plot_exp2_bar_charts(args.output_dir, args.tail_epochs, args.fig_dir, use_postprocess)
+    
+    if args.all or args.plot3:
+        print("\n📊 正在绘制图3: Exp2多维分面折线图...")
+        plot_exp2_faceted_linechart(args.output_dir, args.tail_epochs, args.fig_dir, args.use_neighbor)
     
     print(f"\n✅ 所有图表已保存到: {args.fig_dir}")
 
