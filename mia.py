@@ -374,7 +374,7 @@ def load_target(args) -> List[Dict]:
     dataset = args.dataset_config_file.split("/")[-1].split(".")[0]
     wandb_group = getattr(args, 'wandb_group', None) or 'default'
     save_filename = os.path.join(
-        os.path.expanduser('~/data/sepfpl/checkpoints'),
+        os.path.expanduser('~/code/sepfpl/checkpoints'),
         wandb_group,
         dataset,
         f'{args.factorization}_{args.rank}_{args.noise}_{args.seed}_{args.num_users}.pth.tar'
@@ -405,7 +405,7 @@ def load_attack(args, dataset_name: str, label: int) -> AttackModel:
     """
     wandb_group = getattr(args, 'wandb_group', None) or 'default'
     save_filename = os.path.join(
-        os.path.expanduser('~/data/sepfpl/checkpoints'),
+        os.path.expanduser('~/code/sepfpl/checkpoints'),
         wandb_group,
         dataset_name,
         f"mia_{label}_{args.noise}.pth.tar"
@@ -440,7 +440,7 @@ def train_attack_models(args, auto_test: bool = True):
     # ====== 初始化 ======
     logger = init_logger_from_args(
         args, 
-        log_dir=os.path.expanduser('~/data/sepfpl/logs'), 
+        log_dir=os.path.expanduser('~/code/sepfpl/logs'), 
         log_to_file=True, 
         log_to_console=True
     )
@@ -460,8 +460,8 @@ def train_attack_models(args, auto_test: bool = True):
     # ====== 路径设置 ======
     dataset_name = args.dataset_config_file.split('/')[-1].split('.')[0]
     wandb_group = getattr(args, 'wandb_group', None) or 'default'
-    output_dir = os.path.join(os.path.expanduser('~/data/sepfpl/outputs'), wandb_group, dataset_name)
-    checkpoint_dir = os.path.join(os.path.expanduser('~/data/sepfpl/checkpoints'), wandb_group, dataset_name)
+    output_dir = os.path.join(os.path.expanduser('~/code/sepfpl/outputs'), wandb_group, dataset_name)
+    checkpoint_dir = os.path.join(os.path.expanduser('~/code/sepfpl/checkpoints'), wandb_group, dataset_name)
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(checkpoint_dir, exist_ok=True)
 
@@ -654,7 +654,7 @@ def test_attack_models(args):
     # ====== 初始化 ======
     logger = init_logger_from_args(
         args, 
-        log_dir=os.path.expanduser('~/data/sepfpl/logs'), 
+        log_dir=os.path.expanduser('~/code/sepfpl/logs'), 
         log_to_file=True, 
         log_to_console=True
     )
@@ -680,7 +680,7 @@ def test_attack_models(args):
     
     # ====== 路径设置 ======
     wandb_group = getattr(args, 'wandb_group', None) or 'default'
-    output_dir = os.path.join(os.path.expanduser('~/data/sepfpl/outputs'), wandb_group, dataset_name)
+    output_dir = os.path.join(os.path.expanduser('~/code/sepfpl/outputs'), wandb_group, dataset_name)
     os.makedirs(output_dir, exist_ok=True)
 
     # ====== 准备测试数据 ======

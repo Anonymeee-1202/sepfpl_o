@@ -48,7 +48,7 @@ except ImportError:
     sys.exit(1)
 
 # ========== 全局常量配置 ==========
-DEFAULT_OUTPUT_DIR = Path.home() / 'data/sepfpl/outputs'
+DEFAULT_OUTPUT_DIR = Path.home() / 'code/sepfpl/outputs'
 DEFAULT_TAIL_EPOCHS = 10
 
 
@@ -339,16 +339,16 @@ def generate_mia_table(
     
     文件路径结构（与 mia.py 保持一致）：
         {output_dir}/{exp_name}/{dataset}/mia_acc_{noise}.pkl
-        例如：~/data/sepfpl/outputs/exp3-mia/oxford_pets/mia_acc_0.0.pkl
+        例如：~/code/sepfpl/outputs/exp3-mia/oxford_pets/mia_acc_0.0.pkl
     
     Args:
         exp_name: 实验组名（对应 mia.py 中的 wandb_group），默认为 'exp3-mia'
-        output_dir: 结果文件的基础目录，默认为 ~/data/sepfpl/outputs
+        output_dir: 结果文件的基础目录，默认为 ~/code/sepfpl/outputs
         datasets: 数据集列表，如果为None则自动扫描目录
         noise_list: 噪声值列表，如果为None则自动扫描文件
     """
     # 构建实验目录路径：{output_dir}/{exp_name}
-    # 对应 mia.py 中的：~/data/sepfpl/outputs/{wandb_group}
+    # 对应 mia.py 中的：~/code/sepfpl/outputs/{wandb_group}
     exp_dir = output_dir / exp_name
     
     if not exp_dir.exists():

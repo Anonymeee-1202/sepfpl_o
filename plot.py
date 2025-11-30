@@ -36,7 +36,7 @@ except ImportError:
 
 # ========== 全局配置 ==========
 # 注意：默认使用outputs目录（与table.py一致），如果数据在p_outputs，请使用--output-dir参数指定
-DEFAULT_OUTPUT_DIR = Path.home() / 'data/sepfpl/outputs'
+DEFAULT_OUTPUT_DIR = Path.home() / 'code/sepfpl/outputs'
 DEFAULT_TAIL_EPOCHS = 10  # 与table.py保持一致
 DEFAULT_FIG_DIR = Path('figures')
 

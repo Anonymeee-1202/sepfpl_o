@@ -104,7 +104,7 @@ bash srun_generate_shadow.sh \
 
 ### 输出文件
 
-- **Shadow 数据**: `~/data/sepfpl/outputs/{wandb_group}/{dataset}/shadow_{noise}_{seed}.pkl`
+- **Shadow 数据**: `~/code/sepfpl/outputs/{wandb_group}/{dataset}/shadow_{noise}_{seed}.pkl`
   - 每个文件包含一个列表，每个元素是 `(prediction, membership, label)` 元组
   - `prediction`: 模型对样本的预测概率分布
   - `membership`: 1 表示训练集样本，0 表示测试集样本
@@ -141,7 +141,7 @@ bash srun_mia.sh train \
 
 ### 输出文件
 
-- **攻击模型**: `~/data/sepfpl/checkpoints/{wandb_group}/{dataset}/mia_{label}_{noise}.pth.tar`
+- **攻击模型**: `~/code/sepfpl/checkpoints/{wandb_group}/{dataset}/mia_{label}_{noise}.pth.tar`
   - 每个类别一个模型文件
 
 ---
@@ -183,7 +183,7 @@ bash srun_mia.sh test \
 
 ### 输出文件
 
-- **攻击准确率**: `~/data/sepfpl/outputs/{wandb_group}/{dataset}/mia_acc_{noise}.pkl`
+- **攻击准确率**: `~/code/sepfpl/outputs/{wandb_group}/{dataset}/mia_acc_{noise}.pkl`
   - 包含平均 MIA 攻击成功率
 
 ---
@@ -256,7 +256,7 @@ bash srun_mia.sh test \
 ### 目录结构
 
 ```
-~/data/sepfpl/
+~/code/sepfpl/
 ├── checkpoints/
 │   └── {wandb_group}/
 │       └── {dataset}/
@@ -361,7 +361,7 @@ bash scripts/task_list_exp3-mia.sh
 ## 联系与支持
 
 如有问题，请检查：
-1. 日志文件：`~/data/sepfpl/logs/`
+1. 日志文件：`~/code/sepfpl/logs/`
 2. 代码注释和文档
 3. 项目 README
 
