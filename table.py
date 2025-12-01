@@ -120,10 +120,17 @@ def read_data(exp_name: str, dataset: str, factorization: str, rank: int,
     base_dir = output_base_dir / exp_name / dataset
 
     for seed in seed_list:
-        if num_users is not None:
-            pattern = f'acc_{factorization}_{rank}_{noise}_{seed}_{num_users}'
+        # 确保 noise 格式化为浮点数字符串，匹配文件命名格式
+        # 整数 0 -> "0.0", 浮点数 0.4 -> "0.4" (不是 "0.40")
+        if noise == int(noise):
+            noise_str = f'{float(noise):.1f}'  # 0 -> "0.0"
         else:
-            pattern = f'acc_{factorization}_{rank}_{noise}_{seed}'
+            # 对于非整数，去除末尾的0，如 0.40 -> "0.4", 0.01 -> "0.01"
+            noise_str = f'{float(noise):g}'  # 使用 g 格式自动去除不必要的0
+        if num_users is not None:
+            pattern = f'acc_{factorization}_{rank}_{noise_str}_{seed}_{num_users}'
+        else:
+            pattern = f'acc_{factorization}_{rank}_{noise_str}_{seed}'
         
         file_path = find_output_file(base_dir, pattern)
         if not file_path:

@@ -294,8 +294,8 @@ def extend_cfg(cfg, args, mode: str = 'test'):
         # 差分隐私参数
         cfg.NORM_THRESH = args.norm_thresh
 
-        # DP_FPL Trainer 配置
-        cfg.TRAINER.NAME = "DP_FPL"
+        # SEPFPL Trainer 配置
+        cfg.TRAINER.NAME = "SEPFPL"
         cfg.TRAINER.DP_FPL = CN()
         cfg.TRAINER.DP_FPL.N_CTX = args.n_ctx  # 上下文向量数量
         cfg.TRAINER.DP_FPL.PREC = "fp32"  # 计算精度：fp16, fp32, amp

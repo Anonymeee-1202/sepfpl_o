@@ -6,7 +6,7 @@ import zipfile
 from collections import defaultdict
 import gdown
 
-from Dassl.dassl.utils import check_isfile
+from Dassl.dassl.utils import check_isfile, read_json, write_json, listdir_nohidden
 from utils.logger import require_global_logger
 
 
@@ -374,34 +374,42 @@ class DatasetBase:
         与 few-shot 版本不同，这里试图模拟每个客户端拥有其类别的全部或特定比例的数据。
 
         参数:
-            num_shots (int): 虽然命名为 shots，但在 baseline 中可能用于控制 fold 分组逻辑。
-            ... (其他参数同上)
+            data_sources: 可变参数，每个元素是一个包含 Datum 对象的列表。
+            num_shots (int): 用于控制 fold 分组逻辑。fold = num_users / num_shots。
+            num_users (int): 用户(Client)数量。
+            is_iid (bool): 是否独立同分布 (IID)。如果为 True，每个用户拥有所有类。
+            repeat_rate (float): 类别重叠率 (0.0 - 1.0)。控制不同用户间共享类别的比例 (用于 Non-IID 设置)。
+            repeat (bool): 未使用，保留以保持接口一致性。
+
+        返回:
+            output_dict (dict): {user_id: [Datum_list]}，每个用户的训练数据列表。
         """
         logger = _get_dataset_logger()
-        logger.info(f"正在创建 Baseline 联邦数据集")
+        logger.info("正在创建 Baseline 联邦数据集")
         output_dict = defaultdict(list)
         user_class_dict = defaultdict(list)
-        sample_per_user = defaultdict(int) # 每个类别分给每个用户的样本数
-        sample_order = defaultdict(list)   # 记录每个类别样本的分配顺序索引
+        sample_per_user = defaultdict(int)  # 每个类别分给每个用户的样本数
+        sample_order = defaultdict(list)    # 记录每个类别样本的分配顺序索引
 
         class_num = self.get_num_classes(data_sources[0])
         logger.info(f"类别总数: {class_num}")
-        
+
         class_per_user = int(round(class_num / num_users))
         class_list = list(range(0, class_num))
         random.seed(2023)
         random.shuffle(class_list)
 
         # --- 逻辑块：准备 Non-IID 参数 (Repeat Rate & Fold) ---
+        fold = 0
         if repeat_rate > 0:
             repeat_num = int(repeat_rate * class_num)
             class_repeat_list = class_list[0:repeat_num]
             class_norepeat_list = class_list[repeat_num:class_num]
             class_per_user = int(round((class_num - repeat_num) / num_users))
-            
+
             fold = int(num_users / num_shots) if num_shots > 0 else 0
-            logger.info(f"repeat_num: {repeat_num}")
-            logger.info(f"fold: {fold}")
+            logger.info(f"重复类别数: {repeat_num}")
+            logger.info(f"Fold 数: {fold}")
 
             if fold > 0:
                 client_idx_fold = defaultdict(list)
@@ -409,21 +417,26 @@ class DatasetBase:
                 repeat_per_fold = int(round(repeat_num / fold))
                 client_list = list(range(0, num_users))
                 random.shuffle(client_list)
+
+                # 将用户分配到不同的 fold
                 for i in range(fold):
-                    client_idx_fold[i] = client_list[i * client_per_fold : min((i + 1) * client_per_fold, num_users)]
+                    start_idx = i * client_per_fold
+                    end_idx = min((i + 1) * client_per_fold, num_users)
+                    client_idx_fold[i] = client_list[start_idx:end_idx]
 
         # --- 步骤 1: 预计算每个类别的样本分配策略 ---
         for data_source in data_sources:
             tracker = self.split_dataset_by_label(data_source)
+
             for label, items in tracker.items():
                 sample_order[label] = list(range(0, len(items)))
-                # 默认将该类样本平均分给所有用户 (如果是 IID 或 共享类)
+                # 默认将该类样本平均分给所有用户 (如果是 IID 或共享类)
                 sample_per_user[label] = int(round(len(items) / num_users))
                 random.shuffle(sample_order[label])
-                
+
                 # 如果使用了 fold 分组，共享类的样本分配量需要调整
-                if repeat_rate > 0 and 'fold' in locals() and fold > 0:
-                     # 此时共享该类的用户数减少了，每个用户分到的样本变多
+                # 此时共享该类的用户数减少了，每个用户分到的样本变多
+                if repeat_rate > 0 and fold > 0:
                     sample_per_user[label] = int(round(len(items) / (num_users / fold)))
 
             # --- 步骤 2: 为每个用户分配类别和数据 ---
@@ -433,70 +446,87 @@ class DatasetBase:
                     user_class_dict[idx] = list(range(0, class_num))
                 else:
                     if repeat_rate == 0.0:
+                        # 无重叠：严格切分类别列表
                         if idx == num_users - 1:
-                            user_class_dict[idx] = class_list[idx * class_per_user : class_num]
+                            user_class_dict[idx] = class_list[idx * class_per_user:class_num]
                         else:
-                            user_class_dict[idx] = class_list[idx * class_per_user : (idx + 1) * class_per_user]
+                            end_idx = (idx + 1) * class_per_user
+                            user_class_dict[idx] = class_list[idx * class_per_user:end_idx]
                     else:
+                        # 有重叠 (repeat_rate > 0)
                         user_class_dict[idx] = []
+
+                        # 2.1.1 添加共享(重复)部分
                         if fold > 0:
                             for k, v in client_idx_fold.items():
-                                if idx in v:
+                                if idx in v:  # 找到当前用户所在的 fold
                                     if k == len(client_idx_fold) - 1:
-                                        user_class_dict[idx].extend(class_repeat_list[k * repeat_per_fold : repeat_num])
+                                        user_class_dict[idx].extend(
+                                            class_repeat_list[k * repeat_per_fold:repeat_num]
+                                        )
                                     else:
-                                        user_class_dict[idx].extend(class_repeat_list[k * repeat_per_fold : (k + 1) * repeat_per_fold])
+                                        end_idx = (k + 1) * repeat_per_fold
+                                        user_class_dict[idx].extend(
+                                            class_repeat_list[k * repeat_per_fold:end_idx]
+                                        )
                         else:
                             user_class_dict[idx].extend(class_repeat_list)
 
                         logger.info(f"User {idx} repeat part: {user_class_dict[idx]}")
 
+                        # 2.1.2 添加私有(不重复)部分
                         if idx == num_users - 1:
-                            segment = class_norepeat_list[idx * class_per_user : class_num - repeat_num]
+                            segment = class_norepeat_list[
+                                idx * class_per_user:(class_num - repeat_num)
+                            ]
                             user_class_dict[idx].extend(segment)
                         else:
-                            segment = class_norepeat_list[idx * class_per_user : (idx + 1) * class_per_user]
+                            end_idx = (idx + 1) * class_per_user
+                            segment = class_norepeat_list[idx * class_per_user:end_idx]
                             user_class_dict[idx].extend(segment)
-                        
+
                         logger.info(f"User {idx} non-repeat part: {segment}")
 
                 logger.info(f"User {idx} total classes: {user_class_dict[idx]}")
 
-                dataset = []
-
                 # 2.2 根据 sample_order 和 sample_per_user 进行切片分配
+                dataset = []
                 for label, items in tracker.items():
-                    if label in user_class_dict[idx]:
-                        if is_iid:
-                            # IID: 按照预先计算的顺序切片，确保每个用户拿到不重复的切片
-                            sampled_items = []
-                            for k, v in enumerate(items):
+                    if label not in user_class_dict[idx]:
+                        continue
+
+                    if is_iid:
+                        # IID: 按照预先计算的顺序切片，确保每个用户拿到不重复的切片
+                        sampled_items = []
+                        start_idx = idx * sample_per_user[label]
+                        end_idx = min((idx + 1) * sample_per_user[label], len(items))
+                        selected_indices = sample_order[label][start_idx:end_idx]
+
+                        for k, v in enumerate(items):
+                            if k in selected_indices:
+                                sampled_items.append(v)
+                        dataset.extend(sampled_items)
+                    else:
+                        # Non-IID
+                        if repeat_rate == 0.0:
+                            # 独占该类，拿走所有数据
+                            dataset.extend(items)
+                        else:
+                            # 有重叠
+                            if label in class_repeat_list:
+                                # 是共享类：只拿走属于该用户切片的部分
+                                sampled_items = []
                                 start_idx = idx * sample_per_user[label]
                                 end_idx = min((idx + 1) * sample_per_user[label], len(items))
-                                if k in sample_order[label][start_idx : end_idx]:
-                                    sampled_items.append(v)
-                            dataset.extend(sampled_items)
-                        else:
-                            # Non-IID
-                            if repeat_rate == 0.0:
-                                # 独占该类，拿走所有数据
-                                sampled_items = items
+                                selected_indices = sample_order[label][start_idx:end_idx]
+
+                                for k, v in enumerate(items):
+                                    if k in selected_indices:
+                                        sampled_items.append(v)
                                 dataset.extend(sampled_items)
                             else:
-                                # 有重叠
-                                if label in user_class_dict[idx][0:repeat_num]:
-                                    # 是共享类：只拿走属于该用户切片的部分
-                                    sampled_items = []
-                                    for k, v in enumerate(items):
-                                        start_idx = idx * sample_per_user[label]
-                                        end_idx = min((idx + 1) * sample_per_user[label], len(items))
-                                        if k in sample_order[label][start_idx : end_idx]:
-                                            sampled_items.append(v)
-                                    dataset.extend(sampled_items)
-                                else:
-                                    # 是独占类：拿走所有数据
-                                    sampled_items = items
-                                    dataset.extend(sampled_items)
+                                # 是独占类：拿走所有数据
+                                dataset.extend(items)
 
                 output_dict[idx] = dataset
                 logger.info(f"idx: {idx}, output_dict_len: {len(output_dict[idx])}")
@@ -532,3 +562,256 @@ class DatasetBase:
         for item in data_source:
             output[item.domain].append(item)
         return output
+
+    @staticmethod
+    def per_class_downsample(data_list, sample_ratio, rng=None):
+        """
+        按类别内样本比例采样（保持类别集合不变）。
+        
+        参数:
+            data_list (list): Datum 对象列表。
+            sample_ratio (float): 采样比例 (0.0 - 1.0)。
+            rng (Random, optional): 随机数生成器。如果为 None，使用默认的 random 模块。
+        
+        返回:
+            downsampled (list): 采样后的 Datum 对象列表。
+        """
+        if rng is None:
+            rng = random
+        
+        by_class = defaultdict(list)
+        for d in data_list:
+            by_class[d.classname].append(d)
+        
+        downsampled = []
+        for cname, items in by_class.items():
+            n_keep = max(1, int(round(len(items) * sample_ratio)))
+            if len(items) <= n_keep:
+                downsampled.extend(items)
+            else:
+                downsampled.extend(rng.sample(items, n_keep))
+        
+        return downsampled
+
+    @staticmethod
+    def split_trainval(trainval, p_val=0.2):
+        """
+        将训练验证集分割为训练集和验证集。
+        
+        参数:
+            trainval (list): 训练验证集数据列表（Datum 对象列表）。
+            p_val (float): 验证集比例，默认 0.2。
+        
+        返回:
+            train (list): 训练集数据列表。
+            val (list): 验证集数据列表。
+        """
+        logger = _get_dataset_logger()
+        p_trn = 1 - p_val
+        logger.info("Splitting trainval into %.0f%% train and %.0f%% val", p_trn * 100, p_val * 100)
+        
+        tracker = defaultdict(list)
+        for idx, item in enumerate(trainval):
+            label = item.label
+            tracker[label].append(idx)
+
+        train, val = [], []
+        for label, idxs in tracker.items():
+            n_val = round(len(idxs) * p_val)
+            assert n_val > 0, f"Class {label} has too few samples for validation split"
+            random.shuffle(idxs)
+            for n, idx in enumerate(idxs):
+                item = trainval[idx]
+                if n < n_val:
+                    val.append(item)
+                else:
+                    train.append(item)
+
+        return train, val
+
+    @staticmethod
+    def save_split(train, val, test, filepath, path_prefix):
+        """
+        保存数据集分割到 JSON 文件。
+        
+        参数:
+            train (list): 训练集数据列表（Datum 对象列表）。
+            val (list): 验证集数据列表（Datum 对象列表）。
+            test (list): 测试集数据列表（Datum 对象列表）。
+            filepath (str): 保存路径。
+            path_prefix (str): 路径前缀，用于相对化图像路径。
+        """
+        logger = _get_dataset_logger()
+        
+        def _extract(items):
+            out = []
+            for item in items:
+                impath = item.impath
+                label = item.label
+                classname = item.classname
+                impath = impath.replace(path_prefix, "")
+                if impath.startswith("/"):
+                    impath = impath[1:]
+                out.append((impath, label, classname))
+            return out
+
+        train = _extract(train)
+        val = _extract(val)
+        test = _extract(test)
+
+        split = {"train": train, "val": val, "test": test}
+        write_json(split, filepath)
+        logger.info("Saved split to %s", filepath)
+
+    @staticmethod
+    def read_split(filepath, path_prefix):
+        """
+        从 JSON 文件读取数据集分割。
+        
+        参数:
+            filepath (str): 分割文件路径。
+            path_prefix (str): 图像路径前缀。
+        
+        返回:
+            train (list): 训练集数据列表（Datum 对象列表）。
+            val (list): 验证集数据列表（Datum 对象列表）。
+            test (list): 测试集数据列表（Datum 对象列表）。
+        """
+        logger = _get_dataset_logger()
+        
+        def _convert(items):
+            out = []
+            for impath, label, classname in items:
+                impath = os.path.join(path_prefix, impath)
+                item = Datum(impath=impath, label=int(label), classname=classname)
+                out.append(item)
+            return out
+
+        logger.info("Reading split from %s", filepath)
+        split = read_json(filepath)
+        train = _convert(split["train"])
+        val = _convert(split["val"])
+        test = _convert(split["test"])
+
+        return train, val, test
+
+    @staticmethod
+    def read_and_split_data(image_dir, p_trn=0.5, p_val=0.2, ignored=None, new_cnames=None):
+        """
+        从按类别组织的目录结构中读取并分割数据。
+        
+        数据组织格式：
+            images/
+                dog/
+                cat/
+                horse/
+        
+        参数:
+            image_dir (str): 图像目录路径。
+            p_trn (float): 训练集比例，默认 0.5。
+            p_val (float): 验证集比例，默认 0.2。
+            ignored (list, optional): 要忽略的类别名称列表。
+            new_cnames (dict, optional): 类别名称映射字典 {old_name: new_name}。
+        
+        返回:
+            train (list): 训练集数据列表（Datum 对象列表）。
+            val (list): 验证集数据列表（Datum 对象列表）。
+            test (list): 测试集数据列表（Datum 对象列表）。
+        """
+        if ignored is None:
+            ignored = []
+        
+        categories = listdir_nohidden(image_dir)
+        categories = [c for c in categories if c not in ignored]
+        categories.sort()
+
+        p_tst = 1 - p_trn - p_val
+        logger = _get_dataset_logger()
+        logger.info("Splitting into %.0f%% train, %.0f%% val, and %.0f%% test", 
+                   p_trn * 100, p_val * 100, p_tst * 100)
+
+        def _collate(ims, y, c):
+            items = []
+            for im in ims:
+                item = Datum(impath=im, label=y, classname=c)  # is already 0-based
+                items.append(item)
+            return items
+
+        train, val, test = [], [], []
+        for label, category in enumerate(categories):
+            category_dir = os.path.join(image_dir, category)
+            images = listdir_nohidden(category_dir)
+            images = [os.path.join(category_dir, im) for im in images]
+            random.shuffle(images)
+            n_total = len(images)
+            n_train = round(n_total * p_trn)
+            n_val = round(n_total * p_val)
+            n_test = n_total - n_train - n_val
+            assert n_train > 0 and n_val > 0 and n_test > 0
+
+            if new_cnames is not None and category in new_cnames:
+                category = new_cnames[category]
+
+            train.extend(_collate(images[:n_train], label, category))
+            val.extend(_collate(images[n_train: n_train + n_val], label, category))
+            test.extend(_collate(images[n_train + n_val:], label, category))
+
+        return train, val, test
+
+    def prepare_federated_data(self, train, test, cfg, train_sample_ratio=None, test_sample_ratio=None):
+        """
+        准备联邦学习数据的通用方法。
+        
+        参数:
+            train (list): 训练集数据列表（Datum 对象列表）。
+            test (list): 测试集数据列表（Datum 对象列表）。
+            cfg: 配置对象，需要包含 DATASET.USEALL, DATASET.NUM_SHOTS, DATASET.USERS, DATASET.IID 等属性。
+            train_sample_ratio (float, optional): 训练集采样比例。如果为 None，不进行采样。
+            test_sample_ratio (float, optional): 测试集采样比例。如果为 None，不进行采样。
+        
+        返回:
+            federated_train_x (dict): 联邦训练集 {user_id: [Datum_list]}。
+            federated_test_x (dict): 联邦测试集 {user_id: [Datum_list]}。
+        """
+        # 按类别内样本比例采样（保持类别集合不变）
+        rng = random.Random(getattr(cfg, 'SEED', 1))
+        
+        if train_sample_ratio is not None:
+            train = self.per_class_downsample(train, train_sample_ratio, rng)
+        
+        if test_sample_ratio is not None:
+            test = self.per_class_downsample(test, test_sample_ratio, rng)
+
+        # 根据用户数量决定是否使用类别重叠
+        if cfg.DATASET.USERS >= 20:
+            repeat_rate = 0.1
+        else:
+            repeat_rate = 0
+
+        # 生成联邦数据集
+        if cfg.DATASET.USEALL:
+            federated_train_x = self.generate_federated_dataset(
+                train,
+                num_shots=cfg.DATASET.NUM_SHOTS,
+                num_users=cfg.DATASET.USERS,
+                is_iid=cfg.DATASET.IID,
+                repeat_rate=repeat_rate
+            )
+        else:
+            federated_train_x = self.generate_federated_fewshot_dataset(
+                train,
+                num_shots=cfg.DATASET.NUM_SHOTS,
+                num_users=cfg.DATASET.USERS,
+                is_iid=cfg.DATASET.IID,
+                repeat_rate=repeat_rate
+            )
+
+        federated_test_x = self.generate_federated_dataset(
+            test,
+            num_shots=cfg.DATASET.NUM_SHOTS,
+            num_users=cfg.DATASET.USERS,
+            is_iid=cfg.DATASET.IID,
+            repeat_rate=repeat_rate
+        )
+
+        return federated_train_x, federated_test_x

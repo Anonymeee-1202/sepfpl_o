@@ -173,8 +173,8 @@ def plot_exp1_noise_linecharts(output_dir: Path = DEFAULT_OUTPUT_DIR,
     })
 
     target_configs = [
-        ('EXPERIMENT_1_SIMPLE', 'exp1_simple'),
-        ('EXPERIMENT_1_HARD', 'exp1_hard'),
+        ('EXPERIMENT_1_STANDARD', 'exp1_simple'),
+        ('EXPERIMENT_1_EXTENSION', 'exp1_hard'),
     ]
 
     method_labels = {
@@ -229,7 +229,7 @@ def plot_exp1_noise_linecharts(output_dir: Path = DEFAULT_OUTPUT_DIR,
             ('Neighbor Accuracy (%)', True, 'neighbor')
         ]
 
-        if config_key == 'EXPERIMENT_1_SIMPLE':
+        if config_key == 'EXPERIMENT_1_STANDARD':
             n_rows, n_cols = 2, 2
         else:
             n_panels = len(dataset_entries)
@@ -568,6 +568,206 @@ def plot_exp2_bar_charts(output_dir: Path = DEFAULT_OUTPUT_DIR,
             plt.close()
 
 
+def plot_exp2_3d_bar_charts(output_dir: Path = DEFAULT_OUTPUT_DIR,
+                            tail_epochs: int = DEFAULT_TAIL_EPOCHS,
+                            fig_dir: Path = DEFAULT_FIG_DIR,
+                            use_postprocess: bool = True):
+    """
+    绘制exp2的3D立体柱状图 (学术论文风格优化版)
+    
+    坐标轴：
+    - x轴：noise (ε)
+    - y轴：rank (r)
+    - z轴：accuracy (%)
+    
+    改进点:
+    - Times New Roman 字体
+    - 更加专业的配色 (Colorblind-friendly / Academic)
+    - 优化3D视角和布局
+    - 清晰的轴标签和刻度
+    """
+    
+    # --- 全局绘图风格设置 ---
+    plt.rcParams.update({
+        'font.family': 'serif',
+        'font.serif': ['Times New Roman'],
+        'mathtext.fontset': 'stix',  # 数学公式字体与Times兼容
+        'font.size': 14 + 4,
+        'axes.labelsize': 18 + 4,
+        'axes.titlesize': 18 + 8,
+        'xtick.labelsize': 16 + 4,
+        'ytick.labelsize': 16 + 4,
+        'legend.fontsize': 16 + 4,
+        'axes.linewidth': 1.2,
+    })
+
+    config = EXPERIMENT_CONFIGS['EXPERIMENT_2_ABLATION']
+    exp_name = config['exp_name']
+    datasets = config['dataset_list']
+    methods = config['factorization_list']
+    rank_list = config['rank_list']
+    noise_list = config['noise_list']
+    seed_list = config['seed_list']
+    num_users = config['num_users_list'][0]
+    exp_type = 'exp2'
+    
+    # 方法名称映射
+    method_labels = {
+        'dpfpl': 'w/o TimeAdaptive & SE',
+        'sepfpl_time_adaptive': 'w/ TimeAdaptive',
+        'sepfpl_hcse': 'w/ SE',
+        'sepfpl': '(SepFPL) Full Method' 
+    }
+    
+    # 学术风格配色 - 为每个方法分配不同颜色
+    method_colors = {
+        'dpfpl': '#4E79A7',           # 偏灰蓝
+        'sepfpl_time_adaptive': '#F28E2B',  # 偏柔和橙
+        'sepfpl_hcse': '#59A14F',     # 偏深绿
+        'sepfpl': '#E15759'           # 偏深红
+    }
+
+    for dataset in datasets:
+        for use_neighbor in [False, True]:
+            acc_type = 'neighbor' if use_neighbor else 'local'
+            
+            # 创建一张3D图，包含所有方法
+            fig = plt.figure(figsize=(14, 10))
+            ax = fig.add_subplot(111, projection='3d')
+            
+            # 存储所有方法的数据矩阵
+            all_data_matrices = {}
+            all_valid_values = []
+            
+            # 读取所有方法的数据
+            for method in methods:
+                data_matrix = np.zeros((len(noise_list), len(rank_list)))
+                
+                for n_idx, noise in enumerate(noise_list):
+                    for r_idx, rank in enumerate(rank_list):
+                        try:
+                            l_list, n_list = read_scheme(
+                                exp_name, dataset, rank, noise, methods,
+                                seed_list, num_users, output_dir, tail_epochs
+                            )
+                            
+                            if use_postprocess:
+                                l_proc = postprocess_results(l_list, methods, exp_type)
+                                n_proc = postprocess_results(n_list, methods, exp_type)
+                            else:
+                                l_proc = l_list
+                                n_proc = n_list
+                            
+                            stat_list = n_proc if use_neighbor else l_proc
+                            method_idx = methods.index(method)
+                            stat_str = stat_list[method_idx] if method_idx < len(stat_list) else "N/A"
+                            
+                            if stat_str and stat_str != "N/A":
+                                parts = stat_str.split('±')
+                                mean_val = float(parts[0].strip())
+                                data_matrix[n_idx, r_idx] = mean_val
+                                all_valid_values.append(mean_val)
+                            else:
+                                data_matrix[n_idx, r_idx] = 0.0
+                        except Exception as e:
+                            print(f"Error reading data for {method}, rank {rank}, noise {noise}: {e}")
+                            data_matrix[n_idx, r_idx] = 0.0
+                
+                all_data_matrices[method] = data_matrix
+            
+            # 计算z轴范围（基于所有方法的数据）
+            if all_valid_values:
+                z_min = max(0, min(all_valid_values) - 5)
+                z_max = max(all_valid_values) + 2
+            else:
+                z_min = 0
+                z_max = 100
+            
+            # 柱子的尺寸和间距
+            num_methods = len(methods)
+            bar_width = 0.15   # x方向宽度（每个方法的柱子）
+            bar_depth = 0.15   # y方向深度（每个方法的柱子）
+            method_spacing = 0.2  # 方法之间的间距
+            
+            # 为每个方法绘制柱状图
+            for method_idx, method in enumerate(methods):
+                data_matrix = all_data_matrices[method]
+                color = method_colors.get(method, '#808080')
+                
+                # 计算该方法的x偏移量（使不同方法的柱子并排显示）
+                x_offset = (method_idx - (num_methods - 1) / 2) * (bar_width + method_spacing)
+                
+                # 构建柱状图数据
+                x_positions = []
+                y_positions = []
+                z_positions = []
+                dx_values = []
+                dy_values = []
+                dz_values = []
+                
+                for n_idx, noise in enumerate(noise_list):
+                    for r_idx, rank in enumerate(rank_list):
+                        accuracy = data_matrix[n_idx, r_idx]
+                        if accuracy > 0:  # 只绘制有效数据
+                            x_positions.append(n_idx + x_offset - bar_width / 2)
+                            y_positions.append(r_idx - bar_depth / 2)
+                            z_positions.append(0)  # 柱子从z=0开始
+                            dx_values.append(bar_width)
+                            dy_values.append(bar_depth)
+                            dz_values.append(accuracy)
+                
+                # 绘制3D柱状图
+                if x_positions:
+                    ax.bar3d(x_positions, y_positions, z_positions,
+                            dx_values, dy_values, dz_values,
+                            color=color, alpha=0.8, edgecolor='black', linewidth=0.5,
+                            label=method_labels.get(method, method))
+            
+            # 设置坐标轴
+            ax.set_xlabel(r'Noise Level ($\epsilon$)', fontweight='bold', labelpad=12)
+            ax.set_ylabel(r'Rank ($r$)', fontweight='bold', labelpad=12)
+            zlabel_text = 'Neighbor Accuracy (%)' if use_neighbor else 'Local Accuracy (%)'
+            ax.set_zlabel(zlabel_text, fontweight='bold', labelpad=12)
+            
+            # 设置x轴刻度（noise）
+            ax.set_xticks(np.arange(len(noise_list)))
+            ax.set_xticklabels([f'{noise:.2f}' for noise in noise_list])
+            
+            # 设置y轴刻度（rank）
+            ax.set_yticks(np.arange(len(rank_list)))
+            y_labels = [str(r) if r != 16 else 'Full' for r in rank_list]
+            ax.set_yticklabels(y_labels)
+            
+            # 设置z轴范围和刻度
+            ax.set_zlim(bottom=0, top=z_max)
+            z_ticks = np.arange(0, int(z_max) + 1, 5)
+            ax.set_zticks(z_ticks)
+            # 设置z轴刻度标签大小
+            ax.tick_params(axis='z', labelsize=16 + 4)
+            
+            # 设置标题
+            ax.set_title(f'{dataset.upper()} - {zlabel_text}', 
+                       fontsize=20, fontweight='bold', pad=15)
+            
+            # 添加图例
+            ax.legend(loc='upper left', fontsize=14, framealpha=0.9)
+            
+            # 设置视角（可以调整以获得最佳视觉效果）
+            ax.view_init(elev=25, azim=45)
+            
+            # 添加网格
+            ax.grid(True, alpha=0.3)
+            
+            # 保存图片
+            fig_dir.mkdir(parents=True, exist_ok=True)
+            postfix = '_postprocessed' if use_postprocess else ''
+            output_path = fig_dir / f'exp2_{dataset}_{acc_type}_3d_bar{postfix}.pdf'
+            plt.savefig(output_path, dpi=300, bbox_inches='tight')
+            
+            print(f"✅ Exp2 3D Plot Saved: {output_path}")
+            plt.close()
+
+
 # ========== 图3（新增）: Exp2 多维分面折线图 ==========
 
 def plot_exp2_faceted_linechart(output_dir: Path, tail_epochs: int, fig_dir: Path, use_neighbor: bool = False):
@@ -585,7 +785,7 @@ def plot_exp2_faceted_linechart(output_dir: Path, tail_epochs: int, fig_dir: Pat
     datasets = config['dataset_list']
     methods = config['factorization_list']
     rank_list = config['rank_list']
-    noise_list = config['noise_list'] # [0.4, 0.1, 0.01]
+    noise_list = config['noise_list']  # [0, 0.4, 0.1, 0.01]
     
     # 颜色与标记
     method_colors = {
@@ -596,7 +796,7 @@ def plot_exp2_faceted_linechart(output_dir: Path, tail_epochs: int, fig_dir: Pat
     
     # 坐标映射
     rank_indices = np.arange(len(rank_list))
-    #为了拉大Y轴视觉距离，我们放大间隔：0, 1.5, 3
+    # 为了拉大Y轴视觉距离，我们放大间隔
     noise_indices = np.arange(len(noise_list)) * 1.5 
 
     for dataset in datasets:
@@ -753,15 +953,16 @@ def main():
     parser.add_argument("--plot1", action="store_true", help="绘制图1: Exp1噪声折线图")
     parser.add_argument("--plot2", action="store_true", help="绘制图2: Exp2柱状图（后处理数据）")
     parser.add_argument("--plot3", action="store_true", help="绘制图3: Exp2多维分面折线图")
+    parser.add_argument("--plot4", action="store_true", help="绘制图4: Exp2 3D立体柱状图（x=noise, y=rank, z=accuracy）")
     parser.add_argument("--all", action="store_true", help="绘制所有图表")
     parser.add_argument("--use-neighbor", action="store_true", help="使用Neighbor Accuracy（仅对plot3有效）")
     parser.add_argument("--no-postprocess", action="store_true", 
-                       help="禁用后处理（仅对plot1有效，默认启用后处理）")
+                       help="禁用后处理（仅对plot1和plot2有效，默认启用后处理）")
     
     args = parser.parse_args()
     
-    if not (args.plot1 or args.plot2 or args.plot3 or args.all):
-        print("⚠️  未指定要绘制的图表，使用 --all 绘制所有图表，或使用 --plot1/--plot2/--plot3 选择特定图表")
+    if not (args.plot1 or args.plot2 or args.plot3 or args.plot4 or args.all):
+        print("⚠️  未指定要绘制的图表，使用 --all 绘制所有图表，或使用 --plot1/--plot2/--plot3/--plot4 选择特定图表")
         args.all = True
     
     use_postprocess = not args.no_postprocess  # 默认启用后处理
@@ -777,6 +978,10 @@ def main():
     if args.all or args.plot3:
         print("\n📊 正在绘制图3: Exp2多维分面折线图...")
         plot_exp2_faceted_linechart(args.output_dir, args.tail_epochs, args.fig_dir, args.use_neighbor)
+    
+    if args.all or args.plot4:
+        print("\n📊 正在绘制图4: Exp2 3D立体柱状图...")
+        plot_exp2_3d_bar_charts(args.output_dir, args.tail_epochs, args.fig_dir, use_postprocess)
     
     print(f"\n✅ 所有图表已保存到: {args.fig_dir}")
 

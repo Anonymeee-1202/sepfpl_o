@@ -24,20 +24,20 @@ ROOT_DIR = os.path.expanduser('~/dataset')
 # Key: 内部配置标识符
 # Value: 具体实验参数 grid
 EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
-    # 实验1.1: Simple (标准数据集 + 固定 10 客户端)
-    'EXPERIMENT_1_SIMPLE': {
-        'exp_name': 'exp1-simple',
+    # 实验1.1: Standard (标准数据集 + 固定 10 客户端)
+    'EXPERIMENT_1_STANDARD': {
+        'exp_name': 'exp1-standard',
         'seed_list': [1],
-        'dataset_list': ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101'],
-        'factorization_list': ['promptfl', 'fedotp', 'fedpgp', 'dpfpl', 'sepfpl'],
-        'noise_list': [0.0, 0.4, 0.2, 0.1, 0.05, 0.01],
+        'dataset_list': ['stanford_dogs'], # ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101']
+        'factorization_list': ['promptfl', 'fedotp', 'fedpgp', 'dpfpl', 'sepfpl'], # 
+        'noise_list': [0.4, 0.2, 0.1, 0.05, 0.01],
         'rank_list': [8],
         'num_users_list': [10],
         'round': 40,
     },
-    # 实验1.2: Hard (CIFAR-100 + 扩展性测试)
-    'EXPERIMENT_1_HARD': {
-        'exp_name': 'exp1-hard',
+    # 实验1.2: Extension (CIFAR-100 + 扩展性测试)
+    'EXPERIMENT_1_EXTENSION': {
+        'exp_name': 'exp1-extension',
         'seed_list': [1],
         'dataset_list': ['cifar-100'],
         'factorization_list': ['promptfl', 'fedotp', 'fedpgp', 'dpfpl', 'sepfpl'],
@@ -46,22 +46,34 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         'num_users_list': [25, 50],
         'round': 40,
     },
-    # 实验2: Rank 消融 + 机制消融 (合并)
+    # 实验2: 机制消融 (合并)
     'EXPERIMENT_2_ABLATION': {
-        'exp_name': 'exp2',
+        'exp_name': 'exp2-ablation',
         'seed_list': [1],
-        'dataset_list': ['caltech-101', 'oxford_pets'],
+        'dataset_list': ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101'],
         'factorization_list': ['dpfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse', 'sepfpl'],
-        'noise_list': [0.4, 0.1, 0.01],
-        'rank_list': [1, 2, 4, 8, 16],
+        'noise_list': [0, 0.4, 0.1, 0.01],
+        'rank_list': [8],
         'num_users_list': [10],
         'round': 40,
     },
-    # 实验3: MIA (Membership Inference Attack) 攻击评估
-    'EXPERIMENT_3_MIA': {
-        'exp_name': 'exp3-mia',
+    # 实验3: 敏感性分析
+    'EXPERIMENT_3_Sensitivity_Analysis': {
+        'exp_name': 'exp3-sensitivity-analysis',
         'seed_list': [1],
-        'dataset_list': ['caltech-101', 'oxford_pets', 'oxford_flowers'],
+        'dataset_list': ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101'],
+        'factorization_list': ['sepfpl'],
+        'noise_list': [0], # [0, 0.4, 0.1, 0.01]
+        'rank_list': [1, 2, 4, 8, 16],
+        'num_users_list': [10],
+        'round': 100,
+    },
+
+    # 实验4: MIA (Membership Inference Attack) 攻击评估
+    'EXPERIMENT_4_MIA': {
+        'exp_name': 'exp4-mia',
+        'seed_list': [1],
+        'dataset_list': ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101'],
         'factorization_list': ['sepfpl'],
         'noise_list': [0.0, 0.4, 0.2, 0.1, 0.05, 0.01],
         'rank_list': [8],
@@ -77,12 +89,14 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
 # Key: argparse 参数名 (会自动将 - 转为 _)
 # Value: (配置 Key 列表, 描述文本)
 EXP_ARG_MAP = {
-    'exp1': (['EXPERIMENT_1_SIMPLE', 'EXPERIMENT_1_HARD'], "实验1 (Simple + Hard)"),
-    'exp2': (['EXPERIMENT_2_ABLATION'], "实验2 (Rank + Ablation 合并)"),
-    'exp3': (['EXPERIMENT_3_MIA'], "实验3 (MIA 攻击评估)"),
-    'exp1_simple': (['EXPERIMENT_1_SIMPLE'], "实验1.1 (Simple)"),
-    'exp1_hard': (['EXPERIMENT_1_HARD'], "实验1.2 (Hard)"),
-    'exp3_mia': (['EXPERIMENT_3_MIA'], "实验3 (MIA 攻击评估)"),
+    'exp1': (['EXPERIMENT_1_STANDARD', 'EXPERIMENT_1_EXTENSION'], "实验1 (Standard + Extension)"),
+    'exp2': (['EXPERIMENT_2_ABLATION'], "实验2 (机制消融)"),
+    'exp3': (['EXPERIMENT_3_Sensitivity_Analysis'], "实验3 (敏感性分析)"),
+    'exp4': (['EXPERIMENT_4_MIA'], "实验4 (MIA 攻击评估)"),
+    'exp1_simple': (['EXPERIMENT_1_STANDARD'], "实验1.1 (Standard)"),
+    'exp1_hard': (['EXPERIMENT_1_EXTENSION'], "实验1.2 (Extension)"),
+    'exp3_sensitivity': (['EXPERIMENT_3_Sensitivity_Analysis'], "实验3 (敏感性分析)"),
+    'exp4_mia': (['EXPERIMENT_4_MIA'], "实验4 (MIA 攻击评估)"),
 }
 
 
@@ -656,7 +670,7 @@ if __name__ == "__main__":
             print(f"\n处理配置: {cfg.get('exp_name', key)}")
             
             # 判断是否为 MIA 实验
-            if key == 'EXPERIMENT_3_MIA':
+            if key == 'EXPERIMENT_4_MIA':
                 tasks, path = generate_mia_batch_script(cfg, gpus=args.gpus)
             else:
                 tasks, path = generate_batch_script(cfg, gpus=args.gpus)

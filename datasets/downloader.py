@@ -1,5 +1,7 @@
 import os
 import json
+import tarfile
+import urllib.request
 from urllib.error import URLError
 from typing import List, Optional
 
@@ -45,6 +47,7 @@ def download_standard_datasets(base_root: str, dataset_list: Optional[List[str]]
         - oxford_flowers
         - food-101
         - cifar-100
+        - stanford_dogs
 
     参数:
         base_root (str): 数据集存储的根目录路径。会自动创建该目录。
@@ -99,6 +102,11 @@ def download_standard_datasets(base_root: str, dataset_list: Optional[List[str]]
             'downloader': tvd.CIFAR100,
             'candidates': ['cifar-100', 'CIFAR100', 'cifar100'],
         },
+        'stanford_dogs': {
+            'name': 'Stanford Dogs',
+            'downloader': None,  # 需要手动下载
+            'candidates': ['stanford_dogs', 'StanfordDogs', 'stanford-dogs'],
+        },
     }
 
     # --- 内部辅助函数 ---
@@ -113,6 +121,15 @@ def download_standard_datasets(base_root: str, dataset_list: Optional[List[str]]
         
         # 1. 检查标准目录是否已存在
         if os.path.isdir(target_dir):
+            # 对于 Stanford Dogs，还需要检查必要的子目录
+            if standard_key == 'stanford_dogs':
+                images_dir = os.path.join(target_dir, 'Images')
+                annotation_dir = os.path.join(target_dir, 'Annotation')
+                if os.path.isdir(images_dir) and os.path.isdir(annotation_dir):
+                    return True
+                else:
+                    # 目录存在但结构不完整，需要重新下载
+                    return False
             return True
             
         # 2. 检查是否存在别名目录 (由 torchvision 自动生成)，若有则重命名
@@ -127,6 +144,92 @@ def download_standard_datasets(base_root: str, dataset_list: Optional[List[str]]
                     print(f"⚠️ 重命名失败 ({cand} -> {standard_key}): {re}")
                     break # 停止尝试其他 candidate
         return False
+
+    def download_stanford_dogs(download_root: str) -> None:
+        """
+        下载 Stanford Dogs 数据集。
+        
+        Stanford Dogs 数据集包含 120 个狗品种类别，需要从 Stanford 网站下载。
+        数据集结构：
+            stanford_dogs/
+                Images/
+                Annotation/
+                file_list.mat
+                test_list.mat
+                train_list.mat
+        
+        参数:
+            download_root (str): 数据集存储的根目录。
+        """
+        target_dir = os.path.join(download_root, 'stanford_dogs')
+        os.makedirs(target_dir, exist_ok=True)
+        
+        # Stanford Dogs 数据集的下载链接
+        urls = {
+            'images': 'http://vision.stanford.edu/aditya86/ImageNetDogs/images.tar',
+            'annotations': 'http://vision.stanford.edu/aditya86/ImageNetDogs/annotation.tar',
+            'lists': 'http://vision.stanford.edu/aditya86/ImageNetDogs/lists.tar',
+        }
+        
+        print("⬇️ 正在下载 Stanford Dogs 数据集...")
+        print("   注意: 数据集较大 (~800MB)，下载可能需要一些时间。")
+        
+        for key, url in urls.items():
+            filename = f'{key}.tar'
+            filepath = os.path.join(target_dir, filename)
+            extract_dir = target_dir
+            
+            # 检查是否需要下载
+            need_download = not os.path.exists(filepath)
+            
+            # 检查是否需要解压（检查解压后的目录是否存在）
+            need_extract = True
+            if key == 'images':
+                # 检查 Images 目录是否存在
+                if os.path.isdir(os.path.join(target_dir, 'Images')):
+                    need_extract = False
+            elif key == 'annotations':
+                # 检查 Annotation 目录是否存在
+                if os.path.isdir(os.path.join(target_dir, 'Annotation')):
+                    need_extract = False
+            elif key == 'lists':
+                # 检查列表文件是否存在
+                list_files = ['file_list.mat', 'test_list.mat', 'train_list.mat']
+                if all(os.path.exists(os.path.join(target_dir, f)) for f in list_files):
+                    need_extract = False
+            
+            if not need_download and not need_extract:
+                print(f"   ✓ {filename} 已存在且已解压，跳过")
+                continue
+            
+            # 下载文件
+            if need_download:
+                try:
+                    print(f"   ⬇️ 正在下载 {filename}...")
+                    urllib.request.urlretrieve(url, filepath)
+                    print(f"   ✓ {filename} 下载完成")
+                except Exception as e:
+                    print(f"   ❌ {filename} 下载失败: {e}")
+                    continue
+            
+            # 解压文件
+            if need_extract and os.path.exists(filepath):
+                try:
+                    print(f"   📦 正在解压 {filename}...")
+                    with tarfile.open(filepath, 'r') as tar:
+                        tar.extractall(path=extract_dir)
+                    print(f"   ✓ {filename} 解压完成")
+                except Exception as e:
+                    print(f"   ⚠️ {filename} 解压失败: {e}")
+        
+        # 验证目录结构
+        images_dir = os.path.join(target_dir, 'Images')
+        annotation_dir = os.path.join(target_dir, 'Annotation')
+        
+        if os.path.isdir(images_dir) and os.path.isdir(annotation_dir):
+            print(f"✅ Stanford Dogs 数据集准备完成: {target_dir}")
+        else:
+            print(f"⚠️ 警告: 数据集目录结构可能不完整，请检查 {target_dir}")
 
     def post_setup(standard_key: str) -> None:
         """
@@ -170,13 +273,21 @@ def download_standard_datasets(base_root: str, dataset_list: Optional[List[str]]
         print(f"⬇️ 正在下载 {meta['name']} ...")
         
         try:
-            # download=True 会触发 torchvision 的下载逻辑
-            download_root = base_root
-            if standard_key == 'cifar-100':
-                download_root = os.path.join(base_root, standard_key)
-                os.makedirs(download_root, exist_ok=True)
-            meta['downloader'](root=download_root, download=True)
-            print(f"🎉 {meta['name']} 下载完成。")
+            # Stanford Dogs 需要特殊处理
+            if standard_key == 'stanford_dogs':
+                download_stanford_dogs(base_root)
+                print(f"🎉 {meta['name']} 下载完成。")
+            else:
+                # download=True 会触发 torchvision 的下载逻辑
+                download_root = base_root
+                if standard_key == 'cifar-100':
+                    download_root = os.path.join(base_root, standard_key)
+                    os.makedirs(download_root, exist_ok=True)
+                if meta['downloader'] is not None:
+                    meta['downloader'](root=download_root, download=True)
+                    print(f"🎉 {meta['name']} 下载完成。")
+                else:
+                    print(f"⚠️ {meta['name']} 没有配置下载器，跳过下载。")
         except (URLError, Exception) as e:
             print(f"❌ {meta['name']} 下载失败: {e}")
             continue

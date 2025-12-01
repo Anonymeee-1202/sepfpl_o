@@ -4,14 +4,7 @@ import math
 import random
 from collections import defaultdict
 
-# from Dassl.dassl.data.datasets import DATASET_REGISTRY, Datum, DatasetBase
 from Dassl.dassl.data.datasets.base_dataset import DatasetBase, Datum
-from Dassl.dassl.utils import read_json, write_json
-from utils.logger import require_global_logger
-
-
-def _get_logger():
-    return require_global_logger()
 
 
 # @DATASET_REGISTRY.register()
@@ -33,25 +26,14 @@ class OxfordPets(DatasetBase):
             train, val = self.split_trainval(trainval)
             self.save_split(train, val, test, self.split_path, self.image_dir)
 
-        if cfg.DATASET.USERS >= 20:
-            repeat_rate = 0.1
-        else:
-            repeat_rate = 0
+        # ========== 按类别内样本比例采样（保持类别集合不变） ==========
+        rng = random.Random(getattr(cfg, 'SEED', 1))
+        # train = self.per_class_downsample(train, 0.25, rng)
+        test = self.per_class_downsample(test, 0.25, rng)
 
-        if cfg.DATASET.USEALL:
-            federated_train_x = self.generate_federated_dataset(train, num_shots=cfg.DATASET.NUM_SHOTS,
-                                                                num_users=cfg.DATASET.USERS,
-                                                                is_iid=cfg.DATASET.IID,
-                                                                repeat_rate=repeat_rate)
-        elif not cfg.DATASET.USEALL:
-            federated_train_x = self.generate_federated_fewshot_dataset(train, num_shots=cfg.DATASET.NUM_SHOTS,
-                                                                        num_users=cfg.DATASET.USERS,
-                                                                        is_iid=cfg.DATASET.IID,
-                                                                        repeat_rate=repeat_rate)
-        federated_test_x = self.generate_federated_dataset(test, num_shots=cfg.DATASET.NUM_SHOTS,
-                                                            num_users=cfg.DATASET.USERS,
-                                                            is_iid=cfg.DATASET.IID,
-                                                            repeat_rate=repeat_rate)
+        federated_train_x, federated_test_x = self.prepare_federated_data(
+            train, test, cfg, train_sample_ratio=None, test_sample_ratio=None
+        )
 
         super().__init__(total_train_x=train, federated_train_x=federated_train_x, federated_test_x=federated_test_x)
 
@@ -75,72 +57,6 @@ class OxfordPets(DatasetBase):
 
         return items
 
-    @staticmethod
-    def split_trainval(trainval, p_val=0.2):
-        p_trn = 1 - p_val
-        logger = _get_logger()
-        logger.info("Splitting trainval into %.0f%% train and %.0f%% val", p_trn * 100, p_val * 100)
-        tracker = defaultdict(list)
-        for idx, item in enumerate(trainval):
-            label = item.label
-            tracker[label].append(idx)
-
-        train, val = [], []
-        for label, idxs in tracker.items():
-            n_val = round(len(idxs) * p_val)
-            assert n_val > 0
-            random.shuffle(idxs)
-            for n, idx in enumerate(idxs):
-                item = trainval[idx]
-                if n < n_val:
-                    val.append(item)
-                else:
-                    train.append(item)
-
-        return train, val
-
-    @staticmethod
-    def save_split(train, val, test, filepath, path_prefix):
-        logger = _get_logger()
-        def _extract(items):
-            out = []
-            for item in items:
-                impath = item.impath
-                label = item.label
-                classname = item.classname
-                impath = impath.replace(path_prefix, "")
-                if impath.startswith("/"):
-                    impath = impath[1:]
-                out.append((impath, label, classname))
-            return out
-
-        train = _extract(train)
-        val = _extract(val)
-        test = _extract(test)
-
-        split = {"train": train, "val": val, "test": test}
-
-        write_json(split, filepath)
-        logger.info("Saved split to %s", filepath)
-
-    @staticmethod
-    def read_split(filepath, path_prefix):
-        logger = _get_logger()
-        def _convert(items):
-            out = []
-            for impath, label, classname in items:
-                impath = os.path.join(path_prefix, impath)
-                item = Datum(impath=impath, label=int(label), classname=classname)
-                out.append(item)
-            return out
-
-        logger.info("Reading split from %s", filepath)
-        split = read_json(filepath)
-        train = _convert(split["train"])
-        val = _convert(split["val"])
-        test = _convert(split["test"])
-
-        return train, val, test
 
     @staticmethod
     def subsample_classes(*args, subsample="all"):

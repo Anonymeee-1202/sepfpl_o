@@ -39,8 +39,8 @@ def extend_cfg(cfg, args):
     cfg.RDP_ALPHA = getattr(args, 'rdp_alpha', 2.0)  # RDP 阶数 α
     cfg.RDP_P = getattr(args, 'rdp_p', 1.1)          # sepfpl 中时间自适应隐私分配的幂次 p
 
-    # ====== 训练器（Trainer）相关配置：DP_FPL ======
-    cfg.TRAINER.NAME = 'DP_FPL'
+    # ====== 训练器（Trainer）相关配置：SEPFPL ======
+    cfg.TRAINER.NAME = 'SEPFPL'
     cfg.TRAINER.DP_FPL = CN()
     cfg.TRAINER.DP_FPL.N_CTX = args.n_ctx  # 文本提示 context 个数
     cfg.TRAINER.DP_FPL.PREC = "fp32"       # 计算精度：可选 fp16, fp32, amp
@@ -54,12 +54,6 @@ def extend_cfg(cfg, args):
     cfg.DATASET.NUM_SHOTS = args.num_shots     # few-shot 设置下的每类样本数
     cfg.DATASET.PARTITION = args.partition     # cifar 系列的数据划分策略
     cfg.DATASET.BETA = args.beta               # Dirichlet 划分参数
-
-    # Food101 按类下采样比例（不改变类别集合，仅在类内做采样）
-    if hasattr(args, 'food101_sample_ratio'):
-        cfg.DATASET.FOOD101_SAMPLE_RATIO = args.food101_sample_ratio
-    else:
-        cfg.DATASET.FOOD101_SAMPLE_RATIO = 1.0
 
     # CIFAR-100 按类下采样比例（不改变类别集合，仅在类内做采样）
     if hasattr(args, 'cifar100_sample_ratio'):
@@ -925,7 +919,7 @@ if __name__ == "__main__":
                         help="全局通信轮数（federated rounds）")
     parser.add_argument('--num-users', type=int, default=10,
                         help="客户端数量")
-    parser.add_argument('--lr', type=float, default=0.0001,
+    parser.add_argument('--lr', type=float, default=0.001,
                         help='学习率（learning rate）')
     parser.add_argument('--train-batch-size', type=int, default=32,
                         help="训练 batch size（仅在 useall=True 时生效）")
@@ -964,10 +958,6 @@ if __name__ == "__main__":
     parser.add_argument(
         '--useall', default=True,
         help="是否使用全部训练样本（True：全量训练；False：few-shot）"
-    )
-    parser.add_argument(
-        '--food101-sample-ratio', type=float, default=0.1,
-        help="Food101 每个类别的采样比例 (0,1]，不改变类别集合，仅对类内样本下采样"
     )
     parser.add_argument(
         '--cifar100-sample-ratio', type=float, default=0.2,

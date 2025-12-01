@@ -53,7 +53,7 @@ def load_clip_to_cpu(cfg):
     except RuntimeError:
         state_dict = torch.load(model_path, map_location="cpu")
 
-    design_details = {"trainer": 'DP_FPL',
+    design_details = {"trainer": 'SEPFPL',
                       "vision_depth": 0,
                       "language_depth": 0, "vision_ctx": 0,
                       "language_ctx": 0}
@@ -253,97 +253,136 @@ class CustomCLIP(nn.Module):
 
 
 # @TRAINER_REGISTRY.register()
-class DP_FPL(TrainerX):
+class SEPFPL(TrainerX):
 
     def check_cfg(self, cfg):
         assert cfg.TRAINER.DP_FPL.PREC in ["fp16", "fp32", "amp"]
 
     def build_model(self):
+        """
+        构建模型并初始化差分隐私相关参数
+        
+        主要步骤：
+        1. 加载 CLIP 预训练模型
+        2. 构建自定义 CLIP 模型（包含 PromptLearner）
+        3. 冻结图像和文本编码器，仅训练 PromptLearner
+        4. 初始化优化器和学习率调度器
+        5. 计算差分隐私参数（RDP 噪声标准差）
+        """
         cfg = self.cfg
         classnames = self.dm.dataset.classnames
 
-        # 初始化 logger，需确保外部已调用 init_logger_from_args
+        # ========== 初始化日志记录器 ==========
+        # 注意：需确保外部已调用 init_logger_from_args 进行全局初始化
         self.logger = require_global_logger()
         
+        # ========== 加载 CLIP 预训练模型 ==========
         self.logger.info(f"Loading CLIP (backbone: {cfg.MODEL.BACKBONE.NAME})")
         clip_model = load_clip_to_cpu(cfg)
+        
+        # CLIP 默认使用 fp16 精度，如果配置要求 fp32 或 amp，则转换为 fp32
         if cfg.TRAINER.DP_FPL.PREC == "fp32" or cfg.TRAINER.DP_FPL.PREC == "amp":
-            # CLIP's default precision is fp16
             clip_model.float()
         self.dtype = clip_model.dtype
 
+        # ========== 构建自定义 CLIP 模型 ==========
         self.logger.info("Building custom CLIP")
         self.model = CustomCLIP(cfg, classnames, clip_model)
 
+        # ========== 冻结非 PromptLearner 的参数 ==========
+        # 在联邦提示学习中，只训练 PromptLearner 的参数
+        # 图像编码器和文本编码器保持冻结状态，不参与梯度更新
         self.logger.info("Turning off gradients in both the image and the text encoder")
         for name, param in self.model.named_parameters():
             if "prompt_learner" not in name:
                 param.requires_grad_(False)
 
+        # ========== 加载预训练权重（如果指定） ==========
         if cfg.MODEL.INIT_WEIGHTS:
             load_pretrained_weights(self.model.prompt_learner, cfg.MODEL.INIT_WEIGHTS)
 
+        # ========== 将模型移动到指定设备 ==========
         self.model.to(self.device)
 
-        # NOTE: only give prompt_learner to the optimizer
+        # ========== 初始化优化器和学习率调度器 ==========
+        # 注意：仅对 PromptLearner 的参数进行优化，其他模块参数已冻结
         self.optim = build_optimizer(self.model.prompt_learner, cfg.OPTIM)
         self.sched = build_lr_scheduler(self.optim, cfg.OPTIM)
         self.register_model("prompt_learner", self.model.prompt_learner, self.optim, self.sched)
 
-        # differential privacy parameters
+        # ========== 计算差分隐私相关参数 ==========
+        # 遍历所有客户端的数据加载器，获取最大 batch size 和最大 batch 数量
+        # 这些值用于计算敏感度（sensitivity），进而确定噪声标准差
         max_batch_size = 0
         total_batches_per_round = 0
         for idx in range(0, cfg.DATASET.USERS):
             max_batch_size = max(max_batch_size, self.dm.fed_train_loader_x_dict[idx].batch_size)
             total_batches_per_round = max(total_batches_per_round, len(self.dm.fed_train_loader_x_dict[idx]))
+        
+        # ========== RDP (Rényi Differential Privacy) 噪声计算 ==========
         if cfg.NOISE > 0:
-            # ========== RDP (Rényi Differential Privacy) 实现 ==========
-            # 从配置读取RDP参数
-            rdp_alpha = getattr(cfg, 'RDP_ALPHA', 2.0)  # RDP阶数，默认2.0
-            # 使用cfg.NOISE作为每个batch的RDP预算
+            # 从配置读取 RDP 参数
+            # rdp_alpha: RDP 阶数 α，控制隐私保证的严格程度（默认 2.0）
+            rdp_alpha = getattr(cfg, 'RDP_ALPHA', 2.0)
+            
+            # 计算每个 batch 的 RDP 隐私预算
+            # 将总隐私预算平均分配到所有训练轮次
             rdp_eps_per_batch = cfg.NOISE / cfg.OPTIM.ROUND
             
-            # 使用RDP计算噪声标准差
-            # 对于高斯机制: ε_α = α / (2 * σ^2)
-            # 反推: σ = sqrt(α / (2 * ε_α))
+            # 根据 RDP 理论计算噪声标准差
+            # RDP 高斯机制公式: ε_α = α / (2 * σ^2)
+            # 反推得到: σ = sqrt(α / (2 * ε_α))
             rdp_sigma = math.sqrt(rdp_alpha / (2.0 * rdp_eps_per_batch))
-            sensitivity = cfg.NORM_THRESH / max_batch_size  # 敏感度
+            
+            # 计算敏感度（sensitivity）
+            # 敏感度 = 梯度裁剪阈值 / batch_size
+            # 表示单个样本对梯度的影响上限
+            sensitivity = cfg.NORM_THRESH / max_batch_size
+            
+            # 最终的噪声标准差 = RDP 噪声系数 × 敏感度
             self.std = rdp_sigma * sensitivity
                         
-            # ========== sepfpl隐私预算分配实现（时间适应隐私分配）==========
-            # 根据factorization自动判断：sepfpl/sepfpl_time_adaptive/sepfpl_hcse默认启用
+            # ========== SepFPL 时间适应隐私预算分配 ==========
+            # 根据 factorization 类型自动判断是否启用时间适应隐私分配
+            # sepfpl 和 sepfpl_time_adaptive 默认启用此机制
             use_time_adaptive = (cfg.FACTORIZATION in ['sepfpl', 'sepfpl_time_adaptive'])
+            
             if use_time_adaptive:
-                # 从配置读取参数
-                rdp_p = getattr(cfg, 'RDP_P', 1.05)  
-                total_rounds = cfg.OPTIM.ROUND  # 总轮数
-                
-                rdp_eps_tot = cfg.NOISE
+                # 从配置读取时间适应参数
+                # rdp_p: 时间适应幂次参数，控制隐私预算的分配策略（默认 1.05）
+                # p > 1 表示后期轮次分配更多隐私预算，有利于模型收敛
+                rdp_p = getattr(cfg, 'RDP_P', 1.05)
+                total_rounds = cfg.OPTIM.ROUND  # 总训练轮数
+                rdp_eps_tot = cfg.NOISE  # 总隐私预算
                 
                 # 预计算所有轮次的隐私预算分配
-                # ε_t = ε_tot * (t^p) / (sum_{j=1}^T j^p)
-                # 计算分母: sum_{j=1}^T j^p
+                # 时间适应分配公式: ε_t = ε_tot * (t^p) / (sum_{j=1}^T j^p)
+                # 其中 t 是当前轮次，T 是总轮数，p 是幂次参数
+                # 计算归一化分母: sum_{j=1}^T j^p
                 denominator = sum(j ** rdp_p for j in range(1, total_rounds + 1))
                 
-                # 预计算每轮的隐私预算和噪声标准差
+                # 预计算每轮的隐私预算和对应的噪声标准差
+                # 这样可以在训练过程中直接查表，避免重复计算
                 self.rdp_eps_per_batch_list = []
                 self.std_per_batch_list = []
                 
                 for t in range(1, total_rounds + 1):
-                    # 计算第t轮的隐私预算
+                    # 计算第 t 轮的隐私预算
                     eps_t = rdp_eps_tot * (t ** rdp_p) / denominator
                     self.rdp_eps_per_batch_list.append(eps_t)
                     
-                    # 计算对应的噪声标准差: σ = sqrt(α / (2 * ε_α))
+                    # 根据该轮的隐私预算计算对应的噪声标准差
+                    # 使用相同的 RDP 公式: σ = sqrt(α / (2 * ε_α))
                     sigma_t = math.sqrt(rdp_alpha / (2.0 * eps_t))
                     std_t = sigma_t * sensitivity
                     self.std_per_batch_list.append(std_t)
                 
                 # 初始化第一轮的噪声标准差
+                # 后续轮次通过 update_std_for_round() 方法更新
                 self.std = self.std_per_batch_list[0]
                 
-        
-        # 初始化epoch开始时间跟踪
+        # ========== 初始化训练时间跟踪 ==========
+        # 用于记录每个 epoch 的开始时间，便于性能分析和日志记录
         self.epoch_start_time = None
     
     def update_std_for_round(self, round_idx):
@@ -372,33 +411,56 @@ class DP_FPL(TrainerX):
         self.epoch_start_time = time.time()
 
     def forward_pass(self, batch):
+        """
+        前向传播和梯度处理
+        
+        主要步骤：
+        1. 前向传播计算损失
+        2. 反向传播计算梯度
+        3. 梯度裁剪（限制梯度范数，满足差分隐私敏感度要求）
+        4. 梯度加噪（添加高斯噪声，实现差分隐私保护）
+        5. 计算完整梯度（对于低秩分解方法，从 u 和 v 的梯度恢复完整梯度）
+        
+        注意：不同 factorization 方法需要处理不同的参数：
+        - promptfl: 仅处理 global_ctx
+        - fedotp: 处理 global_ctx 和 local_ctx
+        - fedpgp/dplora/dpfpl/sepfpl: 处理 global_ctx, local_u_ctx, local_v_ctx
+        - sepfpl (HCSE): 额外处理 cluster_ctx
+        """
+        # ========== 前向传播和损失计算 ==========
         image, label = self.parse_batch_train(batch)
         logits = self.model(image)
         loss = F.cross_entropy(logits.float(), label)
 
+        # ========== 反向传播计算梯度 ==========
         self.model_zero_grad()
         self.model_backward(loss)
 
+        # 获取所有参数的字典，便于后续访问和修改梯度
         param_dict = dict(self.model.named_parameters())
 
-        # 梯度裁剪与加噪（差分隐私保护）
+        # ========== 差分隐私保护：梯度裁剪与加噪 ==========
         if self.cfg.NOISE > 0:
-            # 裁剪global_ctx梯度
+            # 梯度裁剪：限制 global_ctx 的梯度范数
+            # 这是差分隐私的基础要求，确保敏感度（sensitivity）有界
             grad = param_dict['prompt_learner.global_ctx'].grad.data
-            norm = grad.norm(2)
+            norm = grad.norm(2)  # 计算 L2 范数
             if norm > self.cfg.NORM_THRESH:
+                # 如果梯度范数超过阈值，按比例缩放
                 scale = self.cfg.NORM_THRESH / norm
-                scale[scale>1] = 1
+                scale[scale>1] = 1  # 确保不会放大梯度
                 param_dict['prompt_learner.global_ctx'].grad *= scale
             
-            # 根据不同的factorization方法，对相应参数进行裁剪和加噪
+            # ========== 根据不同的 factorization 方法处理相应参数 ==========
             if self.cfg.FACTORIZATION == 'promptfl':
-                # promptfl: 仅对global_ctx加噪
+                # PromptFL: 仅对 global_ctx 添加高斯噪声
+                # 这是最简单的差分隐私实现，所有客户端共享同一个 global prompt
                 noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
                 param_dict['prompt_learner.global_ctx'].grad += noise
             
             elif self.cfg.FACTORIZATION == 'fedotp':
-                # fedotp: 对local_ctx进行裁剪和加噪
+                # FedOTP: 对 local_ctx 进行裁剪和加噪
+                # FedOTP 使用 global_ctx + local_ctx 的组合，只对 local 部分加噪
                 grad = param_dict['prompt_learner.local_ctx'].grad.data
                 norm = grad.norm(2)
                 if norm > self.cfg.NORM_THRESH:
@@ -409,7 +471,11 @@ class DP_FPL(TrainerX):
                 param_dict['prompt_learner.local_ctx'].grad += noise
             
             elif self.cfg.FACTORIZATION in ['fedpgp', 'dplora', 'dpfpl', 'sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']:
-                # fedpgp/dplora/dpfpl/sepfpl系列: 对local_u_ctx和local_v_ctx进行裁剪和加噪
+                # FedPGP/DPLoRA/DPFPL/SepFPL 系列: 对低秩分解参数进行裁剪和加噪
+                # 这些方法将 local_ctx 分解为 local_u_ctx @ local_v_ctx
+                # 只对分解后的参数加噪，可以减少通信成本和噪声影响
+                
+                # 处理 local_u_ctx: 裁剪 + 加噪
                 grad = param_dict['prompt_learner.local_u_ctx'].grad.data
                 norm = grad.norm(2)
                 if norm > self.cfg.NORM_THRESH:
@@ -418,7 +484,8 @@ class DP_FPL(TrainerX):
                     param_dict['prompt_learner.local_u_ctx'].grad *= scale
                 noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
                 param_dict['prompt_learner.local_u_ctx'].grad += noise
-                # 处理local_v_ctx
+                
+                # 处理 local_v_ctx: 裁剪 + 加噪
                 grad = param_dict['prompt_learner.local_v_ctx'].grad.data
                 norm = grad.norm(2)
                 if norm > self.cfg.NORM_THRESH:
@@ -428,10 +495,14 @@ class DP_FPL(TrainerX):
                 noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
                 param_dict['prompt_learner.local_v_ctx'].grad += noise
             
-            # sepfpl: 对cluster_ctx进行裁剪和加噪（仅在启用HCSE时）
+            # ========== SepFPL (HCSE): 对 cluster_ctx 进行裁剪和加噪 ==========
+            # 仅在启用层次化类别语义编码（HCSE）时处理
+            # cluster_ctx 用于捕获类别间的层次关系
             use_hcse_for_noise = getattr(self.cfg, 'USE_HCSE', None)
             if use_hcse_for_noise is None:
+                # 自动判断：sepfpl 和 sepfpl_hcse 默认启用 HCSE
                 use_hcse_for_noise = (self.cfg.FACTORIZATION in ['sepfpl', 'sepfpl_hcse'])
+            
             if use_hcse_for_noise and 'prompt_learner.cluster_ctx' in param_dict and param_dict['prompt_learner.cluster_ctx'].grad is not None:
                 grad = param_dict['prompt_learner.cluster_ctx'].grad.data
                 norm = grad.norm(2)
@@ -439,14 +510,23 @@ class DP_FPL(TrainerX):
                     scale = self.cfg.NORM_THRESH / norm
                     scale[scale>1] = 1
                     param_dict['prompt_learner.cluster_ctx'].grad *= scale
-                noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
-                param_dict['prompt_learner.cluster_ctx'].grad += noise
+                # noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
+                # param_dict['prompt_learner.cluster_ctx'].grad += noise
 
+        # ========== 计算完整梯度（用于低秩分解方法） ==========
+        # 对于使用低秩分解的方法，需要从 u 和 v 的梯度恢复完整的 local_ctx 梯度
+        # 这是为了在客户端本地更新时能够正确更新 local_ctx 参数
+        # 公式: ∇local_ctx = ∇(u @ v) = ∇u @ v + u @ ∇v + u @ u^T @ ∇u @ v
         if self.cfg.FACTORIZATION in ['dplora', 'dpfpl', 'sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']:
-            full_grad = compute_full_grad(param_dict['prompt_learner.local_u_ctx'], param_dict['prompt_learner.local_v_ctx'], self.dtype)
+            full_grad = compute_full_grad(
+                param_dict['prompt_learner.local_u_ctx'], 
+                param_dict['prompt_learner.local_v_ctx'], 
+                self.dtype
+            )
             full_grad = full_grad.type(self.dtype)
             param_dict['prompt_learner.local_ctx'].grad = full_grad
 
+        # ========== 返回损失和准确率摘要 ==========
         loss_summary = {
             "loss": loss.item(),
             "acc": compute_accuracy(logits, label)[0].item(),
