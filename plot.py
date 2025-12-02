@@ -80,12 +80,34 @@ def load_metrics(file_path: Path) -> Tuple[List[float], List[float]]:
 
 
 def find_output_file(base_dir: Path, pattern_base: str) -> Optional[Path]:
-    """查找文件"""
+    """
+    查找文件，支持旧格式和新格式（包含 topk 和 rdp_p 参数）。
+    
+    对于 sepfpl 相关方法，文件名可能包含 topk 和 rdp_p 参数，格式为：
+    acc_sepfpl_8_0.4_topk8_rdp1_01_1_10.pkl
+    """
+    import glob
+    
+    # 首先尝试精确匹配（向后兼容）
     possible_names = [f'{pattern_base}.pkl', f'{pattern_base}_10.pkl']
     for name in possible_names:
         file_path = base_dir / name
         if file_path.exists():
             return file_path
+    
+    # 如果精确匹配失败，使用 glob 模式匹配（支持包含 topk 和 rdp_p 的文件名）
+    # 模式：pattern_base 后面可能跟 _topk*_rdp* 或 _rdp*_topk*，然后是 _num_users.pkl
+    glob_patterns = [
+        f'{pattern_base}.pkl',  # 旧格式
+        f'{pattern_base}_*.pkl',  # 包含额外参数的新格式
+    ]
+    
+    for pattern in glob_patterns:
+        matches = list(base_dir.glob(pattern))
+        if matches:
+            # 返回第一个匹配的文件
+            return matches[0]
+    
     return None
 
 

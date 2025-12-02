@@ -1,5 +1,4 @@
 import os
-import re
 import shlex
 import argparse
 import itertools
@@ -28,45 +27,79 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
     'EXPERIMENT_1_STANDARD': {
         'exp_name': 'exp1-standard',
         'seed_list': [1],
-        'dataset_list': ['stanford_dogs'], # ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101']
-        'factorization_list': ['promptfl', 'fedotp', 'fedpgp', 'dpfpl', 'sepfpl'], # 
-        'noise_list': [0.4, 0.2, 0.1, 0.05, 0.01],
+        'dataset_list': ['caltech-101', 'oxford_flowers', 'food-101', 'stanford_dogs'], # 'oxford_pets'
+        'factorization_list': ['promptfl', 'fedotp', 'fedpgp', 'dpfpl','sepfpl'],
+        'noise_list': [0.0, 0.4, 0.2, 0.1, 0.05, 0.01], 
         'rank_list': [8],
         'num_users_list': [10],
         'round': 40,
+        'sepfpl_topk': 8,  # SepFPL top-k 参数
+        'rdp_p': 1.01,     # RDP 时间适应幂次参数
     },
     # 实验1.2: Extension (CIFAR-100 + 扩展性测试)
     'EXPERIMENT_1_EXTENSION': {
         'exp_name': 'exp1-extension',
         'seed_list': [1],
         'dataset_list': ['cifar-100'],
-        'factorization_list': ['promptfl', 'fedotp', 'fedpgp', 'dpfpl', 'sepfpl'],
+        'factorization_list': ['promptfl', 'fedotp', 'fedpgp', 'dpfpl', 'sepfpl'], # 
         'noise_list': [0.0, 0.4, 0.2, 0.1, 0.05, 0.01],
         'rank_list': [8],
         'num_users_list': [25, 50],
         'round': 40,
+        'sepfpl_topk': 8,  # SepFPL top-k 参数
+        'rdp_p': 1.01,     # RDP 时间适应幂次参数
     },
-    # 实验2: 机制消融 (合并)
+    # 实验2: 机制消融 
     'EXPERIMENT_2_ABLATION': {
         'exp_name': 'exp2-ablation',
         'seed_list': [1],
-        'dataset_list': ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101'],
-        'factorization_list': ['dpfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse', 'sepfpl'],
-        'noise_list': [0, 0.4, 0.1, 0.01],
+        'dataset_list': ['caltech-101', 'stanford_dogs', 'oxford_flowers', 'food-101'],
+        'factorization_list': ['dpfpl','sepfpl_time_adaptive', 'sepfpl_hcse','sepfpl'],
+        'noise_list': [0.4, 0.1, 0.01],
         'rank_list': [8],
         'num_users_list': [10],
         'round': 40,
+        'sepfpl_topk': 8,  # SepFPL top-k 参数（用于 sepfpl_hcse 和 sepfpl）
+        'rdp_p': 1.01,     # RDP 时间适应幂次参数（用于 sepfpl_time_adaptive 和 sepfpl）
     },
-    # 实验3: 敏感性分析
-    'EXPERIMENT_3_Sensitivity_Analysis': {
-        'exp_name': 'exp3-sensitivity-analysis',
+    # 实验3.1: 敏感性分析 (Rank)
+    'EXPERIMENT_3_Sensitivity_Analysis_rank': {
+        'exp_name': 'exp3-sensitivity-analysis-rank',
         'seed_list': [1],
-        'dataset_list': ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101'],
+        'dataset_list': ['caltech-101', 'stanford_dogs', 'oxford_flowers', 'food-101'],
         'factorization_list': ['sepfpl'],
-        'noise_list': [0], # [0, 0.4, 0.1, 0.01]
-        'rank_list': [1, 2, 4, 8, 16],
+        'noise_list': [0, 0.4, 0.1, 0.01], # [0, 0.4, 0.1, 0.01]
+        'rank_list': [1, 2, 4, 16],
         'num_users_list': [10],
-        'round': 100,
+        'round': 20,
+        'sepfpl_topk': 8,  # SepFPL top-k 参数
+        'rdp_p': 1.01,     # RDP 时间适应幂次参数
+    },
+    # 实验3.2: 敏感性分析 (sepfpl_topk)
+    'EXPERIMENT_3_Sensitivity_Analysis_sepfpl_topk': {
+        'exp_name': 'exp3-sensitivity-analysis-sepfpl-topk',
+        'seed_list': [1],
+        'dataset_list': ['caltech-101', 'stanford_dogs', 'oxford_flowers', 'food-101'],
+        'factorization_list': ['sepfpl'],
+        'noise_list': [0.4, 0.1, 0.01],
+        'rank_list': [8],
+        'num_users_list': [10],
+        'round': 20,
+        'sepfpl_topk_list': [2, 4, 8],  # 测试不同的 topk 值
+        'rdp_p': 1.01,     # RDP 时间适应幂次参数（固定）
+    },
+    # 实验3.3: 敏感性分析 (rdp_p)
+    'EXPERIMENT_3_Sensitivity_Analysis_rdp_p': {
+        'exp_name': 'exp3-sensitivity-analysis-rdp-p',
+        'seed_list': [1],
+        'dataset_list': ['caltech-101', 'stanford_dogs', 'oxford_flowers', 'food-101'],
+        'factorization_list': ['sepfpl'],
+        'noise_list': [0.4, 0.1, 0.01],
+        'rank_list': [8],
+        'num_users_list': [10],
+        'round': 20,
+        'sepfpl_topk': 8,  # SepFPL top-k 参数（固定）
+        'rdp_p_list': [0.1, 0.2, 0.4, 0.8],  # 测试不同的 rdp_p 值
     },
 
     # 实验4: MIA (Membership Inference Attack) 攻击评估
@@ -81,6 +114,8 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         'round': 5,
         'shadow_start_seed': 0,  # Shadow 数据生成的起始 seed
         'shadow_end_seed': 1,   # Shadow 数据生成的结束 seed（包含）
+        'sepfpl_topk': 8,  # SepFPL top-k 参数
+        'rdp_p': 1.01,     # RDP 时间适应幂次参数
     },
 }
 
@@ -91,11 +126,13 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
 EXP_ARG_MAP = {
     'exp1': (['EXPERIMENT_1_STANDARD', 'EXPERIMENT_1_EXTENSION'], "实验1 (Standard + Extension)"),
     'exp2': (['EXPERIMENT_2_ABLATION'], "实验2 (机制消融)"),
-    'exp3': (['EXPERIMENT_3_Sensitivity_Analysis'], "实验3 (敏感性分析)"),
+    'exp3': (['EXPERIMENT_3_Sensitivity_Analysis_rank', 'EXPERIMENT_3_Sensitivity_Analysis_sepfpl_topk', 'EXPERIMENT_3_Sensitivity_Analysis_rdp_p'], "实验3 (敏感性分析 - 全部)"),
+    'exp3_rank': (['EXPERIMENT_3_Sensitivity_Analysis_rank'], "实验3.1 (敏感性分析 - Rank)"),
+    'exp3_topk': (['EXPERIMENT_3_Sensitivity_Analysis_sepfpl_topk'], "实验3.2 (敏感性分析 - sepfpl_topk)"),
+    'exp3_rdp_p': (['EXPERIMENT_3_Sensitivity_Analysis_rdp_p'], "实验3.3 (敏感性分析 - rdp_p)"),
     'exp4': (['EXPERIMENT_4_MIA'], "实验4 (MIA 攻击评估)"),
     'exp1_simple': (['EXPERIMENT_1_STANDARD'], "实验1.1 (Standard)"),
     'exp1_hard': (['EXPERIMENT_1_EXTENSION'], "实验1.2 (Extension)"),
-    'exp3_sensitivity': (['EXPERIMENT_3_Sensitivity_Analysis'], "实验3 (敏感性分析)"),
     'exp4_mia': (['EXPERIMENT_4_MIA'], "实验4 (MIA 攻击评估)"),
 }
 
@@ -105,13 +142,19 @@ EXP_ARG_MAP = {
 def _construct_shell_command(
     dataset: str, users: int, factorization: str, rank: int, 
     noise: float, seed: int, round_num: int, exp_name: str, 
-    task_id: str, gpus: Optional[str] = None
+    task_id: str, gpus: Optional[str] = None,
+    sepfpl_topk: Optional[int] = None,
+    rdp_p: Optional[float] = None
 ) -> str:
     """
     [内部函数] 构建标准的 bash 执行命令字符串。
     
     核心目的：统一 Test 模式和 Batch 脚本生成模式的命令格式，确保行为一致。
     使用了 shlex.quote 来处理路径和参数中的特殊字符，防止 Shell 注入或解析错误。
+    
+    参数:
+        sepfpl_topk (Optional[int]): SepFPL top-k 参数（可选）
+        rdp_p (Optional[float]): RDP 时间适应幂次参数（可选）
     """
     dataset_yaml = f'configs/datasets/{dataset}.yaml'
     
@@ -127,7 +170,9 @@ def _construct_shell_command(
         str(seed),
         str(round_num),
         shlex.quote(exp_name) if exp_name else '""',
-        shlex.quote(task_id) if task_id else '""'
+        shlex.quote(task_id) if task_id else '""',
+        str(sepfpl_topk) if sepfpl_topk is not None else '""',
+        str(rdp_p) if rdp_p is not None else '""'
     ]
     
     cmd_str = " ".join(parts)
@@ -144,17 +189,25 @@ def _construct_shell_command(
 def run_single_task(
     dataset: str, users: int, factorization: str, rank: int, 
     noise: float, seed: int, round_num: int = 10, 
-    gpus: Optional[str] = None
+    gpus: Optional[str] = None,
+    sepfpl_topk: Optional[int] = None,
+    rdp_p: Optional[float] = None
 ) -> None:
     """
     [Test Mode] 立即执行单个实验任务。
     
     通常用于调试或快速验证某个特定配置。
+    
+    参数:
+        sepfpl_topk (Optional[int]): SepFPL top-k 参数（可选）
+        rdp_p (Optional[float]): RDP 时间适应幂次参数（可选）
     """
     # 构建命令
     cmd_str = _construct_shell_command(
         dataset, users, factorization, rank, noise, seed, round_num, 
-        exp_name="test-run", task_id="[TEST]", gpus=gpus
+        exp_name="test-run", task_id="[TEST]", gpus=gpus,
+        sepfpl_topk=sepfpl_topk,
+        rdp_p=rdp_p
     )
     
     print(f"🧪 [测试模式] 执行命令: {cmd_str}")
@@ -426,29 +479,59 @@ def generate_batch_script(
     rank_list = config.get('rank_list') or [config.get('rank', 8)]
     round_num = config.get('round', 20)
     exp_name = config.get('exp_name', 'default_exp')
+    
+    # 支持单个值或列表（用于敏感性分析）
+    sepfpl_topk = config.get('sepfpl_topk', None)  # 单个值
+    sepfpl_topk_list = config.get('sepfpl_topk_list', None)  # 列表（用于敏感性分析）
+    rdp_p = config.get('rdp_p', None)  # 单个值
+    rdp_p_list = config.get('rdp_p_list', None)  # 列表（用于敏感性分析）
+    
+    # 如果提供了列表，使用列表；否则使用单个值（转换为列表以便统一处理）
+    if sepfpl_topk_list is not None:
+        sepfpl_topk_values = sepfpl_topk_list
+    elif sepfpl_topk is not None:
+        sepfpl_topk_values = [sepfpl_topk]
+    else:
+        sepfpl_topk_values = [None]
+    
+    if rdp_p_list is not None:
+        rdp_p_values = rdp_p_list
+    elif rdp_p is not None:
+        rdp_p_values = [rdp_p]
+    else:
+        rdp_p_values = [None]
 
     # 解析 GPU 列表
     gpu_pool = [g.strip() for g in str(gpus).split(',') if g.strip()] if gpus else []
     
-    # Grid Search 笛卡尔积
+    # Grid Search 笛卡尔积（包含 sepfpl_topk 和 rdp_p）
     combinations = list(itertools.product(
-        seed_list, dataset_list, users_list, rank_list, noise_list, factorization_list
+        seed_list, dataset_list, users_list, rank_list, noise_list, factorization_list,
+        sepfpl_topk_values, rdp_p_values
     ))
     total_tasks = len(combinations)
     
     # 2. 生成任务列表
     tasks = []
-    for idx, (seed, dataset, users, rank, noise, factorization) in enumerate(combinations, 1):
+    for idx, (seed, dataset, users, rank, noise, factorization, topk_val, rdp_p_val) in enumerate(combinations, 1):
         # 轮询分配 GPU (如果 gpu_pool 为空则为 None)
         gpu_assigned = gpu_pool[(idx - 1) % len(gpu_pool)] if gpu_pool else None
         
         task_id = f"[{idx}/{total_tasks}]"
-        desc = f"{dataset} | {factorization} | r={rank} n={noise} u={users} s={seed}"
+        # 更新描述以包含 topk 和 rdp_p（如果它们变化）
+        desc_parts = [f"{dataset}", f"{factorization}", f"r={rank}", f"n={noise}", f"u={users}", f"s={seed}"]
+        if sepfpl_topk_list is not None:
+            desc_parts.append(f"topk={topk_val}")
+        if rdp_p_list is not None:
+            desc_parts.append(f"rdp_p={rdp_p_val}")
+        desc = " | ".join(desc_parts)
         
         # 构建命令 (注意：这里不带 GPU 前缀，因为 GPU 调度由生成的 Shell 脚本控制)
         cmd = _construct_shell_command(
             dataset, users, factorization, rank, noise, seed, round_num, 
-            exp_name, task_id, gpus=None 
+            exp_name, task_id, gpus=None,
+            sepfpl_topk=topk_val,
+            rdp_p=rdp_p_val
         )
         
         tasks.append({
@@ -521,63 +604,6 @@ def generate_batch_script(
 
     file_path.chmod(0o755)
     return tasks, str(file_path)
-
-
-def clean_old_logs(log_dir: str = 'logs', dry_run: bool = False) -> None:
-    """
-    日志清理工具：扫描日志目录，保留同一实验参数下时间戳最新的日志，删除旧的。
-    
-    支持新的日志路径结构: logs/{wandb_group}/{dataset}/{method}/*.log
-    """
-    log_path = Path(log_dir)
-    if not log_path.exists():
-        print(f"❌ 日志目录不存在: {log_dir}")
-        return
-
-    # 文件名正则: rank_noise_users_timestamp.log
-    pattern = re.compile(r'^(\d+)_([\d.]+)_(\d+)_(\d{8}_\d{6})\.log$')
-    groups = defaultdict(list)
-
-    # 1. 扫描并分组
-    # 目录结构: logs/{wandb_group}/{dataset}/{method}/*.log
-    for log_file in log_path.glob('*/*/*/*.log'):
-        match = pattern.match(log_file.name)
-        if match:
-            # Key 由 (wandb_group, dataset, method, rank, noise, users) 组成
-            # 这样可以确保同一组参数的多次运行被归为一组
-            wandb_group = log_file.parent.parent.parent.name
-            dataset_name = log_file.parent.parent.name
-            method_name = log_file.parent.name
-            params = match.groups()[:3]  # rank, noise, users
-            
-            key = (wandb_group, dataset_name, method_name) + params
-            timestamp = match.groups()[3]
-            groups[key].append((log_file, timestamp))
-
-    # 2. 执行清理
-    stats = {'del': 0, 'keep': 0, 'err': 0}
-    print(f"🧹 正在清理日志目录: {log_dir} ...")
-    
-    for key, files in groups.items():
-        # 按时间戳降序排序 (最新的在 index 0)
-        files.sort(key=lambda x: x[1], reverse=True)
-        stats['keep'] += 1
-        
-        # 删除除最新文件以外的所有文件
-        for f, _ in files[1:]:
-            try:
-                if dry_run:
-                    print(f"  🔍 [预览] 将删除: {f}")
-                else:
-                    f.unlink()
-                    print(f"  🗑️ 已删除: {f}")
-                stats['del'] += 1
-            except OSError:
-                stats['err'] += 1
-
-    print(f"\n📊 清理统计: 保留 {stats['keep']} 个, 删除 {stats['del']} 个, 错误 {stats['err']} 个")
-
-
 # ==================== 主程序入口 (Main Entry) ====================
 
 if __name__ == "__main__":
@@ -587,7 +613,6 @@ if __name__ == "__main__":
     mode = parser.add_argument_group("运行模式")
     mode.add_argument("-d", "--download", action="store_true", help="下载标准数据集")
     mode.add_argument("-t", "--test", action="store_true", help="单任务测试模式")
-    mode.add_argument("--clean-logs", action="store_true", help="清理旧日志 (仅保留最新)")
 
     # --- 实验选择 (Batch Experiment Selection) ---
     # 动态根据 EXP_ARG_MAP 生成参数，避免硬编码
@@ -598,8 +623,6 @@ if __name__ == "__main__":
     # --- 通用配置 (Configuration) ---
     conf = parser.add_argument_group("通用配置")
     conf.add_argument("--gpus", type=str, default='0,1', help="可用 GPU 列表 (例如 '0,1')")
-    conf.add_argument("--log-dir", type=str, default='logs', help="日志目录路径")
-    conf.add_argument("--dry-run", action="store_true", help="日志清理预览模式 (不实际删除)")
 
     # --- 测试模式参数 (Test Args) ---
     test_args = parser.add_argument_group("测试模式专用参数")
@@ -610,24 +633,20 @@ if __name__ == "__main__":
     test_args.add_argument("--noise", type=float, help="差分隐私噪声")
     test_args.add_argument("--seed", type=int, help="随机种子")
     test_args.add_argument("--round", type=int, default=5, help="训练轮次 (默认: 5)")
+    test_args.add_argument("--sepfpl-topk", type=int, default=None, help="SepFPL top-k 参数（可选）")
+    test_args.add_argument("--rdp-p", type=float, default=None, help="RDP 时间适应幂次参数（可选）")
 
     args = parser.parse_args()
 
     # -----------------------------------------------------------
-    # 1. 日志清理模式
+    # 1. 数据下载模式
     # -----------------------------------------------------------
-    if args.clean_logs:
-        clean_old_logs(args.log_dir, args.dry_run)
-
-    # -----------------------------------------------------------
-    # 2. 数据下载模式
-    # -----------------------------------------------------------
-    elif args.download:
+    if args.download:
         print("📥 正在下载标准数据集...")
         download_standard_datasets(ROOT_DIR, ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101', 'cifar-100'])
 
     # -----------------------------------------------------------
-    # 3. 单任务测试模式
+    # 2. 单任务测试模式
     # -----------------------------------------------------------
     elif args.test:
         # 检查必填参数
@@ -641,11 +660,13 @@ if __name__ == "__main__":
         
         run_single_task(
             args.dataset, args.users, args.factorization, args.rank, 
-            args.noise, args.seed, args.round, first_gpu
+            args.noise, args.seed, args.round, first_gpu,
+            sepfpl_topk=getattr(args, 'sepfpl_topk', None),
+            rdp_p=getattr(args, 'rdp_p', None)
         )
 
     # -----------------------------------------------------------
-    # 4. 批量脚本生成模式
+    # 3. 批量脚本生成模式
     # -----------------------------------------------------------
     else:
         # 收集需要运行的配置 Keys

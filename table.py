@@ -103,12 +103,34 @@ def load_metrics(file_path: Path) -> Tuple[List[float], List[float]]:
 
 
 def find_output_file(base_dir: Path, pattern_base: str) -> Optional[Path]:
-    """查找文件"""
+    """
+    查找文件，支持旧格式和新格式（包含 topk 和 rdp_p 参数）。
+    
+    对于 sepfpl 相关方法，文件名可能包含 topk 和 rdp_p 参数，格式为：
+    acc_sepfpl_8_0.4_topk8_rdp1_01_1_10.pkl
+    """
+    import glob
+    
+    # 首先尝试精确匹配（向后兼容）
     possible_names = [f'{pattern_base}.pkl', f'{pattern_base}_10.pkl']
     for name in possible_names:
         file_path = base_dir / name
         if file_path.exists():
             return file_path
+    
+    # 如果精确匹配失败，使用 glob 模式匹配（支持包含 topk 和 rdp_p 的文件名）
+    # 模式：pattern_base 后面可能跟 _topk*_rdp* 或 _rdp*_topk*，然后是 _num_users.pkl
+    glob_patterns = [
+        f'{pattern_base}.pkl',  # 旧格式
+        f'{pattern_base}_*.pkl',  # 包含额外参数的新格式
+    ]
+    
+    for pattern in glob_patterns:
+        matches = list(base_dir.glob(pattern))
+        if matches:
+            # 返回第一个匹配的文件
+            return matches[0]
+    
     return None
 
 
@@ -330,6 +352,167 @@ def generate_tables(config_key: str, config: Dict[str, Any], output_dir: Path, t
                 print(t_neighbor)
             
             print("-" * 40)
+
+
+def generate_exp2_ablation_table(
+    config_key: str = 'EXPERIMENT_2_ABLATION',
+    config: Optional[Dict[str, Any]] = None,
+    output_dir: Path = DEFAULT_OUTPUT_DIR,
+    tail_epochs: int = DEFAULT_TAIL_EPOCHS,
+    enable_postprocess: bool = True
+) -> None:
+    """
+    生成实验2 (Ablation Study) 的专门表格
+    
+    实验2的特点：
+    - 多个数据集：caltech-101, stanford_dogs, oxford_flowers, food-101
+    - 多个方法：dpfpl, sepfpl_time_adaptive, sepfpl_hcse, sepfpl
+    - 多个噪声值：0, 0.4, 0.1, 0.01
+    - 单 Rank：8
+    
+    表格格式：
+    - 每个数据集生成一个表格（Local 和 Neighbor 分开）
+    - 可选：生成跨数据集的汇总表格
+    """
+    # 获取配置
+    if config is None:
+        if config_key not in EXPERIMENT_CONFIGS:
+            print(f"❌ 错误: 配置键 '{config_key}' 不存在")
+            return
+        config = EXPERIMENT_CONFIGS[config_key]
+    
+    exp_name = config.get('exp_name', 'exp2-ablation')
+    dataset_list = config.get('dataset_list', [])
+    factorization_list = config.get('factorization_list', [])
+    noise_list = config.get('noise_list', [0.0])
+    seed_list = config.get('seed_list', [1])
+    rank_list = config.get('rank_list', [8])
+    num_users_list = config.get('num_users_list', [config.get('num_users', 10)])
+    
+    exp_type = 'exp2'  # 明确指定为 exp2 类型
+    postprocess_status = "启用" if enable_postprocess else "禁用"
+    
+    print(f"\n{'='*80}")
+    print(f"📊 实验2 (Ablation Study) - {exp_name}")
+    print(f"   配置键: {config_key} | 后处理: {postprocess_status}")
+    print(f"{'='*80}")
+    
+    rank = rank_list[0] if rank_list else 8
+    
+    # 存储所有数据集的结果，用于后续汇总
+    all_results = {}  # {dataset: {acc_type: {noise: [method1_val, method2_val, ...]}}}
+    
+    # 为每个数据集生成表格
+    for dataset in dataset_list:
+        for num_users in num_users_list:
+            header_info = f"Dataset: {dataset}"
+            if len(num_users_list) > 1:
+                header_info += f" | Users: {num_users}"
+            print(f"\n{'='*60}")
+            print(f">>> {header_info}")
+            print(f"{'='*60}")
+            
+            # 构建表头
+            headers = ['Noise'] + factorization_list
+            t_local = PrettyTable(headers)
+            t_neighbor = PrettyTable(headers)
+            
+            # 存储当前数据集的结果
+            dataset_local_results = {}
+            dataset_neighbor_results = {}
+            
+            for noise in noise_list:
+                l_list, n_list = read_scheme(
+                    exp_name, dataset, rank, noise, factorization_list, 
+                    seed_list, num_users, output_dir, tail_epochs
+                )
+                
+                if enable_postprocess:
+                    l_proc = postprocess_results(l_list, factorization_list, exp_type)
+                    n_proc = postprocess_results(n_list, factorization_list, exp_type)
+                else:
+                    l_proc = l_list
+                    n_proc = n_list
+                
+                t_local.add_row([noise] + l_proc)
+                t_neighbor.add_row([noise] + n_proc)
+                
+                # 保存结果用于汇总
+                dataset_local_results[noise] = l_proc
+                dataset_neighbor_results[noise] = n_proc
+            
+            # 输出表格
+            print(f'\n📊 [Local Accuracy] (Rank={rank})')
+            print(t_local)
+            print(f'\n📊 [Neighbor Accuracy] (Rank={rank})')
+            print(t_neighbor)
+            
+            # 保存结果
+            if dataset not in all_results:
+                all_results[dataset] = {}
+            all_results[dataset]['local'] = dataset_local_results
+            all_results[dataset]['neighbor'] = dataset_neighbor_results
+            
+            print("-" * 60)
+    
+    # 生成跨数据集的汇总表格（可选）
+    if len(dataset_list) > 1:
+        print(f"\n{'='*80}")
+        print(f"📊 跨数据集汇总 (Rank={rank})")
+        print(f"{'='*80}")
+        
+        # 为每个噪声值生成一个汇总表格
+        for acc_type, use_neighbor in [('Local', False), ('Neighbor', True)]:
+            print(f'\n📊 {acc_type} Accuracy 汇总')
+            
+            # 表头：第一列是数据集，后面是各个方法
+            summary_headers = ['Dataset'] + factorization_list
+            summary_table = PrettyTable(summary_headers)
+            
+            # 为每个噪声值生成一个表格
+            for noise in noise_list:
+                print(f'\n  Noise = {noise}')
+                noise_table = PrettyTable(summary_headers)
+                
+                for dataset in dataset_list:
+                    if dataset in all_results:
+                        acc_key = 'neighbor' if use_neighbor else 'local'
+                        if noise in all_results[dataset][acc_key]:
+                            row = [dataset] + all_results[dataset][acc_key][noise]
+                            noise_table.add_row(row)
+                
+                print(noise_table)
+            
+            # 计算每个方法的平均值（跨数据集）
+            print(f'\n  {acc_type} Accuracy 平均值（跨数据集）')
+            avg_table = PrettyTable(summary_headers)
+            
+            for noise in noise_list:
+                # 计算每个方法在该噪声值下的平均值
+                method_avgs = []
+                for method_idx, method in enumerate(factorization_list):
+                    method_values = []
+                    for dataset in dataset_list:
+                        if dataset in all_results:
+                            acc_key = 'neighbor' if use_neighbor else 'local'
+                            if noise in all_results[dataset][acc_key]:
+                                val_str = all_results[dataset][acc_key][noise][method_idx]
+                                val = extract_value(val_str)
+                                if val > 0:
+                                    method_values.append(val)
+                    
+                    if method_values:
+                        avg_val = mean(method_values)
+                        std_val = stdev(method_values) if len(method_values) > 1 else 0.0
+                        method_avgs.append(f'{avg_val:.2f} ± {std_val:.2f}')
+                    else:
+                        method_avgs.append('N/A')
+                
+                avg_table.add_row([f'Noise={noise}'] + method_avgs)
+            
+            print(avg_table)
+        
+        print("=" * 80)
 
 
 def generate_mia_table(
@@ -570,7 +753,17 @@ def main():
             
             for key in configs_to_run:
                 if key in EXPERIMENT_CONFIGS:
-                    generate_tables(key, EXPERIMENT_CONFIGS[key], args.output_dir, args.tail_epochs, enable_postprocess)
+                    # 对于 EXPERIMENT_2_ABLATION，使用专门的表格生成函数
+                    if key == 'EXPERIMENT_2_ABLATION':
+                        generate_exp2_ablation_table(
+                            config_key=key,
+                            config=EXPERIMENT_CONFIGS[key],
+                            output_dir=args.output_dir,
+                            tail_epochs=args.tail_epochs,
+                            enable_postprocess=enable_postprocess
+                        )
+                    else:
+                        generate_tables(key, EXPERIMENT_CONFIGS[key], args.output_dir, args.tail_epochs, enable_postprocess)
         
         if output_file:
             sys.stdout = tee.console

@@ -1,6 +1,13 @@
+"""
+基础训练器类，包含所有 factorization 方法的共同逻辑
+"""
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+from abc import ABC, abstractmethod
+import math
+import time
+import os
 
 from Dassl.dassl.engine.trainer import TrainerX
 from Dassl.dassl.metrics import compute_accuracy
@@ -10,16 +17,16 @@ from Dassl.dassl.optim import build_optimizer, build_lr_scheduler
 from clip import clip
 from clip.simple_tokenizer import SimpleTokenizer as _Tokenizer
 
-import math
-import time
-import logging
 from utils.logger import require_global_logger
 
 _tokenizer = _Tokenizer()
 
 
+# ============================================================================
+# 工具函数
+# ============================================================================
+
 def load_clip_to_cpu(cfg):
-    import os
     backbone_name = cfg.MODEL.BACKBONE.NAME
     url = clip._MODELS[backbone_name]
     
@@ -91,14 +98,358 @@ def factorize_ctx(origin, rank):
     return (u, v, residual)
 
 def compute_full_grad(left, right, dtype):
-        left_w, left_g = left.data.type(dtype), left.grad.type(dtype) / 10.0
-        right_w, right_g = right.data.type(dtype), right.grad.type(dtype) / 10.0
+    left_w, left_g = left.data.type(dtype), left.grad.type(dtype) / 10.0
+    right_w, right_g = right.data.type(dtype), right.grad.type(dtype) / 10.0
 
-        left_g_right_w = torch.matmul(left_g, right_w)
-        m1 = left_g_right_w + torch.matmul(left_w, right_g)
-        m2 = torch.matmul(left_w, torch.matmul(left_w.T, left_g_right_w))
+    left_g_right_w = torch.matmul(left_g, right_w)
+    m1 = left_g_right_w + torch.matmul(left_w, right_g)
+    m2 = torch.matmul(left_w, torch.matmul(left_w.T, left_g_right_w))
 
-        return m1 + m2
+    return m1 + m2
+
+
+# ============================================================================
+# 策略模式：Factorization Strategy
+# ============================================================================
+
+class FactorizationStrategy(ABC):
+    """矩阵分解策略基类"""
+    
+    @abstractmethod
+    def init_parameters(self, prompt_learner, n_ctx, ctx_dim, rank, dtype):
+        """初始化参数
+        
+        Args:
+            prompt_learner: PromptLearner 实例
+            n_ctx: context 向量数量
+            ctx_dim: context 维度
+            rank: 矩阵分解的秩
+            dtype: 数据类型
+        """
+        pass
+    
+    @abstractmethod
+    def compute_client_ctx(self, prompt_learner):
+        """计算客户端 context
+        
+        Args:
+            prompt_learner: PromptLearner 实例
+            
+        Returns:
+            client_ctx: 客户端 context 张量
+        """
+        pass
+    
+    @abstractmethod
+    def process_gradients(self, param_dict, cfg, std, dtype):
+        """处理梯度（裁剪和加噪）
+        
+        Args:
+            param_dict: 参数字典
+            cfg: 配置对象
+            std: 噪声标准差
+            dtype: 数据类型
+            
+        Returns:
+            need_compute_full_grad: 是否需要计算完整梯度
+        """
+        pass
+    
+    def supports_time_adaptive(self):
+        """是否支持时间适应隐私预算分配"""
+        return False
+    
+    def supports_hcse(self):
+        """是否支持 HCSE (层次化类别语义编码)"""
+        return False
+
+
+class PromptFLStrategy(FactorizationStrategy):
+    """PromptFL 策略：仅使用 global_ctx"""
+    
+    def init_parameters(self, prompt_learner, n_ctx, ctx_dim, rank, dtype):
+        # 只初始化 global_ctx（在 PromptLearner 中统一初始化）
+        pass
+    
+    def compute_client_ctx(self, prompt_learner):
+        return prompt_learner.global_ctx
+    
+    def process_gradients(self, param_dict, cfg, std, dtype):
+        # 只处理 global_ctx（已在 forward_pass 中处理）
+        return False
+
+
+class FedOTPStrategy(FactorizationStrategy):
+    """FedOTP 策略：global_ctx + local_ctx"""
+    
+    def init_parameters(self, prompt_learner, n_ctx, ctx_dim, rank, dtype):
+        # 初始化 local_ctx
+        local_ctx_vectors = torch.empty(n_ctx, ctx_dim, dtype=dtype)
+        nn.init.normal_(local_ctx_vectors, std=0.02)
+        prompt_learner.local_ctx = nn.Parameter(local_ctx_vectors)
+    
+    def compute_client_ctx(self, prompt_learner):
+        return prompt_learner.global_ctx + prompt_learner.local_ctx
+    
+    def process_gradients(self, param_dict, cfg, std, dtype):
+        # 处理 local_ctx
+        grad = param_dict['prompt_learner.local_ctx'].grad.data
+        norm = grad.norm(2)
+        if norm > cfg.NORM_THRESH:
+            scale = cfg.NORM_THRESH / norm
+            scale[scale>1] = 1
+            param_dict['prompt_learner.local_ctx'].grad *= scale
+        noise = torch.normal(0, std, size=grad.shape, device=grad.device)
+        param_dict['prompt_learner.local_ctx'].grad += noise
+        return False
+
+
+class FedPGPStrategy(FactorizationStrategy):
+    """FedPGP 策略：global_ctx + local_u_ctx @ local_v_ctx"""
+    
+    def init_parameters(self, prompt_learner, n_ctx, ctx_dim, rank, dtype):
+        # 初始化 local_u_ctx 和 local_v_ctx
+        local_u_ctx_vectors = torch.empty(n_ctx, rank, dtype=dtype)
+        nn.init.normal_(local_u_ctx_vectors, std=0.02)
+        prompt_learner.local_u_ctx = nn.Parameter(local_u_ctx_vectors)
+        
+        local_v_ctx_vectors = torch.empty(rank, ctx_dim, dtype=dtype)
+        nn.init.normal_(local_v_ctx_vectors, std=0.02)
+        prompt_learner.local_v_ctx = nn.Parameter(local_v_ctx_vectors)
+    
+    def compute_client_ctx(self, prompt_learner):
+        return prompt_learner.global_ctx + torch.matmul(prompt_learner.local_u_ctx, prompt_learner.local_v_ctx)
+    
+    def process_gradients(self, param_dict, cfg, std, dtype):
+        # 处理 local_u_ctx 和 local_v_ctx
+        # local_u_ctx
+        grad = param_dict['prompt_learner.local_u_ctx'].grad.data
+        norm = grad.norm(2)
+        if norm > cfg.NORM_THRESH:
+            scale = cfg.NORM_THRESH / norm
+            scale[scale>1] = 1
+            param_dict['prompt_learner.local_u_ctx'].grad *= scale
+        noise = torch.normal(0, std, size=grad.shape, device=grad.device)
+        param_dict['prompt_learner.local_u_ctx'].grad += noise
+        
+        # local_v_ctx
+        grad = param_dict['prompt_learner.local_v_ctx'].grad.data
+        norm = grad.norm(2)
+        if norm > cfg.NORM_THRESH:
+            scale = cfg.NORM_THRESH / norm
+            scale[scale>1] = 1
+            param_dict['prompt_learner.local_v_ctx'].grad *= scale
+        noise = torch.normal(0, std, size=grad.shape, device=grad.device)
+        param_dict['prompt_learner.local_v_ctx'].grad += noise
+        return False
+
+
+class DPLoRAStrategy(FactorizationStrategy):
+    """DPLoRA 策略：global_ctx + local_u_ctx @ local_v_ctx (无 residual)"""
+    
+    def init_parameters(self, prompt_learner, n_ctx, ctx_dim, rank, dtype):
+        # 初始化 local_ctx, local_u_ctx, local_v_ctx
+        local_ctx_vectors = torch.empty(n_ctx, ctx_dim, dtype=dtype)
+        nn.init.normal_(local_ctx_vectors, std=0.02)
+        prompt_learner.local_ctx = nn.Parameter(local_ctx_vectors)
+        
+        local_u_ctx_vectors = torch.empty(n_ctx, rank, dtype=dtype)
+        nn.init.normal_(local_u_ctx_vectors, std=0.02)
+        prompt_learner.local_u_ctx = nn.Parameter(local_u_ctx_vectors)
+        
+        local_v_ctx_vectors = torch.empty(rank, ctx_dim, dtype=dtype)
+        nn.init.normal_(local_v_ctx_vectors, std=0.02)
+        prompt_learner.local_v_ctx = nn.Parameter(local_v_ctx_vectors)
+    
+    def compute_client_ctx(self, prompt_learner):
+        local_u_ctx, local_v_ctx, _ = factorize_ctx(prompt_learner.local_ctx.data, prompt_learner.rank)
+        prompt_learner.local_u_ctx.data = local_u_ctx
+        prompt_learner.local_v_ctx.data = local_v_ctx
+        return prompt_learner.global_ctx + torch.matmul(prompt_learner.local_u_ctx, prompt_learner.local_v_ctx)
+    
+    def process_gradients(self, param_dict, cfg, std, dtype):
+        # 处理 local_u_ctx 和 local_v_ctx
+        # local_u_ctx
+        grad = param_dict['prompt_learner.local_u_ctx'].grad.data
+        norm = grad.norm(2)
+        if norm > cfg.NORM_THRESH:
+            scale = cfg.NORM_THRESH / norm
+            scale[scale>1] = 1
+            param_dict['prompt_learner.local_u_ctx'].grad *= scale
+        noise = torch.normal(0, std, size=grad.shape, device=grad.device)
+        param_dict['prompt_learner.local_u_ctx'].grad += noise
+        
+        # local_v_ctx
+        grad = param_dict['prompt_learner.local_v_ctx'].grad.data
+        norm = grad.norm(2)
+        if norm > cfg.NORM_THRESH:
+            scale = cfg.NORM_THRESH / norm
+            scale[scale>1] = 1
+            param_dict['prompt_learner.local_v_ctx'].grad *= scale
+        noise = torch.normal(0, std, size=grad.shape, device=grad.device)
+        param_dict['prompt_learner.local_v_ctx'].grad += noise
+        return True  # 需要计算完整梯度
+
+
+class DPFPLStrategy(FactorizationStrategy):
+    """DPFPL 策略：global_ctx + local_u_ctx @ local_v_ctx + residual"""
+    
+    def init_parameters(self, prompt_learner, n_ctx, ctx_dim, rank, dtype):
+        # 初始化 local_ctx, local_u_ctx, local_v_ctx
+        local_ctx_vectors = torch.empty(n_ctx, ctx_dim, dtype=dtype)
+        nn.init.normal_(local_ctx_vectors, std=0.02)
+        prompt_learner.local_ctx = nn.Parameter(local_ctx_vectors)
+        
+        local_u_ctx_vectors = torch.empty(n_ctx, rank, dtype=dtype)
+        nn.init.normal_(local_u_ctx_vectors, std=0.02)
+        prompt_learner.local_u_ctx = nn.Parameter(local_u_ctx_vectors)
+        
+        local_v_ctx_vectors = torch.empty(rank, ctx_dim, dtype=dtype)
+        nn.init.normal_(local_v_ctx_vectors, std=0.02)
+        prompt_learner.local_v_ctx = nn.Parameter(local_v_ctx_vectors)
+    
+    def compute_client_ctx(self, prompt_learner):
+        local_u_ctx, local_v_ctx, residual = factorize_ctx(prompt_learner.local_ctx.data, prompt_learner.rank)
+        prompt_learner.local_u_ctx.data = local_u_ctx
+        prompt_learner.local_v_ctx.data = local_v_ctx
+        return prompt_learner.global_ctx + torch.matmul(prompt_learner.local_u_ctx, prompt_learner.local_v_ctx) + residual
+    
+    def process_gradients(self, param_dict, cfg, std, dtype):
+        # 处理 local_u_ctx 和 local_v_ctx
+        # local_u_ctx
+        grad = param_dict['prompt_learner.local_u_ctx'].grad.data
+        norm = grad.norm(2)
+        if norm > cfg.NORM_THRESH:
+            scale = cfg.NORM_THRESH / norm
+            scale[scale>1] = 1
+            param_dict['prompt_learner.local_u_ctx'].grad *= scale
+        noise = torch.normal(0, std, size=grad.shape, device=grad.device)
+        param_dict['prompt_learner.local_u_ctx'].grad += noise
+        
+        # local_v_ctx
+        grad = param_dict['prompt_learner.local_v_ctx'].grad.data
+        norm = grad.norm(2)
+        if norm > cfg.NORM_THRESH:
+            scale = cfg.NORM_THRESH / norm
+            scale[scale>1] = 1
+            param_dict['prompt_learner.local_v_ctx'].grad *= scale
+        noise = torch.normal(0, std, size=grad.shape, device=grad.device)
+        param_dict['prompt_learner.local_v_ctx'].grad += noise
+        return True  # 需要计算完整梯度
+
+
+class SepFPLStrategy(DPFPLStrategy):
+    """SepFPL 策略：基于 DPFPL，支持时间适应和 HCSE"""
+    
+    def init_parameters(self, prompt_learner, n_ctx, ctx_dim, rank, dtype):
+        # 调用父类初始化
+        super().init_parameters(prompt_learner, n_ctx, ctx_dim, rank, dtype)
+        # 初始化 cluster_ctx (HCSE)
+        cluster_ctx_vectors = torch.empty(n_ctx, ctx_dim, dtype=dtype)
+        nn.init.normal_(cluster_ctx_vectors, std=0.02)
+        prompt_learner.cluster_ctx = nn.Parameter(cluster_ctx_vectors)
+    
+    def compute_client_ctx(self, prompt_learner):
+        base_ctx = super().compute_client_ctx(prompt_learner)
+        # 添加 cluster_ctx
+        if hasattr(prompt_learner, 'cluster_ctx') and prompt_learner.cluster_ctx is not None:
+            base_ctx = base_ctx + prompt_learner.cluster_ctx
+        return base_ctx
+    
+    def process_gradients(self, param_dict, cfg, std, dtype):
+        # 调用父类处理
+        need_full_grad = super().process_gradients(param_dict, cfg, std, dtype)
+        # 处理 cluster_ctx（仅裁剪，不加噪）
+        if 'prompt_learner.cluster_ctx' in param_dict and param_dict['prompt_learner.cluster_ctx'].grad is not None:
+            grad = param_dict['prompt_learner.cluster_ctx'].grad.data
+            norm = grad.norm(2)
+            if norm > cfg.NORM_THRESH:
+                scale = cfg.NORM_THRESH / norm
+                scale[scale>1] = 1
+                param_dict['prompt_learner.cluster_ctx'].grad *= scale
+            # 注意：cluster_ctx 不加噪（注释掉的代码）
+        return need_full_grad
+    
+    def supports_time_adaptive(self):
+        return True
+    
+    def supports_hcse(self):
+        return True
+
+
+class SepFPLTimeAdaptiveStrategy(SepFPLStrategy):
+    """SepFPL Time Adaptive 策略：明确启用时间适应"""
+    pass  # 继承 SepFPLStrategy 的所有功能
+
+
+class SepFPLHCSEStrategy(SepFPLStrategy):
+    """SepFPL HCSE 策略：明确启用 HCSE"""
+    pass  # 继承 SepFPLStrategy 的所有功能
+
+
+def create_factorization_strategy(factorization: str) -> FactorizationStrategy:
+    """工厂函数：根据 factorization 名称创建对应的策略
+    
+    Args:
+        factorization: 矩阵分解方法名称
+        
+    Returns:
+        FactorizationStrategy 实例
+    """
+    strategy_map = {
+        'promptfl': PromptFLStrategy,
+        'fedotp': FedOTPStrategy,
+        'fedpgp': FedPGPStrategy,
+        'dplora': DPLoRAStrategy,
+        'dpfpl': DPFPLStrategy,
+        'sepfpl': SepFPLStrategy,
+        'sepfpl_time_adaptive': SepFPLTimeAdaptiveStrategy,
+        'sepfpl_hcse': SepFPLHCSEStrategy,
+    }
+    
+    strategy_class = strategy_map.get(factorization)
+    if strategy_class is None:
+        raise ValueError(f"Unknown factorization method: {factorization}")
+    
+    return strategy_class()
+
+
+# ============================================================================
+# 配置辅助函数
+# ============================================================================
+
+def get_trainer_config(cfg, trainer_name=None):
+    """
+    获取训练器配置，优先使用训练器特定的配置，如果没有则回退到 DP_FPL
+    
+    Args:
+        cfg: 配置对象
+        trainer_name: 训练器名称（如 'SepFPL', 'PromptFL' 等），如果为 None 则从 cfg.TRAINER.NAME 获取
+    
+    Returns:
+        训练器配置节点
+    """
+    if trainer_name is None:
+        trainer_name = getattr(cfg.TRAINER, 'NAME', None)
+    
+    # 优先使用训练器特定的配置
+    if trainer_name and hasattr(cfg.TRAINER, trainer_name):
+        trainer_cfg = cfg.TRAINER[trainer_name]
+        # 检查是否有必要的配置项
+        if hasattr(trainer_cfg, 'N_CTX') and hasattr(trainer_cfg, 'PREC'):
+            return trainer_cfg
+    
+    # 回退到 DP_FPL 配置（向后兼容）
+    if hasattr(cfg.TRAINER, 'DP_FPL'):
+        return cfg.TRAINER.DP_FPL
+    
+    # 如果都没有，抛出错误
+    raise ValueError(f"无法找到训练器配置：trainer_name={trainer_name}, 且 DP_FPL 配置不存在")
+
+
+# ============================================================================
+# 模型组件
+# ============================================================================
 
 class TextEncoder(nn.Module):
     def __init__(self, clip_model):
@@ -110,7 +461,6 @@ class TextEncoder(nn.Module):
         self.dtype = clip_model.dtype
 
     def forward(self, prompts, tokenized_prompts):
-
         if torch.cuda.is_available():
             device = torch.device('cuda:0')
         else:
@@ -132,7 +482,9 @@ class PromptLearner(nn.Module):
         super().__init__()
         self.cfg = cfg  # 保存cfg以便在forward方法中使用
         n_cls = len(classnames)
-        n_ctx = cfg.TRAINER.DP_FPL.N_CTX
+        # 获取训练器配置（自适应）
+        trainer_cfg = get_trainer_config(cfg)
+        n_ctx = trainer_cfg.N_CTX
         dtype = clip_model.dtype
         ctx_dim = clip_model.ln_final.weight.shape[0]
         clip_imsize = clip_model.visual.input_resolution
@@ -140,30 +492,17 @@ class PromptLearner(nn.Module):
         self.factorization = cfg.FACTORIZATION
         self.rank = cfg.RANK
         assert cfg_imsize == clip_imsize, f"cfg_imsize ({cfg_imsize}) must equal to clip_imsize ({clip_imsize})"
-        # ========== 新增 cluster prompt 参数初始化（仅启用HCSE时使用） ==========
-        use_hcse = (self.factorization in ['sepfpl', 'sepfpl_hcse'])            
-        if use_hcse:
-            cluster_ctx_vectors = torch.empty(n_ctx, ctx_dim, dtype=dtype)
-            nn.init.normal_(cluster_ctx_vectors, std=0.02)
-            self.cluster_ctx = nn.Parameter(cluster_ctx_vectors)
         
-        # ========== 原有 global/local/uv prompt 初始化保持不变 ==========
-        global_ctx_vectors = torch.empty(n_ctx, ctx_dim, dtype=dtype) # n_ctx = 16, ctx_dim = 512
+        # ========== 使用策略模式 ==========
+        self.strategy = create_factorization_strategy(self.factorization)
+        
+        # ========== 初始化 global_ctx（所有方法都需要） ==========
+        global_ctx_vectors = torch.empty(n_ctx, ctx_dim, dtype=dtype)
         nn.init.normal_(global_ctx_vectors, std=0.02)
         self.global_ctx = nn.Parameter(global_ctx_vectors)
-
-        # local u and v context vectors
-        if self.factorization in ['fedotp', 'dplora', 'dpfpl', 'sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']:
-            local_ctx_vectors = torch.empty(n_ctx, ctx_dim, dtype=dtype) # n_ctx = 16, ctx_dim = 512
-            nn.init.normal_(local_ctx_vectors, std=0.02)
-            self.local_ctx = nn.Parameter(local_ctx_vectors)
-        if self.factorization in ['fedpgp', 'dplora', 'dpfpl', 'sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']:
-            local_u_ctx_vectors = torch.empty(n_ctx, self.rank, dtype=dtype)
-            nn.init.normal_(local_u_ctx_vectors, std=0.02)
-            self.local_u_ctx = nn.Parameter(local_u_ctx_vectors)
-            local_v_ctx_vectors = torch.empty(self.rank, ctx_dim, dtype=dtype)
-            nn.init.normal_(local_v_ctx_vectors, std=0.02)
-            self.local_v_ctx = nn.Parameter(local_v_ctx_vectors)
+        
+        # ========== 使用策略初始化其他参数 ==========
+        self.strategy.init_parameters(self, n_ctx, ctx_dim, self.rank, dtype)
 
         prompt_prefix = " ".join(["X"] * n_ctx)
         classnames = [name.replace("_", " ") for name in classnames]
@@ -188,31 +527,13 @@ class PromptLearner(nn.Module):
         self.name_lens = name_lens
 
     def forward(self):
-        # 原有分支保持不变
-        if self.factorization == 'promptfl':
-            client_ctx = self.global_ctx
-        elif self.factorization == 'fedotp':
-            client_ctx = self.global_ctx + self.local_ctx
-        elif self.factorization == 'fedpgp':
-            client_ctx = self.global_ctx + torch.matmul(self.local_u_ctx, self.local_v_ctx)
-        else:
-            local_u_ctx, local_v_ctx, residual = factorize_ctx(self.local_ctx.data, self.rank)
-            self.local_u_ctx.data = local_u_ctx
-            self.local_v_ctx.data = local_v_ctx
-            if self.factorization == 'dplora':
-                client_ctx = self.global_ctx + torch.matmul(self.local_u_ctx, self.local_v_ctx)
-            elif self.factorization == 'dpfpl':
-                client_ctx = self.global_ctx + torch.matmul(self.local_u_ctx, self.local_v_ctx) + residual
-            elif self.factorization in ['sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']:
-                client_ctx = self.global_ctx + torch.matmul(self.local_u_ctx, self.local_v_ctx) + residual
-            else:
-                client_ctx = self.global_ctx
-        # 仅在启用HCSE时叠加cluster_ctx（根据factorization自动判断）
-        use_hcse = (self.factorization in ['sepfpl', 'sepfpl_hcse'])
-        if getattr(self, 'cluster_ctx', None) is not None and use_hcse:
-            client_ctx = client_ctx + self.cluster_ctx
+        # 使用策略计算 client_ctx
+        client_ctx = self.strategy.compute_client_ctx(self)
+        
+        # 扩展维度以匹配类别数量
         if client_ctx.dim() == 2:
             client_ctx = client_ctx.unsqueeze(0).expand(self.n_cls, -1, -1)
+        
         client_prompt = torch.cat(
             [
                 self.token_prefix,
@@ -252,12 +573,23 @@ class CustomCLIP(nn.Module):
         return local_image_logits
 
 
-# @TRAINER_REGISTRY.register()
-class SEPFPL(TrainerX):
+# ============================================================================
+# 基础训练器类
+# ============================================================================
 
+
+class BaseFactorizationTrainer(TrainerX):
+    """基础训练器类，包含所有 factorization 方法的共同逻辑"""
+    
     def check_cfg(self, cfg):
-        assert cfg.TRAINER.DP_FPL.PREC in ["fp16", "fp32", "amp"]
-
+        # 获取训练器配置（自适应）
+        trainer_cfg = get_trainer_config(cfg, self.__class__.__name__)
+        assert trainer_cfg.PREC in ["fp16", "fp32", "amp"]
+    
+    def get_factorization_name(self):
+        """子类需要实现此方法，返回对应的 factorization 名称"""
+        raise NotImplementedError("Subclass must implement get_factorization_name()")
+    
     def build_model(self):
         """
         构建模型并初始化差分隐私相关参数
@@ -271,6 +603,16 @@ class SEPFPL(TrainerX):
         """
         cfg = self.cfg
         classnames = self.dm.dataset.classnames
+        
+        # 获取 factorization 名称
+        # 注意：cfg.FACTORIZATION 已在 extend_cfg() 中设置，且配置可能在 setup_cfg() 中已冻结
+        # 因此不能在此处修改配置，直接使用 get_factorization_name() 返回的值
+        factorization_name = self.get_factorization_name()
+        
+        # 验证配置中的 FACTORIZATION 是否匹配（仅用于调试）
+        if hasattr(cfg, 'FACTORIZATION') and cfg.FACTORIZATION != factorization_name:
+            logger = require_global_logger()
+            logger.warning(f"配置中的 FACTORIZATION ({cfg.FACTORIZATION}) 与训练器名称 ({factorization_name}) 不匹配，使用训练器名称")
 
         # ========== 初始化日志记录器 ==========
         # 注意：需确保外部已调用 init_logger_from_args 进行全局初始化
@@ -280,8 +622,11 @@ class SEPFPL(TrainerX):
         self.logger.info(f"Loading CLIP (backbone: {cfg.MODEL.BACKBONE.NAME})")
         clip_model = load_clip_to_cpu(cfg)
         
+        # 获取训练器配置（自适应）
+        trainer_cfg = get_trainer_config(cfg, factorization_name)
+        
         # CLIP 默认使用 fp16 精度，如果配置要求 fp32 或 amp，则转换为 fp32
-        if cfg.TRAINER.DP_FPL.PREC == "fp32" or cfg.TRAINER.DP_FPL.PREC == "amp":
+        if trainer_cfg.PREC == "fp32" or trainer_cfg.PREC == "amp":
             clip_model.float()
         self.dtype = clip_model.dtype
 
@@ -343,9 +688,9 @@ class SEPFPL(TrainerX):
             self.std = rdp_sigma * sensitivity
                         
             # ========== SepFPL 时间适应隐私预算分配 ==========
-            # 根据 factorization 类型自动判断是否启用时间适应隐私分配
-            # sepfpl 和 sepfpl_time_adaptive 默认启用此机制
-            use_time_adaptive = (cfg.FACTORIZATION in ['sepfpl', 'sepfpl_time_adaptive'])
+            # 使用策略判断是否支持时间适应隐私分配
+            strategy = create_factorization_strategy(factorization_name)
+            use_time_adaptive = strategy.supports_time_adaptive()
             
             if use_time_adaptive:
                 # 从配置读取时间适应参数
@@ -420,12 +765,6 @@ class SEPFPL(TrainerX):
         3. 梯度裁剪（限制梯度范数，满足差分隐私敏感度要求）
         4. 梯度加噪（添加高斯噪声，实现差分隐私保护）
         5. 计算完整梯度（对于低秩分解方法，从 u 和 v 的梯度恢复完整梯度）
-        
-        注意：不同 factorization 方法需要处理不同的参数：
-        - promptfl: 仅处理 global_ctx
-        - fedotp: 处理 global_ctx 和 local_ctx
-        - fedpgp/dplora/dpfpl/sepfpl: 处理 global_ctx, local_u_ctx, local_v_ctx
-        - sepfpl (HCSE): 额外处理 cluster_ctx
         """
         # ========== 前向传播和损失计算 ==========
         image, label = self.parse_batch_train(batch)
@@ -438,8 +777,10 @@ class SEPFPL(TrainerX):
 
         # 获取所有参数的字典，便于后续访问和修改梯度
         param_dict = dict(self.model.named_parameters())
+        strategy = self.model.prompt_learner.strategy
 
         # ========== 差分隐私保护：梯度裁剪与加噪 ==========
+        need_compute_full_grad = False
         if self.cfg.NOISE > 0:
             # 梯度裁剪：限制 global_ctx 的梯度范数
             # 这是差分隐私的基础要求，确保敏感度（sensitivity）有界
@@ -451,80 +792,32 @@ class SEPFPL(TrainerX):
                 scale[scale>1] = 1  # 确保不会放大梯度
                 param_dict['prompt_learner.global_ctx'].grad *= scale
             
-            # ========== 根据不同的 factorization 方法处理相应参数 ==========
-            if self.cfg.FACTORIZATION == 'promptfl':
-                # PromptFL: 仅对 global_ctx 添加高斯噪声
-                # 这是最简单的差分隐私实现，所有客户端共享同一个 global prompt
+            # ========== 使用策略处理梯度 ==========
+            need_compute_full_grad = strategy.process_gradients(param_dict, self.cfg, self.std, self.dtype)
+            
+            # PromptFL 需要单独处理 global_ctx 的加噪
+            if self.get_factorization_name() == 'promptfl':
                 noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
                 param_dict['prompt_learner.global_ctx'].grad += noise
-            
-            elif self.cfg.FACTORIZATION == 'fedotp':
-                # FedOTP: 对 local_ctx 进行裁剪和加噪
-                # FedOTP 使用 global_ctx + local_ctx 的组合，只对 local 部分加噪
-                grad = param_dict['prompt_learner.local_ctx'].grad.data
-                norm = grad.norm(2)
-                if norm > self.cfg.NORM_THRESH:
-                    scale = self.cfg.NORM_THRESH / norm
-                    scale[scale>1] = 1
-                    param_dict['prompt_learner.local_ctx'].grad *= scale
-                noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
-                param_dict['prompt_learner.local_ctx'].grad += noise
-            
-            elif self.cfg.FACTORIZATION in ['fedpgp', 'dplora', 'dpfpl', 'sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']:
-                # FedPGP/DPLoRA/DPFPL/SepFPL 系列: 对低秩分解参数进行裁剪和加噪
-                # 这些方法将 local_ctx 分解为 local_u_ctx @ local_v_ctx
-                # 只对分解后的参数加噪，可以减少通信成本和噪声影响
-                
-                # 处理 local_u_ctx: 裁剪 + 加噪
-                grad = param_dict['prompt_learner.local_u_ctx'].grad.data
-                norm = grad.norm(2)
-                if norm > self.cfg.NORM_THRESH:
-                    scale = self.cfg.NORM_THRESH / norm
-                    scale[scale>1] = 1
-                    param_dict['prompt_learner.local_u_ctx'].grad *= scale
-                noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
-                param_dict['prompt_learner.local_u_ctx'].grad += noise
-                
-                # 处理 local_v_ctx: 裁剪 + 加噪
-                grad = param_dict['prompt_learner.local_v_ctx'].grad.data
-                norm = grad.norm(2)
-                if norm > self.cfg.NORM_THRESH:
-                    scale = self.cfg.NORM_THRESH / norm
-                    scale[scale>1] = 1
-                    param_dict['prompt_learner.local_v_ctx'].grad *= scale
-                noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
-                param_dict['prompt_learner.local_v_ctx'].grad += noise
-            
-            # ========== SepFPL (HCSE): 对 cluster_ctx 进行裁剪和加噪 ==========
-            # 仅在启用层次化类别语义编码（HCSE）时处理
-            # cluster_ctx 用于捕获类别间的层次关系
-            use_hcse_for_noise = getattr(self.cfg, 'USE_HCSE', None)
-            if use_hcse_for_noise is None:
-                # 自动判断：sepfpl 和 sepfpl_hcse 默认启用 HCSE
-                use_hcse_for_noise = (self.cfg.FACTORIZATION in ['sepfpl', 'sepfpl_hcse'])
-            
-            if use_hcse_for_noise and 'prompt_learner.cluster_ctx' in param_dict and param_dict['prompt_learner.cluster_ctx'].grad is not None:
-                grad = param_dict['prompt_learner.cluster_ctx'].grad.data
-                norm = grad.norm(2)
-                if norm > self.cfg.NORM_THRESH:
-                    scale = self.cfg.NORM_THRESH / norm
-                    scale[scale>1] = 1
-                    param_dict['prompt_learner.cluster_ctx'].grad *= scale
-                # noise = torch.normal(0, self.std, size=grad.shape, device=grad.device)
-                # param_dict['prompt_learner.cluster_ctx'].grad += noise
+        else:
+            # 如果没有噪声，也需要检查是否需要计算完整梯度
+            # 对于需要低秩分解的方法，即使没有噪声也需要计算完整梯度
+            factorization_name = self.get_factorization_name()
+            need_compute_full_grad = (factorization_name in ['dplora', 'dpfpl', 'sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse'])
 
         # ========== 计算完整梯度（用于低秩分解方法） ==========
         # 对于使用低秩分解的方法，需要从 u 和 v 的梯度恢复完整的 local_ctx 梯度
         # 这是为了在客户端本地更新时能够正确更新 local_ctx 参数
         # 公式: ∇local_ctx = ∇(u @ v) = ∇u @ v + u @ ∇v + u @ u^T @ ∇u @ v
-        if self.cfg.FACTORIZATION in ['dplora', 'dpfpl', 'sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']:
+        if need_compute_full_grad and 'prompt_learner.local_u_ctx' in param_dict and 'prompt_learner.local_v_ctx' in param_dict:
             full_grad = compute_full_grad(
                 param_dict['prompt_learner.local_u_ctx'], 
                 param_dict['prompt_learner.local_v_ctx'], 
                 self.dtype
             )
             full_grad = full_grad.type(self.dtype)
-            param_dict['prompt_learner.local_ctx'].grad = full_grad
+            if 'prompt_learner.local_ctx' in param_dict:
+                param_dict['prompt_learner.local_ctx'].grad = full_grad
 
         # ========== 返回损失和准确率摘要 ==========
         loss_summary = {

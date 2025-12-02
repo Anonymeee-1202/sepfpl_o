@@ -13,6 +13,7 @@ checkpoints/
 outputs/
 logs/
 wandb/
+scripts/
 
 # Visualization outputs
 hcse/advanced_visualization_output/

@@ -8,6 +8,7 @@ from datasets.food101 import Food101
 from datasets.dtd import DescribableTextures
 from datasets.domainnet import DomainNet
 from datasets.office import Office
+from datasets.stanford_dogs import StanfordDogs
 from utils.logger import require_global_logger
 
 DATASET_REGISTRY = Registry("DATASET")
@@ -20,6 +21,7 @@ DATASET_REGISTRY.register(Food101)
 DATASET_REGISTRY.register(DescribableTextures)
 DATASET_REGISTRY.register(DomainNet)
 DATASET_REGISTRY.register(Office)
+DATASET_REGISTRY.register(StanfordDogs)
 
 def build_dataset(cfg):
     avai_datasets = DATASET_REGISTRY.registered_names()

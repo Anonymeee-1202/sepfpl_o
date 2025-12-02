@@ -294,12 +294,33 @@ def extend_cfg(cfg, args, mode: str = 'test'):
         # 差分隐私参数
         cfg.NORM_THRESH = args.norm_thresh
 
-        # SEPFPL Trainer 配置
-        cfg.TRAINER.NAME = "SEPFPL"
-        cfg.TRAINER.DP_FPL = CN()
-        cfg.TRAINER.DP_FPL.N_CTX = args.n_ctx  # 上下文向量数量
-        cfg.TRAINER.DP_FPL.PREC = "fp32"  # 计算精度：fp16, fp32, amp
-        cfg.TRAINER.DP_FPL.CLASS_TOKEN_POSITION = "end"  # 类别 token 位置
+        # 训练器配置（根据 factorization 参数动态选择）
+        factorization_to_trainer = {
+            'promptfl': 'PromptFL',
+            'fedotp': 'FedOTP',
+            'fedpgp': 'FedPGP',
+            'dplora': 'DPLoRA',
+            'dpfpl': 'DPFPL',
+            'sepfpl': 'SepFPL',
+            'sepfpl_time_adaptive': 'SepFPLTimeAdaptive',
+            'sepfpl_hcse': 'SepFPLHCSE',
+        }
+        trainer_name = factorization_to_trainer.get(args.factorization, 'SepFPL')
+        cfg.TRAINER.NAME = trainer_name
+        
+        # 根据训练器名称动态创建配置节点
+        if not hasattr(cfg.TRAINER, trainer_name):
+            cfg.TRAINER[trainer_name] = CN()
+        cfg.TRAINER[trainer_name].N_CTX = args.n_ctx  # 上下文向量数量
+        cfg.TRAINER[trainer_name].PREC = "fp32"  # 计算精度：fp16, fp32, amp
+        cfg.TRAINER[trainer_name].CLASS_TOKEN_POSITION = "end"  # 类别 token 位置
+        
+        # 为了向后兼容，同时设置 DP_FPL 配置（所有训练器共享）
+        if not hasattr(cfg.TRAINER, 'DP_FPL'):
+            cfg.TRAINER.DP_FPL = CN()
+        cfg.TRAINER.DP_FPL.N_CTX = args.n_ctx
+        cfg.TRAINER.DP_FPL.PREC = "fp32"
+        cfg.TRAINER.DP_FPL.CLASS_TOKEN_POSITION = "end"
 
         # 数据集配置
         cfg.DATASET.USERS = args.num_users  # 客户端数量

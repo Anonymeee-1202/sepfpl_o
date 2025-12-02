@@ -39,12 +39,36 @@ def extend_cfg(cfg, args):
     cfg.RDP_ALPHA = getattr(args, 'rdp_alpha', 2.0)  # RDP 阶数 α
     cfg.RDP_P = getattr(args, 'rdp_p', 1.1)          # sepfpl 中时间自适应隐私分配的幂次 p
 
-    # ====== 训练器（Trainer）相关配置：SEPFPL ======
-    cfg.TRAINER.NAME = 'SEPFPL'
-    cfg.TRAINER.DP_FPL = CN()
-    cfg.TRAINER.DP_FPL.N_CTX = args.n_ctx  # 文本提示 context 个数
-    cfg.TRAINER.DP_FPL.PREC = "fp32"       # 计算精度：可选 fp16, fp32, amp
-    cfg.TRAINER.DP_FPL.CLASS_TOKEN_POSITION = "end"  # 类别 token 放置位置：'middle' / 'end' / 'front'
+    # ====== 训练器（Trainer）相关配置 ======
+    # 根据 factorization 参数动态选择训练器
+    factorization_to_trainer = {
+        'promptfl': 'PromptFL',
+        'fedotp': 'FedOTP',
+        'fedpgp': 'FedPGP',
+        'dplora': 'DPLoRA',
+        'dpfpl': 'DPFPL',
+        'sepfpl': 'SepFPL',
+        'sepfpl_time_adaptive': 'SepFPLTimeAdaptive',
+        'sepfpl_hcse': 'SepFPLHCSE',
+    }
+    trainer_name = factorization_to_trainer.get(args.factorization, 'SepFPL')
+    cfg.TRAINER.NAME = trainer_name
+    
+    # 根据训练器名称动态创建配置节点
+    # 所有 factorization 方法共享相同的配置结构，但使用训练器特定的配置节点
+    if not hasattr(cfg.TRAINER, trainer_name):
+        cfg.TRAINER[trainer_name] = CN()
+    cfg.TRAINER[trainer_name].N_CTX = args.n_ctx  # 文本提示 context 个数
+    cfg.TRAINER[trainer_name].PREC = "fp32"       # 计算精度：可选 fp16, fp32, amp
+    cfg.TRAINER[trainer_name].CLASS_TOKEN_POSITION = "end"  # 类别 token 放置位置：'middle' / 'end' / 'front'
+    
+    # 为了向后兼容，同时设置 DP_FPL 配置（所有训练器共享）
+    # 这样 base_trainer.py 中的代码可以继续使用 cfg.TRAINER.DP_FPL
+    if not hasattr(cfg.TRAINER, 'DP_FPL'):
+        cfg.TRAINER.DP_FPL = CN()
+    cfg.TRAINER.DP_FPL.N_CTX = args.n_ctx
+    cfg.TRAINER.DP_FPL.PREC = "fp32"
+    cfg.TRAINER.DP_FPL.CLASS_TOKEN_POSITION = "end"
 
     # ====== 数据集相关配置 ======
     cfg.DATASET.ROOT = args.root               # 数据集根路径
@@ -55,11 +79,6 @@ def extend_cfg(cfg, args):
     cfg.DATASET.PARTITION = args.partition     # cifar 系列的数据划分策略
     cfg.DATASET.BETA = args.beta               # Dirichlet 划分参数
 
-    # CIFAR-100 按类下采样比例（不改变类别集合，仅在类内做采样）
-    if hasattr(args, 'cifar100_sample_ratio'):
-        cfg.DATASET.CIFAR100_SAMPLE_RATIO = args.cifar100_sample_ratio
-    else:
-        cfg.DATASET.CIFAR100_SAMPLE_RATIO = 1.0
 
     # 一些特定数据集（domainnet, office）使用的 domain 数
     cfg.DATALOADER.TRAIN_X.N_DOMAIN = 6 if args.num_users == 6 else 4
@@ -236,6 +255,45 @@ def init_wandb_run(args, cfg, logger):
     return wandb.init(**init_kwargs)
 
 
+def _build_filename_suffix(args, prefix=''):
+    """
+    构建文件名后缀，对于 sepfpl 相关方法，添加 topk 和 rdp_p 参数。
+    
+    Args:
+        args: 命令行参数对象
+        prefix: 文件名前缀（如 'acc_' 或 ''）
+    
+    Returns:
+        文件名后缀字符串（不包含扩展名）
+    
+    文件名格式：
+    - 非 sepfpl 方法: {prefix}{factorization}_{rank}_{noise}_{seed}_{num_users}
+    - sepfpl 方法: {prefix}{factorization}_{rank}_{noise}_{seed}_{topk}_{rdp_p}_{num_users}
+    """
+    # 检查是否是 sepfpl 相关方法
+    sepfpl_methods = ['sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']
+    is_sepfpl = args.factorization in sepfpl_methods
+    
+    # 基础参数（固定部分）
+    base_parts = [args.factorization, args.rank, args.noise, args.seed]
+    
+    # 如果是 sepfpl 相关方法，添加 topk 和 rdp_p（在 seed 之后，num_users 之前）
+    if is_sepfpl:
+        sepfpl_topk = getattr(args, 'sepfpl_topk', None)
+        rdp_p = getattr(args, 'rdp_p', None)
+        
+        if sepfpl_topk is not None:
+            base_parts.append(sepfpl_topk)  # 直接添加数字，不加前缀
+        if rdp_p is not None:
+            # 直接使用 rdp_p 的字符串形式，保留原始格式（包含点号）
+            base_parts.append(str(rdp_p))
+    
+    # 最后添加 num_users
+    base_parts.append(args.num_users)
+    
+    return f"{prefix}{'_'.join(map(str, base_parts))}"
+
+
 def save_checkpoint(args, epoch, local_weights, local_acc, neighbor_acc):
     """
     保存模型检查点（包含每个客户端的权重及精度曲线）。
@@ -244,10 +302,8 @@ def save_checkpoint(args, epoch, local_weights, local_acc, neighbor_acc):
     wandb_group = getattr(args, 'wandb_group', None) or 'default'
     save_dir = os.path.join(os.path.expanduser('~/code/sepfpl/checkpoints'), wandb_group, dataset)
     os.makedirs(save_dir, exist_ok=True)
-    save_filename = os.path.join(
-        save_dir,
-        f'{args.factorization}_{args.rank}_{args.noise}_{args.seed}_{args.num_users}.pth.tar'
-    )
+    filename_suffix = _build_filename_suffix(args, prefix='')
+    save_filename = os.path.join(save_dir, f'{filename_suffix}.pth.tar')
     state = {
         "epoch": epoch + 1,
         "local_weights": local_weights,
@@ -263,11 +319,12 @@ def load_checkpoint(args):
     """
     dataset = args.dataset_config_file.split('/')[-1].split('.')[0]
     wandb_group = getattr(args, 'wandb_group', None) or 'default'
+    filename_suffix = _build_filename_suffix(args, prefix='')
     save_filename = os.path.join(
         os.path.expanduser('~/code/sepfpl/checkpoints'),
         wandb_group,
         dataset,
-        f'{args.factorization}_{args.rank}_{args.noise}_{args.seed}_{args.num_users}.pth.tar'
+        f'{filename_suffix}.pth.tar'
     )
     if not os.path.exists(save_filename):
         # epoch=0，local_weights 为 num_users 个空 dict，acc 为空列表
@@ -822,13 +879,11 @@ def main(args):
         wandb_group = getattr(args, 'wandb_group', None) or 'default'
         output_dir = os.path.join(os.path.expanduser('~/code/sepfpl/outputs'), wandb_group, dataset_name)
         os.makedirs(output_dir, exist_ok=True)
+        filename_suffix = _build_filename_suffix(args, prefix='acc_')
         pickle.dump(
             [local_acc_list, neighbor_acc_list],
             open(
-                os.path.join(
-                    output_dir,
-                    f'acc_{args.factorization}_{args.rank}_{args.noise}_{args.seed}_{args.num_users}.pkl'
-                ),
+                os.path.join(output_dir, f'{filename_suffix}.pkl'),
                 'wb'
             )
         )
@@ -958,10 +1013,6 @@ if __name__ == "__main__":
     parser.add_argument(
         '--useall', default=True,
         help="是否使用全部训练样本（True：全量训练；False：few-shot）"
-    )
-    parser.add_argument(
-        '--cifar100-sample-ratio', type=float, default=0.2,
-        help="CIFAR-100 每个类别的采样比例 (0,1]，不改变类别集合，仅对类内样本下采样"
     )
     # cifar10, cifar100 等
     parser.add_argument(

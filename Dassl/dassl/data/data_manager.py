@@ -8,6 +8,7 @@ from Dassl.dassl.utils import read_image
 from Dassl.dassl.data.datasets import DATASET_REGISTRY
 from datasets.caltech101 import Caltech101
 from collections import defaultdict
+from utils.logger import require_global_logger
 
 from .datasets import build_dataset
 from .samplers import build_sampler
@@ -200,7 +201,8 @@ class DataManager:
         else:
             table.append(["# test", f"{len(self.dataset.test):,}"])
 
-        print(tabulate(table))
+        logger = require_global_logger()
+        logger.info(f"\n{tabulate(table)}")
 
 
 class DatasetWrapper(TorchDataset):

@@ -5,6 +5,7 @@ import tarfile
 import zipfile
 from collections import defaultdict
 import gdown
+from prettytable import PrettyTable
 
 from Dassl.dassl.utils import check_isfile, read_json, write_json, listdir_nohidden
 from utils.logger import require_global_logger
@@ -224,7 +225,7 @@ class DatasetBase:
         return output
 
     def generate_federated_fewshot_dataset(
-        self, *data_sources, num_shots=-1, num_users=5, is_iid=False, repeat_rate=0.0, repeat=False
+        self, *data_sources, num_shots=-1, num_users=5, is_iid=False, repeat_rate=0.0, repeat=False, dataset_type="训练"
     ):
         """
         生成联邦少样本 (Federated Few-shot) 数据集 (通常用于联邦训练集)。
@@ -321,20 +322,6 @@ class DatasetBase:
                             else:
                                 user_class_dict[idx].extend(class_repeat_list)
                             
-                            logger.info(f"User {idx} repeat part: {user_class_dict[idx]}")
-
-                            # 1.2 添加私有(不重复)部分
-                            if idx == num_users - 1:
-                                segment = class_norepeat_list[idx * class_per_user : class_num - repeat_num]
-                                user_class_dict[idx].extend(segment)
-                            else:
-                                segment = class_norepeat_list[idx * class_per_user : (idx + 1) * class_per_user]
-                                user_class_dict[idx].extend(segment)
-                            
-                            logger.info(f"User {idx} non-repeat part: {segment}")
-
-                    logger.info(f"User {idx} total classes: {user_class_dict[idx]}")
-
                     # --- 步骤 2: 根据类别列表进行数据采样 ---
                     dataset = []
                     for label, items in tracker.items():
@@ -362,12 +349,27 @@ class DatasetBase:
                                 dataset.extend(sampled_items)
 
                     output_dict[idx] = dataset
-                    logger.info(f"idx: {idx}, output_dict_len: {len(output_dict[idx])}")
+
+        # 输出表格
+        if output_dict:
+            table = PrettyTable()
+            table.field_names = ["用户ID", "类别数", "类别列表", "样本数"]
+            table.align = "l"
+            for idx in sorted(output_dict.keys()):
+                classes = sorted(user_class_dict[idx]) if idx in user_class_dict else []
+                classes_str = str(classes) if len(classes) <= 20 else str(classes[:20]) + "..."
+                table.add_row([
+                    f"User {idx}",
+                    len(classes),
+                    classes_str,
+                    len(output_dict[idx])
+                ])
+            logger.info(f"\n{dataset_type}数据划分 ({num_shots}-shot):\n{table}")
 
         return output_dict
 
     def generate_federated_dataset(
-        self, *data_sources, num_shots=-1, num_users=5, is_iid=False, repeat_rate=0.0, repeat=False
+        self, *data_sources, num_shots=-1, num_users=5, is_iid=False, repeat_rate=0.0, repeat=False, dataset_type="训练"
     ):
         """
         生成联邦数据集 (通常用于联邦 Baseline 训练集)。
@@ -385,15 +387,14 @@ class DatasetBase:
             output_dict (dict): {user_id: [Datum_list]}，每个用户的训练数据列表。
         """
         logger = _get_dataset_logger()
-        logger.info("正在创建 Baseline 联邦数据集")
+        logger.info(f"正在创建 Baseline 联邦{dataset_type}数据集")
         output_dict = defaultdict(list)
         user_class_dict = defaultdict(list)
         sample_per_user = defaultdict(int)  # 每个类别分给每个用户的样本数
         sample_order = defaultdict(list)    # 记录每个类别样本的分配顺序索引
 
         class_num = self.get_num_classes(data_sources[0])
-        logger.info(f"类别总数: {class_num}")
-
+        
         class_per_user = int(round(class_num / num_users))
         class_list = list(range(0, class_num))
         random.seed(2023)
@@ -406,7 +407,7 @@ class DatasetBase:
             class_repeat_list = class_list[0:repeat_num]
             class_norepeat_list = class_list[repeat_num:class_num]
             class_per_user = int(round((class_num - repeat_num) / num_users))
-
+            
             fold = int(num_users / num_shots) if num_shots > 0 else 0
             logger.info(f"重复类别数: {repeat_num}")
             logger.info(f"Fold 数: {fold}")
@@ -433,9 +434,9 @@ class DatasetBase:
                 # 默认将该类样本平均分给所有用户 (如果是 IID 或共享类)
                 sample_per_user[label] = int(round(len(items) / num_users))
                 random.shuffle(sample_order[label])
-
+                
                 # 如果使用了 fold 分组，共享类的样本分配量需要调整
-                # 此时共享该类的用户数减少了，每个用户分到的样本变多
+                     # 此时共享该类的用户数减少了，每个用户分到的样本变多
                 if repeat_rate > 0 and fold > 0:
                     sample_per_user[label] = int(round(len(items) / (num_users / fold)))
 
@@ -472,8 +473,6 @@ class DatasetBase:
                         else:
                             user_class_dict[idx].extend(class_repeat_list)
 
-                        logger.info(f"User {idx} repeat part: {user_class_dict[idx]}")
-
                         # 2.1.2 添加私有(不重复)部分
                         if idx == num_users - 1:
                             segment = class_norepeat_list[
@@ -484,10 +483,6 @@ class DatasetBase:
                             end_idx = (idx + 1) * class_per_user
                             segment = class_norepeat_list[idx * class_per_user:end_idx]
                             user_class_dict[idx].extend(segment)
-
-                        logger.info(f"User {idx} non-repeat part: {segment}")
-
-                logger.info(f"User {idx} total classes: {user_class_dict[idx]}")
 
                 # 2.2 根据 sample_order 和 sample_per_user 进行切片分配
                 dataset = []
@@ -529,7 +524,22 @@ class DatasetBase:
                                 dataset.extend(items)
 
                 output_dict[idx] = dataset
-                logger.info(f"idx: {idx}, output_dict_len: {len(output_dict[idx])}")
+
+        # 输出表格
+        if output_dict:
+            table = PrettyTable()
+            table.field_names = ["用户ID", "类别数", "类别列表", "样本数"]
+            table.align = "l"
+            for idx in sorted(output_dict.keys()):
+                classes = sorted(user_class_dict[idx]) if idx in user_class_dict else []
+                classes_str = str(classes) if len(classes) <= 20 else str(classes[:20]) + "..."
+                table.add_row([
+                    f"User {idx}",
+                    len(classes),
+                    classes_str,
+                    len(output_dict[idx])
+                ])
+            logger.info(f"\n{dataset_type}数据划分 (Baseline):\n{table}")
 
         return output_dict
 
@@ -795,7 +805,8 @@ class DatasetBase:
                 num_shots=cfg.DATASET.NUM_SHOTS,
                 num_users=cfg.DATASET.USERS,
                 is_iid=cfg.DATASET.IID,
-                repeat_rate=repeat_rate
+                repeat_rate=repeat_rate,
+                dataset_type="训练"
             )
         else:
             federated_train_x = self.generate_federated_fewshot_dataset(
@@ -803,7 +814,8 @@ class DatasetBase:
                 num_shots=cfg.DATASET.NUM_SHOTS,
                 num_users=cfg.DATASET.USERS,
                 is_iid=cfg.DATASET.IID,
-                repeat_rate=repeat_rate
+                repeat_rate=repeat_rate,
+                dataset_type="训练"
             )
 
         federated_test_x = self.generate_federated_dataset(
@@ -811,7 +823,8 @@ class DatasetBase:
             num_shots=cfg.DATASET.NUM_SHOTS,
             num_users=cfg.DATASET.USERS,
             is_iid=cfg.DATASET.IID,
-            repeat_rate=repeat_rate
+            repeat_rate=repeat_rate,
+            dataset_type="测试"
         )
 
         return federated_train_x, federated_test_x
