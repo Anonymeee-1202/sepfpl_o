@@ -72,13 +72,14 @@ def init_logger_from_args(
     )
     task_id = context.get("task_id") or (getattr(args, "task_id", None) if args else None) or "task"
     
-    # 获取 seed 值
-    seed_val = (
-        kwargs.get("seed")
-        or context.get("seed")
-        or (getattr(args, "seed", None) if args else None)
-        or None
-    )
+    # 获取 seed 值（注意：seed 可能为 0，所以不能使用 or 运算符）
+    seed_val = None
+    if "seed" in kwargs and kwargs["seed"] is not None:
+        seed_val = kwargs["seed"]
+    elif "seed" in context and context["seed"] is not None:
+        seed_val = context["seed"]
+    elif args and hasattr(args, "seed") and args.seed is not None:
+        seed_val = args.seed
     
     # 获取 sepfpl_topk 和 rdp_p（仅对 sepfpl 相关方法）
     sepfpl_methods = ['sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']
@@ -166,10 +167,22 @@ def init_logger_from_args(
         sepfpl_methods = ['sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']
         is_sepfpl = method in sepfpl_methods
         
-        # 基础文件名部分
-        filename_parts = [rank_val, noise_val]
+        # 构建文件名部分，使用单字母标识符
+        filename_parts = []
         
-        # 如果是 sepfpl 相关方法，添加 topk 和 rdp_p
+        # 添加 rank (r)
+        if rank_val is not None:
+            filename_parts.append(f"r{rank_val}")
+        
+        # 添加 noise (n)
+        if noise_val is not None:
+            filename_parts.append(f"n{noise_val}")
+        
+        # 添加 seed (s)
+        if seed_val is not None:
+            filename_parts.append(f"s{seed_val}")
+        
+        # 如果是 sepfpl 相关方法，添加 topk (k) 和 rdp_p (p)
         if is_sepfpl:
             sepfpl_topk = (
                 kwargs.get("sepfpl_topk")
@@ -183,15 +196,19 @@ def init_logger_from_args(
             )
             
             if sepfpl_topk is not None:
-                filename_parts.append(sepfpl_topk)  # 直接添加数字，不加前缀
+                filename_parts.append(f"k{sepfpl_topk}")
             if rdp_p is not None:
-                # 直接使用 rdp_p 的字符串形式，保留原始格式（包含点号）
-                filename_parts.append(str(rdp_p))
+                # 保留 rdp_p 中的点号，不替换
+                filename_parts.append(f"p{rdp_p}")
         
-        # 添加 users 和 timestamp
-        filename_parts.extend([users_val, timestamp])
+        # 添加 users (u) 和 timestamp
+        if users_val is not None:
+            filename_parts.append(f"u{users_val}")
+        filename_parts.append(timestamp)
         
-        # 文件名格式: {rank}_{noise}_{[topkX]}_{[rdpY]}_{users}_{timestamp}.log
+        # 文件名格式:
+        # 基础：r{rank}_n{noise}_s{seed}_u{users}_{timestamp}.log
+        # sepfpl 方法：r{rank}_n{noise}_s{seed}_k{topk}_p{rdp_p}_u{users}_{timestamp}.log
         log_file = log_path / f"{'_'.join(map(str, filename_parts))}.log"
         
         fmt_file = (

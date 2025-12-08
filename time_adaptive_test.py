@@ -130,7 +130,7 @@ def main():
     主函数：演示如何使用时间适应隐私预算分配
     """
     # 默认参数配置
-    total_rounds = 20
+    total_rounds = 40
     rdp_eps_tot = 0.4
     rdp_alpha = 2.0
     rdp_p = 0.1
@@ -161,7 +161,7 @@ def main():
     print("不同 rdp_p 参数的影响对比")
     print(f"{'='*80}")
     
-    p_values = [0.1, 0.2, 0.4, 0.8]
+    p_values = [0, 0.1, 0.2, 0.4, 0.8, 1.6, 3.2]
     for p in p_values:
         eps_list, _, std_list = generate_time_adaptive_sequences(
             total_rounds=total_rounds,

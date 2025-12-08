@@ -15,9 +15,13 @@
 # $9: round - 训练轮次
 # $10: wandb-group - wandb group 参数（可选，留空则不传递）
 # $11: task-id - 任务编号标识（可选，留空则不传递）
+# $12: sepfpl-topk - SepFPL top-k 参数（可选，留空则不传递）
+# $13: rdp-p - RDP 时间适应幂次参数（可选，留空则不传递）
 
 WAND_GROUP="${10:-}"
 TASK_ID="${11:-}"
+SEPFPL_TOPK="${12:-}"
+RDP_P="${13:-}"
 
 START_SEED=$7
 END_SEED=$8
@@ -55,6 +59,14 @@ for seed in $(seq $START_SEED $END_SEED); do
 
   if [ -n "$TASK_ID" ]; then
     PY_ARGS+=(--task-id "$TASK_ID")
+  fi
+
+  if [ -n "$SEPFPL_TOPK" ]; then
+    PY_ARGS+=(--sepfpl-topk "$SEPFPL_TOPK")
+  fi
+
+  if [ -n "$RDP_P" ]; then
+    PY_ARGS+=(--rdp-p "$RDP_P")
   fi
 
   python federated_main.py "${PY_ARGS[@]}"

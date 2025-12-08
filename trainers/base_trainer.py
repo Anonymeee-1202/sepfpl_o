@@ -377,14 +377,24 @@ class SepFPLStrategy(DPFPLStrategy):
         return True
 
 
-class SepFPLTimeAdaptiveStrategy(SepFPLStrategy):
-    """SepFPL Time Adaptive 策略：明确启用时间适应"""
-    pass  # 继承 SepFPLStrategy 的所有功能
+class SepFPLTimeAdaptiveStrategy(DPFPLStrategy):
+    """SepFPL Time Adaptive 策略：只启用时间适应，不包含 HCSE 的 cluster_ctx"""
+    
+    def supports_time_adaptive(self):
+        return True
+    
+    def supports_hcse(self):
+        return False
 
 
 class SepFPLHCSEStrategy(SepFPLStrategy):
-    """SepFPL HCSE 策略：明确启用 HCSE"""
-    pass  # 继承 SepFPLStrategy 的所有功能
+    """SepFPL HCSE 策略：只启用 HCSE，不启用时间适应"""
+    
+    def supports_time_adaptive(self):
+        return False
+    
+    def supports_hcse(self):
+        return True
 
 
 def create_factorization_strategy(factorization: str) -> FactorizationStrategy:

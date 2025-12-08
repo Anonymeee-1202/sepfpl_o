@@ -28,94 +28,94 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         'exp_name': 'exp1-standard',
         'seed_list': [1],
         'dataset_list': ['caltech-101', 'oxford_flowers', 'food-101', 'stanford_dogs'], # 'oxford_pets'
-        'factorization_list': ['promptfl', 'fedotp', 'fedpgp', 'dpfpl','sepfpl'],
-        'noise_list': [0.0, 0.4, 0.2, 0.1, 0.05, 0.01], 
+        'factorization_list': ['promptfl', 'fedotp', 'fedpgp', 'dpfpl','sepfpl'], # 'promptfl', 'fedotp', 'fedpgp', 'dpfpl', 
+        'noise_list': [0.0,0.4, 0.2, 0.1, 0.05, 0.01], # 0.4, 0.1, 0.01
         'rank_list': [8],
         'num_users_list': [10],
         'round': 40,
         'sepfpl_topk': 8,  # SepFPL top-k 参数
-        'rdp_p': 1.01,     # RDP 时间适应幂次参数
+        'rdp_p': 0.2,     # RDP 时间适应幂次参数
     },
     # 实验1.2: Extension (CIFAR-100 + 扩展性测试)
     'EXPERIMENT_1_EXTENSION': {
         'exp_name': 'exp1-extension',
         'seed_list': [1],
         'dataset_list': ['cifar-100'],
-        'factorization_list': ['promptfl', 'fedotp', 'fedpgp', 'dpfpl', 'sepfpl'], # 
+        'factorization_list': ['promptfl', 'fedotp', 'fedpgp', 'dpfpl','sepfpl'], # 'promptfl', 'fedotp', 'fedpgp', 'dpfpl', 
         'noise_list': [0.0, 0.4, 0.2, 0.1, 0.05, 0.01],
         'rank_list': [8],
         'num_users_list': [25, 50],
         'round': 40,
         'sepfpl_topk': 8,  # SepFPL top-k 参数
-        'rdp_p': 1.01,     # RDP 时间适应幂次参数
+        'rdp_p': 0.2,     # RDP 时间适应幂次参数
     },
     # 实验2: 机制消融 
     'EXPERIMENT_2_ABLATION': {
         'exp_name': 'exp2-ablation',
         'seed_list': [1],
         'dataset_list': ['caltech-101', 'stanford_dogs', 'oxford_flowers', 'food-101'],
-        'factorization_list': ['dpfpl','sepfpl_time_adaptive', 'sepfpl_hcse','sepfpl'],
-        'noise_list': [0.4, 0.1, 0.01],
+        'factorization_list': ['dpfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse', 'sepfpl'], # 
+        'noise_list': [0.4, 0.1, 0.01], #  0.1, 0.01
         'rank_list': [8],
         'num_users_list': [10],
         'round': 40,
         'sepfpl_topk': 8,  # SepFPL top-k 参数（用于 sepfpl_hcse 和 sepfpl）
-        'rdp_p': 1.01,     # RDP 时间适应幂次参数（用于 sepfpl_time_adaptive 和 sepfpl）
+        'rdp_p': 0.2,     # RDP 时间适应幂次参数（用于 sepfpl_time_adaptive 和 sepfpl）
     },
     # 实验3.1: 敏感性分析 (Rank)
     'EXPERIMENT_3_Sensitivity_Analysis_rank': {
         'exp_name': 'exp3-sensitivity-analysis-rank',
         'seed_list': [1],
-        'dataset_list': ['caltech-101', 'stanford_dogs', 'oxford_flowers', 'food-101'],
+        'dataset_list': ['stanford_dogs', 'oxford_flowers'], # 'caltech-101', 'food-101'
         'factorization_list': ['sepfpl'],
         'noise_list': [0, 0.4, 0.1, 0.01], # [0, 0.4, 0.1, 0.01]
-        'rank_list': [1, 2, 4, 16],
+        'rank_list': [1, 2, 4, 8, 16],
         'num_users_list': [10],
         'round': 20,
         'sepfpl_topk': 8,  # SepFPL top-k 参数
-        'rdp_p': 1.01,     # RDP 时间适应幂次参数
+        'rdp_p': 0.2,     # RDP 时间适应幂次参数
     },
     # 实验3.2: 敏感性分析 (sepfpl_topk)
     'EXPERIMENT_3_Sensitivity_Analysis_sepfpl_topk': {
         'exp_name': 'exp3-sensitivity-analysis-sepfpl-topk',
         'seed_list': [1],
-        'dataset_list': ['caltech-101', 'stanford_dogs', 'oxford_flowers', 'food-101'],
+        'dataset_list': ['stanford_dogs', 'oxford_flowers'], # 'stanford_dogs', 'oxford_flowers', 'food-101'
         'factorization_list': ['sepfpl'],
-        'noise_list': [0.4, 0.1, 0.01],
+        'noise_list': [0, 0.4, 0.1, 0.01],
         'rank_list': [8],
         'num_users_list': [10],
         'round': 20,
-        'sepfpl_topk_list': [2, 4, 8],  # 测试不同的 topk 值
-        'rdp_p': 1.01,     # RDP 时间适应幂次参数（固定）
+        'sepfpl_topk_list': [2, 4, 6, 8],  # 测试不同的 topk 值
+        'rdp_p': 0.2,     # RDP 时间适应幂次参数（固定）
     },
     # 实验3.3: 敏感性分析 (rdp_p)
     'EXPERIMENT_3_Sensitivity_Analysis_rdp_p': {
         'exp_name': 'exp3-sensitivity-analysis-rdp-p',
         'seed_list': [1],
-        'dataset_list': ['caltech-101', 'stanford_dogs', 'oxford_flowers', 'food-101'],
+        'dataset_list': ['stanford_dogs', 'oxford_flowers'], # 'stanford_dogs', 'oxford_flowers', 'food-101'
         'factorization_list': ['sepfpl'],
         'noise_list': [0.4, 0.1, 0.01],
         'rank_list': [8],
         'num_users_list': [10],
         'round': 20,
         'sepfpl_topk': 8,  # SepFPL top-k 参数（固定）
-        'rdp_p_list': [0.1, 0.2, 0.4, 0.8],  # 测试不同的 rdp_p 值
+        'rdp_p_list': [0, 0.2, 0.5, 1],  # 测试不同的 rdp_p 值
     },
 
     # 实验4: MIA (Membership Inference Attack) 攻击评估
     'EXPERIMENT_4_MIA': {
         'exp_name': 'exp4-mia',
         'seed_list': [1],
-        'dataset_list': ['caltech-101', 'oxford_pets', 'oxford_flowers', 'food-101'],
+        'dataset_list': ['caltech-101', 'stanford_dogs', 'oxford_flowers', 'food-101'], # 'caltech-101', 'oxford_pets', , 'food-101'
         'factorization_list': ['sepfpl'],
         'noise_list': [0.0, 0.4, 0.2, 0.1, 0.05, 0.01],
         'rank_list': [8],
         'num_users_list': [10],
-        'round': 5,
-        'shadow_start_seed': 0,  # Shadow 数据生成的起始 seed
-        'shadow_end_seed': 1,   # Shadow 数据生成的结束 seed（包含）
+        'round': 10,
+        'shadow_start_seed': 1,  # Shadow 数据生成的起始 seed
+        'shadow_end_seed': 10,   # Shadow 数据生成的结束 seed（包含）
         'sepfpl_topk': 8,  # SepFPL top-k 参数
-        'rdp_p': 1.01,     # RDP 时间适应幂次参数
+        'rdp_p': 0.2,     # RDP 时间适应幂次参数
     },
 }
 
@@ -223,13 +223,18 @@ def run_single_task(
 def _construct_mia_shell_command(
     dataset: str, users: int, factorization: str, rank: int,
     noise: float, seed: int, round_num: int, exp_name: str,
-    task_id: str, step: str, shadow_start_seed: int = 0, shadow_end_seed: int = 49
+    task_id: str, step: str, shadow_start_seed: int = 0, shadow_end_seed: int = 49,
+    sepfpl_topk: Optional[int] = None, rdp_p: Optional[float] = None
 ) -> str:
     """
     构建 MIA 实验的 shell 命令。
     
     step: 'target' (训练目标模型), 'shadow' (生成shadow数据), 
           'train_attack' (训练攻击模型，训练完成后自动测试), 'test_attack' (单独测试攻击模型，用于仅测试已训练的模型)
+    
+    参数:
+        sepfpl_topk: SepFPL top-k 参数（可选）
+        rdp_p: RDP 时间适应幂次参数（可选）
     """
     dataset_yaml = f'configs/datasets/{dataset}.yaml'
     
@@ -249,6 +254,15 @@ def _construct_mia_shell_command(
             shlex.quote(task_id) if task_id else '""',
             "--skip-test"  # MIA 实验时跳过测试
         ]
+        # 添加 sepfpl 相关参数
+        if sepfpl_topk is not None:
+            parts.append(str(sepfpl_topk))
+        else:
+            parts.append('""')
+        if rdp_p is not None:
+            parts.append(str(rdp_p))
+        else:
+            parts.append('""')
     elif step == 'shadow':
         # 生成 shadow 数据
         parts = [
@@ -265,6 +279,15 @@ def _construct_mia_shell_command(
             shlex.quote(exp_name) if exp_name else '""',
             shlex.quote(task_id) if task_id else '""'
         ]
+        # 添加 sepfpl 相关参数
+        if sepfpl_topk is not None:
+            parts.append(str(sepfpl_topk))
+        else:
+            parts.append('""')
+        if rdp_p is not None:
+            parts.append(str(rdp_p))
+        else:
+            parts.append('""')
     elif step == 'train_attack':
         # 训练 MIA 攻击模型（训练完成后自动测试，需要测试相关参数）
         parts = [
@@ -281,6 +304,13 @@ def _construct_mia_shell_command(
             shlex.quote(exp_name) if exp_name else '""',
             shlex.quote(task_id) if task_id else '""'
         ]
+        # 添加 sepfpl 相关参数和 shadow seed 范围
+        if sepfpl_topk is not None:
+            parts.append(f"--sepfpl-topk {sepfpl_topk}")
+        if rdp_p is not None:
+            parts.append(f"--rdp-p {rdp_p}")
+        parts.append(f"--shadow-start-seed {shadow_start_seed}")
+        parts.append(f"--shadow-end-seed {shadow_end_seed}")
     elif step == 'test_attack':
         # 单独测试 MIA 攻击模型（用于仅测试已训练的模型，正常流程中训练会自动包含测试）
         parts = [
@@ -297,6 +327,11 @@ def _construct_mia_shell_command(
             shlex.quote(exp_name) if exp_name else '""',
             shlex.quote(task_id) if task_id else '""'
         ]
+        # 添加 sepfpl 相关参数
+        if sepfpl_topk is not None:
+            parts.append(f"--sepfpl-topk {sepfpl_topk}")
+        if rdp_p is not None:
+            parts.append(f"--rdp-p {rdp_p}")
     else:
         raise ValueError(f"Unknown MIA step: {step}")
     
@@ -328,6 +363,8 @@ def generate_mia_batch_script(
     exp_name = config.get('exp_name', 'default_exp')
     shadow_start_seed = config.get('shadow_start_seed', 0)
     shadow_end_seed = config.get('shadow_end_seed', 49)
+    sepfpl_topk = config.get('sepfpl_topk', None)
+    rdp_p = config.get('rdp_p', None)
 
     # 解析 GPU 列表
     gpu_pool = [g.strip() for g in str(gpus).split(',') if g.strip()] if gpus else []
@@ -350,11 +387,13 @@ def generate_mia_batch_script(
         steps = [
             ('shadow', _construct_mia_shell_command(
                 dataset, users, factorization, rank, noise, seed, round_num,
-                exp_name, task_id, 'shadow', shadow_start_seed, shadow_end_seed
+                exp_name, task_id, 'shadow', shadow_start_seed, shadow_end_seed,
+                sepfpl_topk, rdp_p
             )),
             ('train_attack', _construct_mia_shell_command(
                 dataset, users, factorization, rank, noise, seed, round_num,
-                exp_name, task_id, 'train_attack', shadow_start_seed, shadow_end_seed
+                exp_name, task_id, 'train_attack', shadow_start_seed, shadow_end_seed,
+                sepfpl_topk, rdp_p
             )),
         ]
         
@@ -604,6 +643,221 @@ def generate_batch_script(
 
     file_path.chmod(0o755)
     return tasks, str(file_path)
+
+
+def merge_exp3_scripts(script_dir: str = "scripts") -> Optional[str]:
+    """
+    合并实验3的三个子实验脚本，去除重复项。
+    
+    参数:
+        script_dir: 脚本目录路径
+    
+    返回:
+        合并后的脚本文件路径，如果失败则返回 None
+    """
+    script_path_obj = Path(script_dir)
+    
+    # 三个子实验的脚本文件名
+    exp3_scripts = [
+        "task_list_exp3-sensitivity-analysis-rank.sh",
+        "task_list_exp3-sensitivity-analysis-sepfpl-topk.sh",
+        "task_list_exp3-sensitivity-analysis-rdp-p.sh"
+    ]
+    
+    # 检查所有脚本是否存在
+    script_paths = []
+    for script_name in exp3_scripts:
+        script_path = script_path_obj / script_name
+        if not script_path.exists():
+            print(f"  ⚠️  警告: 脚本文件不存在: {script_path}")
+            return None
+        script_paths.append(script_path)
+    
+    # 解析所有脚本，提取命令
+    all_commands = []
+    command_to_metadata = {}  # 存储命令的元数据（用于生成新的 task_id）
+    
+    for script_path in script_paths:
+        with open(script_path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        
+        for line in lines:
+            line = line.strip()
+            # 跳过空行、注释、echo 语句
+            if not line or line.startswith('#') or line.startswith('echo') or line.startswith('#!/'):
+                continue
+            
+            # 跳过函数定义、wait 等控制语句
+            if line.startswith('function ') or line.startswith('run_') or line == 'wait':
+                continue
+            
+            # 提取实际的命令
+            if 'bash srun_main.sh' in line:
+                # 提取 GPU 信息（如果存在）
+                gpu = None
+                if 'CUDA_VISIBLE_DEVICES=' in line:
+                    gpu_part = line.split('CUDA_VISIBLE_DEVICES=')[1]
+                    gpu = gpu_part.split()[0]
+                    # 移除 GPU 前缀部分
+                    line_without_gpu = line.split('CUDA_VISIBLE_DEVICES=')[1].split(' ', 1)[1] if ' ' in gpu_part else line
+                else:
+                    line_without_gpu = line
+                
+                # 解析命令参数
+                # 命令格式: bash srun_main.sh root dataset users factorization rank noise seed round exp_name task_id [sepfpl_topk] [rdp_p]
+                cmd_parts = line_without_gpu.split()
+                
+                if len(cmd_parts) >= 12:
+                    # 参数索引：
+                    # 0: bash
+                    # 1: srun_main.sh
+                    # 2: root
+                    # 3: dataset
+                    # 4: users
+                    # 5: factorization
+                    # 6: rank
+                    # 7: noise
+                    # 8: seed
+                    # 9: round
+                    # 10: exp_name
+                    # 11: task_id
+                    # 12: sepfpl_topk (可选)
+                    # 13: rdp_p (可选)
+                    
+                    root = cmd_parts[2]
+                    dataset = cmd_parts[3]
+                    users = cmd_parts[4]
+                    factorization = cmd_parts[5]
+                    rank = cmd_parts[6]
+                    noise = cmd_parts[7]
+                    seed = cmd_parts[8]
+                    round_num = cmd_parts[9]
+                    # exp_name 和 task_id 用于去重时忽略
+                    sepfpl_topk = cmd_parts[12] if len(cmd_parts) > 12 else '""'
+                    rdp_p = cmd_parts[13] if len(cmd_parts) > 13 else '""'
+                    
+                    # 构建标准化命令（用于去重比较）
+                    # 去重时忽略 exp_name 和 task_id，只比较实际参数
+                    normalized_cmd = f"{root}|{dataset}|{users}|{factorization}|{rank}|{noise}|{seed}|{round_num}|{sepfpl_topk}|{rdp_p}"
+                    
+                    # 存储完整命令和元数据
+                    if normalized_cmd not in command_to_metadata:
+                        command_to_metadata[normalized_cmd] = {
+                            'root': root,
+                            'dataset': dataset,
+                            'users': users,
+                            'factorization': factorization,
+                            'rank': rank,
+                            'noise': noise,
+                            'seed': seed,
+                            'round': round_num,
+                            'sepfpl_topk': sepfpl_topk,
+                            'rdp_p': rdp_p,
+                            'gpu': gpu
+                        }
+                        all_commands.append(normalized_cmd)
+                    elif gpu is not None and command_to_metadata[normalized_cmd]['gpu'] is None:
+                        # 如果之前没有 GPU 信息，现在有了，更新它
+                        command_to_metadata[normalized_cmd]['gpu'] = gpu
+    
+    if not all_commands:
+        print("  ⚠️  警告: 未找到任何命令")
+        return None
+    
+    # 去重（基于标准化命令）
+    unique_commands = list(dict.fromkeys(all_commands))  # 保持顺序的去重
+    
+    print(f"  📊 原始命令数: {len(all_commands)}, 去重后: {len(unique_commands)}")
+    
+    # 生成合并后的脚本
+    merged_filename = "task_list_exp3.sh"
+    merged_path = script_path_obj / merged_filename
+    
+    with open(merged_path, 'w', encoding='utf-8') as f:
+        # 脚本头部
+        f.write("#!/bin/bash\n\n")
+        f.write("# 实验任务列表: exp3 (合并所有敏感性分析实验)\n")
+        f.write(f"# 生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"# 任务总数: {len(unique_commands)} (已去重)\n")
+        f.write("# 执行策略: 不同 GPU 的任务并行执行；同一 GPU 的任务串行执行。\n")
+        f.write("# --------------------------------------------------------------------\n\n")
+        
+        # 按 GPU 分组
+        commands_by_gpu: Dict[Optional[str], List[str]] = defaultdict(list)
+        for cmd in unique_commands:
+            gpu = command_to_metadata[cmd]['gpu']
+            commands_by_gpu[gpu].append(cmd)
+        
+        # 生成脚本内容
+        if len(commands_by_gpu) <= 1:
+            # 顺序执行模式
+            f.write("# 顺序执行模式 (无 GPU 或单 GPU)\n")
+            for idx, cmd in enumerate(unique_commands, 1):
+                meta = command_to_metadata[cmd]
+                desc = f"{meta['dataset'].split('/')[-1].replace('.yaml', '')} | {meta['factorization']} | r={meta['rank']} n={meta['noise']} u={meta['users']} s={meta['seed']}"
+                if meta['sepfpl_topk'] != '""':
+                    desc += f" topk={meta['sepfpl_topk']}"
+                if meta['rdp_p'] != '""':
+                    desc += f" rdp_p={meta['rdp_p']}"
+                
+                f.write(f"echo '▶️  正在执行任务 [{idx}/{len(unique_commands)}]: {desc}'\n")
+                
+                # 构建命令
+                gpu_prefix = f"CUDA_VISIBLE_DEVICES={meta['gpu']} " if meta['gpu'] else ""
+                cmd_line = (
+                    f"{gpu_prefix}bash srun_main.sh {meta['root']} {meta['dataset']} "
+                    f"{meta['users']} {meta['factorization']} {meta['rank']} {meta['noise']} "
+                    f"{meta['seed']} {meta['round']} exp3 '[{idx}/{len(unique_commands)}]' "
+                    f"{meta['sepfpl_topk']} {meta['rdp_p']}\n"
+                )
+                f.write(cmd_line)
+                f.write("\n")
+        else:
+            # 并行执行模式
+            f.write("# 并行执行模式 (多 GPU)\n\n")
+            
+            # 定义每个 GPU 的 Worker 函数
+            for gpu_key, gpu_cmds in sorted(commands_by_gpu.items()):
+                func_name = f"run_gpu_{gpu_key}" if gpu_key != 'none' else "run_cpu"
+                f.write(f"{func_name}() {{\n")
+                f.write(f"    echo \"[Worker {gpu_key}] 启动\"\n")
+                
+                for idx, cmd in enumerate(gpu_cmds, 1):
+                    meta = command_to_metadata[cmd]
+                    desc = f"{meta['dataset'].split('/')[-1].replace('.yaml', '')} | {meta['factorization']} | r={meta['rank']} n={meta['noise']} u={meta['users']} s={meta['seed']}"
+                    if meta['sepfpl_topk'] != '""':
+                        desc += f" topk={meta['sepfpl_topk']}"
+                    if meta['rdp_p'] != '""':
+                        desc += f" rdp_p={meta['rdp_p']}"
+                    
+                    f.write(f"    echo '  --> [{idx}/{len(gpu_cmds)}] {desc}'\n")
+                    
+                    gpu_prefix = f"CUDA_VISIBLE_DEVICES={meta['gpu']} " if meta['gpu'] else ""
+                    cmd_line = (
+                        f"    {gpu_prefix}bash srun_main.sh {meta['root']} {meta['dataset']} "
+                        f"{meta['users']} {meta['factorization']} {meta['rank']} {meta['noise']} "
+                        f"{meta['seed']} {meta['round']} exp3 '[{idx}/{len(gpu_cmds)}]' "
+                        f"{meta['sepfpl_topk']} {meta['rdp_p']}\n"
+                    )
+                    f.write(cmd_line)
+                
+                f.write(f"    echo \"[Worker {gpu_key}] 完成\"\n")
+                f.write(f"}}\n\n")
+            
+            # 后台启动所有 Worker
+            f.write("echo '🚀 启动后台并行任务...'\n")
+            for gpu_key in sorted(commands_by_gpu.keys()):
+                func_name = f"run_gpu_{gpu_key}" if gpu_key != 'none' else "run_cpu"
+                f.write(f"{func_name} &\n")
+            
+            # 等待
+            f.write("\nwait\n")
+            f.write("echo '✅ 所有任务已执行完毕。'\n")
+    
+    merged_path.chmod(0o755)
+    return str(merged_path)
+
+
 # ==================== 主程序入口 (Main Entry) ====================
 
 if __name__ == "__main__":
@@ -701,6 +955,20 @@ if __name__ == "__main__":
                 generated_files.append(path)
             else:
                 print("  ⚠️  未生成任何任务 (请检查配置列表)。")
+        
+        # 特殊处理：合并实验3的三个子实验脚本
+        exp3_keys = [
+            'EXPERIMENT_3_Sensitivity_Analysis_rank',
+            'EXPERIMENT_3_Sensitivity_Analysis_sepfpl_topk',
+            'EXPERIMENT_3_Sensitivity_Analysis_rdp_p'
+        ]
+        if all(key in configs_to_run for key in exp3_keys):
+            print("\n" + "="*50)
+            print("🔄 检测到实验3的所有子实验，开始合并脚本...")
+            merged_path = merge_exp3_scripts(script_dir="scripts")
+            if merged_path:
+                print(f"  ✅ 合并脚本已生成: {merged_path}")
+                generated_files.append(merged_path)
 
         if generated_files:
             print("\n" + "="*50)

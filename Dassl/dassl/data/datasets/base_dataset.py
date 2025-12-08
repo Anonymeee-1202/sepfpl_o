@@ -321,7 +321,7 @@ class DatasetBase:
                                             user_class_dict[idx].extend(class_repeat_list[k * repeat_per_fold : (k + 1) * repeat_per_fold])
                             else:
                                 user_class_dict[idx].extend(class_repeat_list)
-                            
+
                     # --- 步骤 2: 根据类别列表进行数据采样 ---
                     dataset = []
                     for label, items in tracker.items():

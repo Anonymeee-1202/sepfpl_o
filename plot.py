@@ -1,12 +1,3 @@
-#!/usr/bin/env python3
-"""
-实验结果可视化工具
-生成三个主要图表：
-1. 隐私-效用权衡曲线
-2. 消融实验柱状图
-3. Rank敏感度折线图
-"""
-
 import argparse
 import pickle
 import sys
@@ -19,6 +10,9 @@ import numpy as np
 import seaborn as sns
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
+from matplotlib.collections import PolyCollection
+
 
 # 尝试导入外部配置
 try:
@@ -145,18 +139,6 @@ def read_accuracy(exp_name: str, dataset: str, factorization: str, rank: int,
     std = stdev(per_seed_values) if len(per_seed_values) > 1 else 0.0
     return avg, std
 
-
-# ========== 图4（新增）: Exp1 噪声折线图 ==========
-
-import matplotlib.pyplot as plt
-import numpy as np
-from pathlib import Path
-from typing import Tuple
-
-# 假设 matplotlib 和 numpy 已经导入
-# 建议在文件头部导入 seaborn，如果没有安装，可以用 matplotlib 原生实现，
-# 但下面的代码尽量只用 matplotlib 以减少依赖，同时模拟 seaborn 的美观度。
-
 def _parse_stat_value(stat_str: str) -> Tuple[float, float]:
     """将 '85.20 ± 1.05' 解析为 (85.20, 1.05)。"""
     if not stat_str or stat_str == "N/A":
@@ -180,7 +162,7 @@ def plot_exp1_noise_linecharts(output_dir: Path = DEFAULT_OUTPUT_DIR,
     # 使用类似 LaTeX 的字体渲染，增强专业感
     plt.rcParams.update({
         'font.family': 'serif',
-        'font.serif': ['Times New Roman'],  # 论文常用字体
+        'font.serif': ['Times New Roman', 'DejaVu Serif', 'Liberation Serif', 'serif'],  # 字体回退
         'mathtext.fontset': 'stix',         # 数学公式字体类似 LaTeX
         'font.size': 14,
         'axes.labelsize': 16,
@@ -388,579 +370,614 @@ def plot_exp1_noise_linecharts(output_dir: Path = DEFAULT_OUTPUT_DIR,
             print(f"✅ Exp1 噪声折线图已保存: {output_path}")
             plt.close()
 
-# 恢复默认 RC 参数以防影响后续代码（可选）
-# plt.rcParams.update(plt.rcParamsDefault)
-
-
-def plot_exp2_bar_charts(output_dir: Path = DEFAULT_OUTPUT_DIR,
-                         tail_epochs: int = DEFAULT_TAIL_EPOCHS,
-                         fig_dir: Path = DEFAULT_FIG_DIR,
-                         use_postprocess: bool = True):
+def plot_ablation_study(save_name="ablation_study_comparison"):
     """
-    绘制exp2的柱状图 (学术论文风格优化版)
-    
-    改进点:
-    - Times New Roman 字体
-    - 更加专业的配色 (Colorblind-friendly / Academic)
-    - 移除 Top/Right Spines
-    - 添加柱状图边框
-    - 优化网格线层级
+    绘制顶刊学术风格的消融实验分组柱状图。
+    特点：Times New Roman字体、大字号、专业配色、纹理填充、去边框。
     """
     
-    # --- 全局绘图风格设置 ---
-    plt.rcParams.update({
+    # ================= 0. 全局样式设置 (Academic Style) =================
+    # 使用字典更新 rcParams，确保无需安装额外包即可获得学术风格
+    academic_params = {
         'font.family': 'serif',
-        'font.serif': ['Times New Roman'],
-        'mathtext.fontset': 'stix',  # 数学公式字体与Times兼容
+        'font.serif': ['Times New Roman', 'DejaVu Serif', 'Liberation Serif', 'serif'],  # 字体回退
         'font.size': 14 + 4,
-        'axes.labelsize': 18 + 4,
-        'axes.titlesize': 18 + 8,
-        'xtick.labelsize': 16 + 4,
-        'ytick.labelsize': 16 + 4,
-        'legend.fontsize': 16 + 4,
-        'axes.linewidth': 1.2, # 坐标轴线宽
-    })
-
-    config = EXPERIMENT_CONFIGS['EXPERIMENT_2_ABLATION']
-    exp_name = config['exp_name']
-    datasets = config['dataset_list']
-    methods = config['factorization_list']
-    rank_list = config['rank_list']
-    noise_list = config['noise_list']
-    seed_list = config['seed_list']
-    num_users = config['num_users_list'][0]
-    exp_type = 'exp2'
-    
-    # 方法名称映射
-    method_labels = {
-        'dpfpl': 'w/o TimeAdaptive & SE',
-        'sepfpl_time_adaptive': 'w/ TimeAdaptive',
-        'sepfpl_hcse': 'w/ SE',
-        'sepfpl': '(SepFPL) Full Method' 
+        'axes.labelsize': 16 * 1.2,
+        'axes.titlesize': 18 * 1.2,
+        'xtick.labelsize': 14 * 1.2,
+        'ytick.labelsize': 14 * 1.2,
+        'legend.fontsize': 20,
+        'figure.titlesize': 20 * 1.2,
+        'axes.linewidth': 1.5,   # 坐标轴线变粗
+        'xtick.major.width': 1.5,
+        'ytick.major.width': 1.5,
+        'lines.linewidth': 1.5,  # 误差棒变粗
+        'mathtext.fontset': 'stix', # 数学公式字体与 Times 更搭
     }
-    
-    # 学术风格配色 (Muted/Deep Colors)
-    # 对应 noise: 0.4 (High), 0.1 (Mid), 0.01 (Low)
-    noise_colors = {
-        0.4: '#4E79A7',   # 偏灰蓝
-        0.1: '#F28E2B',   # 偏柔和橙
-        0.01: '#59A14F'   # 偏深绿
-    }
-    
-    # 图例标签映射
-    noise_labels = {
-        0.4: r'$\epsilon=0.4$',
-        0.1: r'$\epsilon=0.1$',
-        0.01: r'$\epsilon=0.01$'
-    }
+    plt.rcParams.update(academic_params)
 
-    for dataset in datasets:
-        # 动态调整Y轴下限，保留更多视觉空间
-        y_min = 70 if dataset == 'caltech-101' else 50
-        y_max = 95 if dataset == 'caltech-101' else 85
-
-        for use_neighbor in [False, True]:
-            acc_type = 'neighbor' if use_neighbor else 'local'
-            
-            n_methods = len(methods)
-            # 增加高度以容纳底部标签，增加宽度防止拥挤
-            fig, axes = plt.subplots(1, n_methods, figsize=(5 * n_methods, 4), sharey=True)
-            if n_methods == 1:
-                axes = [axes]
-            
-            x_pos = np.arange(len(rank_list))
-            width = 0.25  # 稍微调窄一点，增加间隙感
-            
-            # 遍历每个方法绘制子图
-            for m_idx, method in enumerate(methods):
-                ax = axes[m_idx]
-                
-                # 网格线置于底层 (zorder=0)
-                ax.grid(axis='y', linestyle='--', alpha=0.4, color='gray', zorder=0)
-                
-                for n_idx, noise in enumerate(noise_list):
-                    accuracies = []
-                    stds = []
-                    
-                    for rank in rank_list:
-                        # 数据读取逻辑保持不变
-                        try:
-                            l_list, n_list = read_scheme(
-                                exp_name, dataset, rank, noise, methods,
-                                seed_list, num_users, output_dir, tail_epochs
-                            )
-                            
-                            if use_postprocess:
-                                l_proc = postprocess_results(l_list, methods, exp_type)
-                                n_proc = postprocess_results(n_list, methods, exp_type)
-                            else:
-                                l_proc = l_list
-                                n_proc = n_list
-                            
-                            stat_list = n_proc if use_neighbor else l_proc
-                            method_idx = methods.index(method)
-                            stat_str = stat_list[method_idx] if method_idx < len(stat_list) else "N/A"
-                            
-                            if stat_str and stat_str != "N/A":
-                                parts = stat_str.split('±')
-                                mean_val = float(parts[0].strip())
-                                std_val = float(parts[1].strip()) if len(parts) > 1 else 0.0
-                                accuracies.append(mean_val)
-                                stds.append(std_val)
-                            else:
-                                accuracies.append(0.0)
-                                stds.append(0.0)
-                        except Exception as e:
-                            print(f"Error reading data for {method}, rank {rank}, noise {noise}: {e}")
-                            accuracies.append(0.0)
-                            stds.append(0.0)
-                    
-                    # 绘制柱状图
-                    offset = (n_idx - 1) * width
-                    # zorder=3 确保柱子在网格线之上
-                    # edgecolor='black', linewidth=0.8 增加边缘清晰度
-                    ax.bar(x_pos + offset, accuracies, width, 
-                           label=noise_labels[noise],
-                           color=noise_colors[noise], 
-                           edgecolor='black',
-                           linewidth=0.8,
-                           alpha=0.9,
-                           zorder=3)
-
-                # --- 子图美化 ---
-                
-                # 移除顶部和右侧边框 (Despine)
-                ax.spines['top'].set_visible(False)
-                ax.spines['right'].set_visible(False)
-                
-                # X轴标签简化
-                ax.set_xticks(x_pos)
-                # 将 '16' 替换为 'Full' 或者保持数字，视论文语境而定，这里保持简洁
-                x_labels = [str(r) if r != 16 else 'Full' for r in rank_list]
-                ax.set_xticklabels(x_labels)
-                
-                # 标题处理
-                title_label = method_labels.get(method, method)
-                ax.set_title(title_label, pad=15, fontsize=22, fontweight='bold')
-
-                # Y轴处理
-                ax.set_ylim(bottom=y_min, top=y_max)
-                ax.set_yticks(np.arange(y_min, y_max + 1, 5))
-                if m_idx == 0:
-                    ylabel_text = 'Neighbor Accuracy (%)' if use_neighbor else 'Local Accuracy (%)'
-                    ax.set_ylabel(ylabel_text, fontweight='bold', labelpad=10)
-                
-                # 为每个子图添加下方 Rank 标签 (或者在整图添加，这里选择每个子图添加更清晰)
-                ax.set_xlabel(r'Rank ($r$)', fontsize=16)
-
-            # --- 整体图例与布局 ---
-            
-            # 获取句柄和标签 (从第一个子图)
-            handles, labels = axes[0].get_legend_handles_labels()
-            
-            # 图例放在底部居中，水平排列 (Paper常用布局)
-            # 或者放在右侧 (User原意)，这里优化右侧布局
-            fig.legend(handles, labels, 
-                      loc='center right',
-                      bbox_to_anchor=(0.99, 0.5),
-                      frameon=False, # 去掉图例边框，更简洁
-                      fontsize=16,
-                      title="Noise Level",
-                      title_fontsize=16,
-                      handlelength=1.5,  # 减少图例项长度
-                      handletextpad=0.3,  # 减少文本与标记的间距
-                      columnspacing=0.8)  # 减少列间距
-            
-            # 调整布局
-            plt.tight_layout()
-            # 再次手动调整边距，减小子图间距并为右侧图例留出更少空间
-            plt.subplots_adjust(right=0.92, wspace=0.06, hspace=0.25) 
-            
-            # 保存
-            fig_dir.mkdir(parents=True, exist_ok=True)
-            postfix = '_postprocessed' if use_postprocess else ''
-            output_path = fig_dir / f'exp2_{dataset}_{acc_type}_accuracy.pdf' # 建议存为PDF矢量图
-            plt.savefig(output_path, dpi=300, bbox_inches='tight')
-            
-            # 为了预览也保存一份PNG
-            # output_path_png = fig_dir / f'exp2_{dataset}_{acc_type}_accuracy{postfix}.png'
-            # plt.savefig(output_path_png, dpi=300, bbox_inches='tight')
-            
-            print(f"✅ Exp2 Plot Saved: {output_path}")
-            plt.close()
-
-
-def plot_exp2_3d_bar_charts(output_dir: Path = DEFAULT_OUTPUT_DIR,
-                            tail_epochs: int = DEFAULT_TAIL_EPOCHS,
-                            fig_dir: Path = DEFAULT_FIG_DIR,
-                            use_postprocess: bool = True):
-    """
-    绘制exp2的3D立体柱状图 (学术论文风格优化版)
-    
-    坐标轴：
-    - x轴：noise (ε)
-    - y轴：rank (r)
-    - z轴：accuracy (%)
-    
-    改进点:
-    - Times New Roman 字体
-    - 更加专业的配色 (Colorblind-friendly / Academic)
-    - 优化3D视角和布局
-    - 清晰的轴标签和刻度
-    """
-    
-    # --- 全局绘图风格设置 ---
-    plt.rcParams.update({
-        'font.family': 'serif',
-        'font.serif': ['Times New Roman'],
-        'mathtext.fontset': 'stix',  # 数学公式字体与Times兼容
-        'font.size': 14 + 4,
-        'axes.labelsize': 18 + 4,
-        'axes.titlesize': 18 + 8,
-        'xtick.labelsize': 16 + 4,
-        'ytick.labelsize': 16 + 4,
-        'legend.fontsize': 16 + 4,
-        'axes.linewidth': 1.2,
-    })
-
-    config = EXPERIMENT_CONFIGS['EXPERIMENT_2_ABLATION']
-    exp_name = config['exp_name']
-    datasets = config['dataset_list']
-    methods = config['factorization_list']
-    rank_list = config['rank_list']
-    noise_list = config['noise_list']
-    seed_list = config['seed_list']
-    num_users = config['num_users_list'][0]
-    exp_type = 'exp2'
-    
-    # 方法名称映射
-    method_labels = {
-        'dpfpl': 'w/o TimeAdaptive & SE',
-        'sepfpl_time_adaptive': 'w/ TimeAdaptive',
-        'sepfpl_hcse': 'w/ SE',
-        'sepfpl': '(SepFPL) Full Method' 
-    }
-    
-    # 学术风格配色 - 为每个方法分配不同颜色
-    method_colors = {
-        'dpfpl': '#4E79A7',           # 偏灰蓝
-        'sepfpl_time_adaptive': '#F28E2B',  # 偏柔和橙
-        'sepfpl_hcse': '#59A14F',     # 偏深绿
-        'sepfpl': '#E15759'           # 偏深红
+    # ================= 1. 数据准备 =================
+    data = {
+        "Caltech-101": {
+            "Local Accuracy": {
+                "Baseline":     [92.57, 91.73, 87.74],
+                "w/ TA":        [94.34, 93.76, 88.88],
+                "w/ SE":        [94.96, 94.32, 89.08],
+                "SepFPL (Ours)":[95.42, 94.52, 90.46]
+            },
+            "Neighbor Accuracy": {
+                "Baseline":     [91.93, 91.26, 87.37],
+                "w/ TA":        [92.81, 91.46, 88.65],
+                "w/ SE":        [92.86, 92.85, 89.30],
+                "SepFPL (Ours)":[93.40, 92.86, 89.77]
+            },
+            "Local Std": {
+                "Baseline":     [0.95, 1.29, 1.27],
+                "w/ TA":        [0.34, 0.41, 1.11],
+                "w/ SE":        [0.40, 0.42, 0.94],
+                "SepFPL (Ours)":[0.72, 0.44, 0.94]
+            },
+            "Neighbor Std": {
+                "Baseline":     [0.61, 0.70, 1.00],
+                "w/ TA":        [0.60, 0.63, 0.89],
+                "w/ SE":        [0.51, 0.29, 1.46],
+                "SepFPL (Ours)":[0.37, 0.35, 1.05]
+            }
+        },
+        "Stanford Dogs": {
+            "Local Accuracy": {
+                "Baseline":     [59.94, 58.29, 54.95],
+                "w/ TA":        [60.08, 58.95, 55.00],
+                "w/ SE":        [62.40, 61.17, 56.60],
+                "SepFPL (Ours)":[64.53, 63.36, 56.71]
+            },
+            "Neighbor Accuracy": {
+                "Baseline":     [59.35, 58.59, 53.83],
+                "w/ TA":        [59.50, 58.84, 53.93],
+                "w/ SE":        [60.77, 60.46, 55.16],
+                "SepFPL (Ours)":[61.92, 61.16, 55.97]
+            },
+            "Local Std": {
+                "Baseline":     [1.04, 0.90, 0.56],
+                "w/ TA":        [0.78, 0.61, 0.92],
+                "w/ SE":        [0.88, 0.40, 1.18],
+                "SepFPL (Ours)":[0.95, 1.05, 1.26]
+            },
+            "Neighbor Std": {
+                "Baseline":     [0.81, 0.59, 0.89],
+                "w/ TA":        [0.75, 0.91, 1.11],
+                "w/ SE":        [0.73, 0.72, 0.73],
+                "SepFPL (Ours)":[0.50, 0.32, 0.81]
+            }
+        }
     }
 
-    for dataset in datasets:
-        for use_neighbor in [False, True]:
-            acc_type = 'neighbor' if use_neighbor else 'local'
+    # ================= 2. 绘图配置 =================
+    datasets = ["Caltech-101", "Stanford Dogs"]
+    metrics = ["Local Accuracy", "Neighbor Accuracy"]
+    epsilon_labels = ["0.4", "0.1", "0.01"]
+    # 统一 Key 名称以匹配数据
+    methods = ["Baseline", "w/ TA", "w/ SE", "SepFPL (Ours)"]
+    
+    # --- 学术配色方案 (Color Palette) ---
+    # 1. 灰色系 (Baseline): 低调对比
+    # 2. 蓝色系 (TA): 冷色调
+    # 3. 绿色系 (SE): 冷色调
+    # 4. 红色/橙色系 (Ours): 暖色调，高亮突出
+    colors = ['#E0E0E0', '#99C1C2', '#8DA0CB', '#FC8D62'] 
+    
+    # --- 纹理填充 (Hatching) ---
+    # 增加黑白打印时的辨识度
+    # '/' = 斜线, '.' = 点, 'x' = 交叉, '' = 无
+    hatches = ['///', '...', 'xx', ''] 
+
+    x = np.arange(len(epsilon_labels))
+    width = 0.2 
+
+    # 初始化画布：2行2列，增加 DPI 保证清晰度
+    fig, axes = plt.subplots(2, 2, figsize=(14, 11), sharex=True, dpi=300)
+
+    # ================= 3. 循环绘图 =================
+    for row_idx, dataset in enumerate(datasets):
+        for col_idx, metric in enumerate(metrics):
+            ax = axes[row_idx, col_idx]
             
-            # 创建一张3D图，包含所有方法
-            fig = plt.figure(figsize=(14, 10))
-            ax = fig.add_subplot(111, projection='3d')
+            # 数据提取
+            y_data = data[dataset][metric]
+            std_key = "Local Std" if metric == "Local Accuracy" else "Neighbor Std"
+            y_err = data[dataset][std_key]
             
-            # 存储所有方法的数据矩阵
-            all_data_matrices = {}
-            all_valid_values = []
-            
-            # 读取所有方法的数据
-            for method in methods:
-                data_matrix = np.zeros((len(noise_list), len(rank_list)))
+            # 绘制柱子
+            for i, method in enumerate(methods):
+                offset = (i - 1.5) * width
                 
-                for n_idx, noise in enumerate(noise_list):
-                    for r_idx, rank in enumerate(rank_list):
-                        try:
-                            l_list, n_list = read_scheme(
-                                exp_name, dataset, rank, noise, methods,
-                                seed_list, num_users, output_dir, tail_epochs
-                            )
-                            
-                            if use_postprocess:
-                                l_proc = postprocess_results(l_list, methods, exp_type)
-                                n_proc = postprocess_results(n_list, methods, exp_type)
-                            else:
-                                l_proc = l_list
-                                n_proc = n_list
-                            
-                            stat_list = n_proc if use_neighbor else l_proc
-                            method_idx = methods.index(method)
-                            stat_str = stat_list[method_idx] if method_idx < len(stat_list) else "N/A"
-                            
-                            if stat_str and stat_str != "N/A":
-                                parts = stat_str.split('±')
-                                mean_val = float(parts[0].strip())
-                                data_matrix[n_idx, r_idx] = mean_val
-                                all_valid_values.append(mean_val)
-                            else:
-                                data_matrix[n_idx, r_idx] = 0.0
-                        except Exception as e:
-                            print(f"Error reading data for {method}, rank {rank}, noise {noise}: {e}")
-                            data_matrix[n_idx, r_idx] = 0.0
+                # 图例 Label 仅在第一个子图设置
+                label = method if (row_idx == 0 and col_idx == 0) else ""
                 
-                all_data_matrices[method] = data_matrix
+                # 绘制柱状图
+                bars = ax.bar(x + offset, y_data[method], width, 
+                              label=label,
+                              color=colors[i], 
+                              edgecolor='black', # 黑色边框
+                              linewidth=1.2,     # 边框宽度
+                              alpha=1.0,         # 不透明
+                              yerr=y_err[method], 
+                              capsize=4,         # 误差棒帽子宽度
+                              error_kw={'elinewidth': 1.5, 'ecolor': '#333333'}, # 误差棒样式
+                              zorder=3)          # 确保柱子在网格线之上
+                
+                # 应用纹理 (Hatching)
+                # 注意：matplotlib 的 hatch 颜色默认随 edgecolor，
+                # 这里我们保持黑色边框，纹理也是黑色的
+                for bar in bars:
+                    bar.set_hatch(hatches[i])
+
+            # --- 样式微调 ---
+            # 标题与坐标轴
+            ax.set_title(f"{dataset} - {metric}", fontweight='bold', pad=12)
             
-            # 计算z轴范围（基于所有方法的数据）
-            if all_valid_values:
-                z_min = max(0, min(all_valid_values) - 5)
-                z_max = max(all_valid_values) + 2
+            if row_idx == 1:
+                ax.set_xlabel(r"Privacy Budget ($\epsilon$)", fontweight='bold')
+                ax.set_xticks(x)
+                ax.set_xticklabels(epsilon_labels)
+            
+            if col_idx == 0:
+                ax.set_ylabel("Accuracy (%)", fontweight='bold')
+
+            # --- 核心美化：网格与边框 ---
+            # 仅保留 Y 轴网格，虚线，灰色，置于底层
+            ax.grid(axis='y', linestyle='--', alpha=0.6, color='gray', zorder=0)
+            
+            # 移除顶部和右侧边框 (Despine)
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            # 加粗左侧和底部边框
+            ax.spines['left'].set_linewidth(1.5)
+            ax.spines['bottom'].set_linewidth(1.5)
+
+            # --- Y轴范围动态调整 ---
+            # 留出一点头部空间给误差棒
+            if dataset == "Caltech-101":
+                ax.set_ylim(85, 99) 
             else:
-                z_min = 0
-                z_max = 100
-            
-            # 柱子的尺寸和间距
-            num_methods = len(methods)
-            bar_width = 0.15   # x方向宽度（每个方法的柱子）
-            bar_depth = 0.15   # y方向深度（每个方法的柱子）
-            method_spacing = 0.2  # 方法之间的间距
-            
-            # 为每个方法绘制柱状图
-            for method_idx, method in enumerate(methods):
-                data_matrix = all_data_matrices[method]
-                color = method_colors.get(method, '#808080')
-                
-                # 计算该方法的x偏移量（使不同方法的柱子并排显示）
-                x_offset = (method_idx - (num_methods - 1) / 2) * (bar_width + method_spacing)
-                
-                # 构建柱状图数据
-                x_positions = []
-                y_positions = []
-                z_positions = []
-                dx_values = []
-                dy_values = []
-                dz_values = []
-                
-                for n_idx, noise in enumerate(noise_list):
-                    for r_idx, rank in enumerate(rank_list):
-                        accuracy = data_matrix[n_idx, r_idx]
-                        if accuracy > 0:  # 只绘制有效数据
-                            x_positions.append(n_idx + x_offset - bar_width / 2)
-                            y_positions.append(r_idx - bar_depth / 2)
-                            z_positions.append(0)  # 柱子从z=0开始
-                            dx_values.append(bar_width)
-                            dy_values.append(bar_depth)
-                            dz_values.append(accuracy)
-                
-                # 绘制3D柱状图
-                if x_positions:
-                    ax.bar3d(x_positions, y_positions, z_positions,
-                            dx_values, dy_values, dz_values,
-                            color=color, alpha=0.8, edgecolor='black', linewidth=0.5,
-                            label=method_labels.get(method, method))
-            
-            # 设置坐标轴
-            ax.set_xlabel(r'Noise Level ($\epsilon$)', fontweight='bold', labelpad=12)
-            ax.set_ylabel(r'Rank ($r$)', fontweight='bold', labelpad=12)
-            zlabel_text = 'Neighbor Accuracy (%)' if use_neighbor else 'Local Accuracy (%)'
-            ax.set_zlabel(zlabel_text, fontweight='bold', labelpad=12)
-            
-            # 设置x轴刻度（noise）
-            ax.set_xticks(np.arange(len(noise_list)))
-            ax.set_xticklabels([f'{noise:.2f}' for noise in noise_list])
-            
-            # 设置y轴刻度（rank）
-            ax.set_yticks(np.arange(len(rank_list)))
-            y_labels = [str(r) if r != 16 else 'Full' for r in rank_list]
-            ax.set_yticklabels(y_labels)
-            
-            # 设置z轴范围和刻度
-            ax.set_zlim(bottom=0, top=z_max)
-            z_ticks = np.arange(0, int(z_max) + 1, 5)
-            ax.set_zticks(z_ticks)
-            # 设置z轴刻度标签大小
-            ax.tick_params(axis='z', labelsize=16 + 4)
-            
-            # 设置标题
-            ax.set_title(f'{dataset.upper()} - {zlabel_text}', 
-                       fontsize=20, fontweight='bold', pad=15)
-            
-            # 添加图例
-            ax.legend(loc='upper left', fontsize=14, framealpha=0.9)
-            
-            # 设置视角（可以调整以获得最佳视觉效果）
-            ax.view_init(elev=25, azim=45)
-            
-            # 添加网格
-            ax.grid(True, alpha=0.3)
-            
-            # 保存图片
-            fig_dir.mkdir(parents=True, exist_ok=True)
-            postfix = '_postprocessed' if use_postprocess else ''
-            output_path = fig_dir / f'exp2_{dataset}_{acc_type}_3d_bar{postfix}.pdf'
-            plt.savefig(output_path, dpi=300, bbox_inches='tight')
-            
-            print(f"✅ Exp2 3D Plot Saved: {output_path}")
+                ax.set_ylim(45, 70)
+
+    # ================= 4. 全局图例与保存 =================
+    # 获取图例句柄
+    handles, labels = axes[0, 0].get_legend_handles_labels()
+    
+    # 在顶部居中放置图例，无边框，背景透明
+    fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.0), 
+               ncol=4, frameon=False, columnspacing=1.5)
+
+    plt.tight_layout()
+    # 调整顶部边距，防止标题被图例遮挡
+    # 减少上下子图间距(hspace)，增加图和图例之间的间距(top降低)
+    plt.subplots_adjust(top=0.88, hspace=0.15, wspace=0.15) 
+
+    # 路径处理
+    save_dir = Path("figures") # 或者是 DEFAULT_FIG_DIR
+    save_dir.mkdir(exist_ok=True)
+    
+    pdf_path = save_dir / f"{save_name}.pdf"
+    
+    plt.savefig(pdf_path, bbox_inches='tight')
+
+    print(f"✅ 学术图表已生成:\n - {pdf_path}")
+    
+    plt.close()
+
+
+
+    """
+    绘制参数敏感性分析的折线图 (Line Chart)。
+    包含三个子图：Rank, TopK, Schedule Factor (p)。
+    采用顶刊学术风格。
+    """
+
+    # ================= 0. 全局样式设置 (Academic Style) =================
+    academic_params = {
+        'font.family': 'serif',
+        'font.serif': ['DejaVu Serif', 'Liberation Serif', 'serif'],  # 字体回退
+        'font.size': 14,
+        'axes.labelsize': 14,
+        'axes.titlesize': 16,
+        'xtick.labelsize': 12 + 4,
+        'ytick.labelsize': 12 + 4,
+        'legend.fontsize': 14,
+        'axes.linewidth': 1.2,
+        'lines.linewidth': 2,
+        'lines.markersize': 8,
+        'mathtext.fontset': 'stix',
+    }
+    plt.rcParams.update(academic_params)
+
+    # ================= 1. 数据准备 =================
+    # 将数据组织为字典，方便循环处理
+    # 注意：这里使用的是 Oxford Flowers 的数据
+    results = {
+        "Rank": {
+            "x": [1, 2, 4, 8, 16],
+            "y_eps_01":  [69.86, 70.76, 67.66, 70.14, 69.85], # epsilon=0.1
+            "y_eps_001": [66.79, 66.42, 66.08, 66.08, 65.63], # epsilon=0.01
+            "xlabel": "Rank ($r$)",
+            "title": "(a) Impact of Rank",
+            "xticks": [1, 2, 4, 8, 16] # 强制显示这些刻度
+        },
+        "TopK": {
+            "x": [2, 4, 6, 8],
+            "y_eps_01":  [70.61, 70.41, 70.67, 70.14],
+            "y_eps_001": [66.47, 66.28, 65.58, 66.08],
+            "xlabel": "TopK ($K$)",
+            "title": "(b) Impact of TopK",
+            "xticks": [2, 4, 6, 8]
+        },
+        "P_Factor": {
+            "x": [0, 0.2, 0.5, 1.0],
+            "y_eps_01":  [70.50, 70.14, 69.89, 69.61],
+            "y_eps_001": [67.08, 66.08, 65.07, 60.65],
+            "xlabel": r"Schedule Factor ($p_\chi$)",
+            "title": r"(c) Impact of $p_\chi$",
+            "xticks": [0, 0.2, 0.5, 1.0]
+        }
+    }
+
+    # ================= 2. 绘图配置 =================
+    # 配色：蓝色(0.1) 和 红色(0.01)
+    colors = {'eps_01': '#377eb8', 'eps_001': '#e41a1c'}
+    markers = {'eps_01': 'o', 'eps_001': 's'} # 圆圈和方块
+    linestyles = {'eps_01': '-', 'eps_001': '--'} # 实线和虚线
+
+    # 初始化画布：1行3列
+    fig, axes = plt.subplots(1, 3, figsize=(16, 4.5))
+
+    keys = ["Rank", "TopK", "P_Factor"]
+
+    # ================= 3. 循环绘图 =================
+    for i, key in enumerate(keys):
+        ax = axes[i]
+        data = results[key]
+        x_vals = data["x"]
+
+        # --- 绘制线条 ---
+        # Line 1: epsilon = 0.1
+        ax.plot(x_vals, data["y_eps_01"], 
+                color=colors['eps_01'], 
+                marker=markers['eps_01'], 
+                linestyle=linestyles['eps_01'],
+                label=r'$\epsilon=0.1$' if i == 1 else "") # 标签仅加一次用于生成图例
+
+        # Line 2: epsilon = 0.01
+        ax.plot(x_vals, data["y_eps_001"], 
+                color=colors['eps_001'], 
+                marker=markers['eps_001'], 
+                linestyle=linestyles['eps_001'],
+                label=r'$\epsilon=0.01$' if i == 1 else "")
+
+        # --- 样式调整 ---
+        ax.set_title(data["title"], fontweight='bold', pad=12)
+        ax.set_xlabel(data["xlabel"], fontweight='bold')
+        
+        # 仅在第一个图显示 Y 轴标签
+        if i == 0:
+            ax.set_ylabel("Local Accuracy (%)", fontweight='bold')
+
+        # 设置刻度
+        ax.set_xticks(data["xticks"])
+        
+        # 网格与边框 (Academic Style)
+        ax.grid(True, linestyle='--', alpha=0.5, color='gray')
+        
+        # 去掉上方和右侧边框 (Despine)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        
+        # 适当调整 Y 轴范围以留出空间
+        if key == "P_Factor":
+             ax.set_ylim(58, 72) # P因子下降较明显，调整范围
+        else:
+             ax.set_ylim(64, 72)
+
+    # ================= 4. 全局图例与保存 =================
+    # 提取图例句柄 (从中间的子图提取)
+    handles, labels = axes[1].get_legend_handles_labels()
+    
+    # 在顶部居中放置图例
+    fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.05), 
+               ncol=2, frameon=False, fontsize=14)
+
+    plt.tight_layout()
+    # 调整布局防止标题被图例遮挡
+    plt.subplots_adjust(top=0.85, wspace=0.25)
+
+    # 保存路径处理
+    save_dir = Path("figures")
+    save_dir.mkdir(exist_ok=True)
+    
+    pdf_path = save_dir / f"{save_name}.pdf"
+    png_path = save_dir / f"{save_name}.png"
+    
+    plt.savefig(pdf_path, bbox_inches='tight')
+    plt.savefig(png_path, bbox_inches='tight', dpi=300)
+    
+    print(f"✅ 敏感性分析图表已生成:\n - {pdf_path}")
+
+    if show_plot:
+        plt.show()
+    else:
             plt.close()
 
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.collections import PolyCollection
+from mpl_toolkits.mplot3d import Axes3D
+from pathlib import Path
+import matplotlib.ticker as ticker
 
-# ========== 图3（新增）: Exp2 多维分面折线图 ==========
-
-def plot_exp2_faceted_linechart(output_dir: Path, tail_epochs: int, fig_dir: Path, use_neighbor: bool = False):
-    
-    # --- 样式设置 ---
+# ================= 0. 配置与样式 =================
+def set_academic_style():
+    """配置学术风格的绘图参数"""
     plt.rcParams.update({
         'font.family': 'serif',
-        'font.serif': ['Times New Roman'],
+        'font.serif': ['Times New Roman', 'DejaVu Serif'],
+        'font.size': 12,
+        'axes.labelsize': 14,
+        'axes.titlesize': 16,
+        'xtick.labelsize': 12,
+        'ytick.labelsize': 12,
+        'legend.fontsize': 11,
         'mathtext.fontset': 'stix',
-        'grid.color': '#DDDDDD',
+        'figure.titlesize': 18,
+        'axes.linewidth': 1.0,
         'grid.linewidth': 0.5,
+        'grid.alpha': 0.3,
+        'grid.linestyle': '--'
     })
 
-    config = EXPERIMENT_CONFIGS['EXPERIMENT_2_ABLATION']
-    datasets = config['dataset_list']
-    methods = config['factorization_list']
-    rank_list = config['rank_list']
-    noise_list = config['noise_list']  # [0, 0.4, 0.1, 0.01]
+# ================= 1. 数据封装 =================
+def get_data():
+    """返回封装好的实验数据"""
     
-    # 颜色与标记
-    method_colors = {
-        'dpfpl': '#7f7f7f', 'sepfpl_time_adaptive': '#1f77b4', 
-        'sepfpl_hcse': '#2ca02c', 'sepfpl': '#d62728'
+    # 隐私预算标签 (用于Y轴)
+    # Group A: Rank & TopK (含 Noise=0)
+    eps_labels_A = [r'$\epsilon=0.01$', r'$\epsilon=0.1$', r'$\epsilon=0.4$', r'$\epsilon=\infty$'] 
+    # Group B: p (不含 Noise=0)
+    eps_labels_B = [r'$\epsilon=0.01$', r'$\epsilon=0.1$', r'$\epsilon=0.4$']
+
+    # 颜色配置 (用于不同 Epsilon)
+    # 使用渐变色：深蓝 -> 蓝 -> 浅蓝 -> 紫(无噪)
+    colors_A = ['#08519c', '#3182bd', '#6baed6', '#9e9ac8'] 
+    colors_B = ['#08519c', '#3182bd', '#6baed6']
+
+    # --- Rank Data ---
+    rank_x = [1, 2, 4, 8, 16]
+    # [Dogs_Loc, Dogs_Ngh, Flowers_Loc, Flowers_Ngh]
+    # Data order: [Noise=0, 0.4, 0.1, 0.01] -> Reorder to [0.01, 0.1, 0.4, 0] for plotting (Back to Front)
+    # Raw data order from user: 0, 0.4, 0.1, 0.01
+    # Target plotting order (y=0..3): 0.01, 0.1, 0.4, 0
+    _rank_raw = [
+        [[61.15, 61.46, 61.21, 59.01, 60.43], [58.35, 59.60, 60.32, 60.61, 61.19], [58.28, 60.28, 60.10, 59.14, 61.10], [56.24, 58.13, 57.32, 56.92, 56.84]], # Dogs Loc
+        [[61.97, 61.60, 60.55, 59.40, 59.94], [58.62, 59.41, 59.67, 60.19, 60.76], [57.57, 59.55, 59.94, 59.62, 59.77], [56.72, 57.27, 56.29, 56.15, 56.71]], # Dogs Ngh
+        [[69.81, 71.43, 69.16, 70.03, 68.85], [69.46, 70.95, 68.95, 70.99, 70.60], [69.86, 70.76, 67.66, 70.14, 69.85], [66.79, 66.42, 66.08, 66.08, 65.63]], # Flowers Loc
+        [[70.65, 71.24, 69.54, 69.54, 69.47], [69.25, 70.95, 68.63, 71.13, 70.36], [69.81, 70.37, 66.64, 69.71, 69.92], [66.27, 65.94, 65.66, 65.77, 66.85]]  # Flowers Ngh
+    ]
+    # Reorder function: [0, 1, 2, 3] -> [3, 2, 1, 0] to match labels [0.01, 0.1, 0.4, 0]
+    # User Raw: 0(idx0), 0.4(idx1), 0.1(idx2), 0.01(idx3)
+    # Target:   0.01, 0.1, 0.4, 0
+    reorder_idx_A = [3, 2, 1, 0] 
+    rank_data = [[dataset[i] for i in reorder_idx_A] for dataset in _rank_raw]
+
+    # --- TopK Data ---
+    topk_x = [2, 4, 6, 8]
+    _topk_raw = [
+        [[59.16, 59.22, 58.87, 59.01], [60.67, 60.49, 60.10, 60.61], [59.65, 59.85, 60.04, 59.14], [58.39, 56.50, 57.49, 56.92]],
+        [[59.70, 60.34, 59.74, 59.40], [60.40, 60.16, 60.13, 60.19], [59.55, 59.81, 59.51, 59.62], [58.09, 56.19, 57.01, 56.15]],
+        [[70.27, 70.17, 69.88, 70.03], [71.27, 71.27, 70.78, 70.99], [70.61, 70.41, 70.67, 70.14], [66.47, 66.28, 65.58, 66.08]],
+        [[69.67, 69.53, 69.30, 69.54], [70.95, 70.66, 70.19, 71.13], [69.96, 70.13, 70.09, 69.71], [66.36, 66.01, 65.58, 65.77]]
+    ]
+    topk_data = [[dataset[i] for i in reorder_idx_A] for dataset in _topk_raw]
+
+    # --- P Data ---
+    p_x = [0, 0.2, 0.5, 1]
+    # User Raw: 0.4(idx0), 0.1(idx1), 0.01(idx2)
+    # Target:   0.01, 0.1, 0.4
+    reorder_idx_B = [2, 1, 0]
+    _p_raw = [
+        [[60.66, 60.61, 59.86, 60.27], [59.56, 59.14, 60.06, 60.36], [58.28, 56.92, 56.47, 57.22]],
+        [[60.18, 60.19, 59.77, 59.68], [59.73, 59.62, 59.91, 59.91], [58.52, 56.15, 56.03, 55.96]],
+        [[70.65, 70.99, 70.91, 71.19], [70.50, 70.14, 69.89, 69.61], [67.08, 66.08, 65.07, 60.65]],
+        [[70.36, 71.13, 70.35, 70.21], [69.81, 69.71, 70.10, 69.24], [67.00, 65.77, 64.97, 59.53]]
+    ]
+    p_data = [[dataset[i] for i in reorder_idx_B] for dataset in _p_raw]
+
+    return {
+        "params": [
+            {"data": rank_data, "x": rank_x, "xlabel": "Rank ($r$)", "title": "(a) Impact of Rank", "eps_labels": eps_labels_A, "colors": colors_A},
+            {"data": topk_data, "x": topk_x, "xlabel": "TopK ($K$)", "title": "(b) Impact of TopK", "eps_labels": eps_labels_A, "colors": colors_A},
+            {"data": p_data,   "x": p_x,    "xlabel": r"Schedule Factor ($p$)", "title": "(c) Impact of $p$", "eps_labels": eps_labels_B, "colors": colors_B}
+        ],
+        "datasets": [
+            {"name": "Stanford Dogs", "indices": [0, 1], "zlim": (55, 63)},
+            {"name": "Oxford Flowers", "indices": [2, 3], "zlim": (58, 72)}
+        ]
     }
-    method_markers = {'dpfpl': 'o', 'sepfpl_time_adaptive': 's', 'sepfpl_hcse': '^', 'sepfpl': 'D'}
+
+# ================= 2. 绘图核心函数 =================
+def plot_ribbon_subplot(ax, x_vals, dataset_data, eps_labels, colors, xlabel, title, zlim, show_zlabel=True):
+    """
+    在给定的 3D 轴上绘制单个参数的 Ribbon 图。
+    dataset_data: shape [num_eps, len(x)]，包含 Local 和 Neighbor 两种数据? 
+    不，这里传入的是单个数据集的单个指标数据列表。
+    为了在同一张图显示 Local 和 Neighbor，我们需要处理两条带子。
+    show_zlabel: 是否显示z轴标签，默认True
+    """
     
-    # 坐标映射
-    rank_indices = np.arange(len(rank_list))
-    # 为了拉大Y轴视觉距离，我们放大间隔
-    noise_indices = np.arange(len(noise_list)) * 1.5 
-
-    for dataset in datasets:
-        fig = plt.figure(figsize=(14, 10))
-        ax = fig.add_subplot(111, projection='3d')
+    # 调整视角
+    ax.view_init(elev=20, azim=-70)
+    
+    num_eps = len(eps_labels)
+    xs = np.arange(len(x_vals))
+    
+    # 辅助函数：将颜色转换为 RGB，用于调整亮度和色调
+    def adjust_color_for_neighbor(color, lighten_factor=0.25, shift_hue=0.05):
+        """调整颜色用于 Neighbor 线条：变浅并略微向红色调偏移"""
+        import matplotlib.colors as mcolors
+        rgb = mcolors.to_rgb(color)
+        # 向白色方向混合（变浅）
+        lightened = tuple(1 - (1 - c) * (1 - lighten_factor) for c in rgb)
+        # 略微增加红色分量，使颜色更暖
+        adjusted = (min(1.0, lightened[0] + shift_hue), lightened[1], lightened[2])
+        return adjusted
+    
+    # 辅助函数：绘制单条 Ribbon
+    def add_ribbon(y_index, z_values, color, label=None, linestyle='-', is_neighbor=False):
+        # 1. 顶部线条
+        line_color = adjust_color_for_neighbor(color) if is_neighbor else color
+        line_width = 2.2 if not is_neighbor else 2.0  # Local 线条更粗，更突出
+        ax.plot(xs, [y_index]*len(xs), z_values, 
+                color=line_color, linewidth=line_width, linestyle=linestyle,
+                marker='o', markersize=5 if not is_neighbor else 4, 
+                markerfacecolor='white', markeredgecolor=line_color, markeredgewidth=1.5,
+                zorder=10 + y_index, label=label)
         
-        # 1. 准备数据 - 读取真实数据
-        data_matrix = {m: np.zeros((len(noise_list), len(rank_list))) for m in methods}
-        
-        # 读取真实数据
-        exp_name = config['exp_name']
-        seed_list = config['seed_list']
-        num_users = config['num_users_list'][0]
-        exp_type = 'exp2'
-        
-        for method in methods:
-            for n_i, noise in enumerate(noise_list):
-                for r_i, rank in enumerate(rank_list):
-                    try:
-                        l_list, n_list = read_scheme(
-                            exp_name, dataset, rank, noise, methods,
-                            seed_list, num_users, output_dir, tail_epochs
-                        )
-                        
-                        # 使用后处理
-                        l_proc = postprocess_results(l_list, methods, exp_type)
-                        n_proc = postprocess_results(n_list, methods, exp_type)
-                        
-                        stat_list = n_proc if use_neighbor else l_proc
-                        method_idx = methods.index(method)
-                        stat_str = stat_list[method_idx] if method_idx < len(stat_list) else "N/A"
-                        
-                        if stat_str and stat_str != "N/A":
-                            parts = stat_str.split('±')
-                            mean_val = float(parts[0].strip())
-                            data_matrix[method][n_i, r_i] = mean_val
-                        else:
-                            data_matrix[method][n_i, r_i] = 0.0
-                    except Exception as e:
-                        print(f"Error reading data for {method}, rank {rank}, noise {noise}: {e}")
-                        data_matrix[method][n_i, r_i] = 0.0
-
-        # 计算 Z 轴范围
-        all_vals = [v for m in methods for row in data_matrix[m] for v in row if v > 0]
-        z_min = min(all_vals) - 5
-        z_max = max(all_vals) + 2
-
-        # 2. 绘制 "视觉地板" (Shelves) - 策略一
-        # 为每个 Noise Level 画一个不同颜色的半透明平面
-        # 为不同的noise值定义不同的背景色
-        noise_bg_colors = ['#e3f2fd', '#fff3e0', '#f3e5f5']  # 蓝色、橙色、紫色的浅色版本
-        
-        for n_idx_raw, y_pos in enumerate(noise_indices):
-            # 创建矩形顶点: (x_min, y, z_min) -> (x_max, y, z_min) -> ...
-            x_min, x_max = -0.5, len(rank_list) - 0.5
+        # 2. 填充面 (PolyCollection) - 仅用于 Local
+        if not is_neighbor:
+            verts = []
+            # 底部基准线 (z=zmin)
+            z_min = zlim[0]
+            polygon = [(x, z_min) for x in xs] + [(x, z) for x, z in zip(xs, z_values)][::-1]
+            verts.append(polygon)
             
-            # 根据noise索引选择对应的背景色
-            bg_color = noise_bg_colors[n_idx_raw % len(noise_bg_colors)]
-            
-            # 画平面上的网格线（伪地板）
-            ax.plot([x_min, x_max], [y_pos, y_pos], [z_min, z_min], color='gray', alpha=0.3, linewidth=1)
-            
-            # (可选) 添加一个淡淡的面，使用不同的背景色
-            verts = [[(x_min, y_pos, z_min), (x_max, y_pos, z_min), 
-                      (x_max, y_pos+0.5, z_min), (x_min, y_pos+0.5, z_min)]] #稍微有些宽度
-            poly = Poly3DCollection(verts, alpha=0.15, facecolor=bg_color)
-            ax.add_collection3d(poly)
-            
-            # 在地板左侧标注 Noise 值
-            ax.text(x_min - 0.5, y_pos, z_min, f"$\\epsilon={noise_list[n_idx_raw]}$", 
-                    fontsize=12, fontweight='bold', color='#333333', ha='right')
+            # 使用稍深的颜色用于填充，增加对比度
+            poly = PolyCollection(verts, facecolors=color, edgecolors=color, 
+                                 alpha=0.4, linewidths=0.5) # 降低透明度，添加边框
+            ax.add_collection3d(poly, zs=y_index, zdir='y')
+    
+    # 获取 Local 和 Neighbor 数据
+    # dataset_data 是个 list，包含 [loc_data_list, ngh_data_list]
+    loc_data_list = dataset_data[0]
+    ngh_data_list = dataset_data[1]
 
-        # 3. 绘制曲线 (Stadium Ordering) - 策略二
-        # 我们按 Noise 列表顺序绘制。
-        # 假设 noise_list = [0.4, 0.1, 0.01]。
-        # 0.4 (Acc低) 在 y=0 (前排)。0.01 (Acc高) 在 y=3 (后排)。
-        # Matplotlib 3D 的遮挡计算有时不完美，但在这种排列下，低不挡高，效果最好。
+    for i in range(num_eps):
+        # 颜色：越靠前（epsilon 越小）颜色越深，或者反之
+        c = colors[i]
         
-        for n_i, noise_val in enumerate(noise_list):
-            y_pos = noise_indices[n_i]
+        # 绘制 Local Ribbon（实线，带填充）
+        add_ribbon(i, loc_data_list[i], c, label=f"{eps_labels[i]}" if i==0 else None, 
+                  linestyle='-', is_neighbor=False)
+        
+        # 绘制 Neighbor Line（虚线，无填充，使用稍浅的颜色）
+        add_ribbon(i, ngh_data_list[i], c, linestyle='--', is_neighbor=True)
+
+    # --- 坐标轴设置 ---
+    # X轴
+    ax.set_xticks(xs)
+    ax.set_xticklabels([str(x) for x in x_vals])
+    ax.set_xlabel(xlabel, labelpad=5, fontweight='bold')
+    
+    # Y轴
+    ax.set_yticks(np.arange(num_eps))
+    ax.set_yticklabels(eps_labels, verticalalignment='baseline', horizontalalignment='left')
+    # 调整 Y 轴标签角度
+    plt.setp(ax.get_yticklabels(), fontsize=12)
+    
+    # Z轴
+    ax.set_zlim(zlim)
+    if show_zlabel:
+        ax.set_zlabel("Accuracy (%)", fontweight='bold', labelpad=5)
+    
+    # 标题
+    # ax.set_title(title, y=1.05, fontweight='bold')
+    
+    # 优化面板显示 - 使用更清晰的背景色
+    # 使用淡蓝色背景，提高对比度
+    pane_color = '#f0f0f5'  # 淡蓝灰色
+    
+    ax.xaxis.pane.fill = True
+    ax.xaxis.pane.set_facecolor(pane_color)
+    ax.xaxis.pane.set_alpha(0.3)
+    
+    ax.yaxis.pane.fill = True
+    ax.yaxis.pane.set_facecolor(pane_color)
+    ax.yaxis.pane.set_alpha(0.3)
+    
+    ax.zaxis.pane.fill = True
+    ax.zaxis.pane.set_facecolor(pane_color)
+    ax.zaxis.pane.set_alpha(0.3)
+    
+    # 设置坐标轴颜色，增强可见性
+    ax.xaxis.line.set_color('#666666')
+    ax.yaxis.line.set_color('#666666')
+    ax.zaxis.line.set_color('#666666')
+    
+    ax.grid(False) # 移除默认网格
+    
+    # 手动添加 Z 轴网格线 (仅在背板) - 使用更明显的颜色
+    for z in np.linspace(zlim[0], zlim[1], 5):
+        ax.plot([xs[0], xs[-1]], [num_eps-1, num_eps-1], [z, z], 
+                color='#999999', alpha=0.3, linestyle='--', linewidth=0.8)
+
+
+def plot_sensitivity_analysis(save_name="sensitivity_analysis_refined", show_plot=True):
+    set_academic_style()
+    data_pack = get_data()
+    
+    # 为每个数据集生成一张大图 (1行3列)
+    for ds_conf in data_pack["datasets"]:
+        ds_name = ds_conf["name"]
+        indices = ds_conf["indices"] # [loc_idx, ngh_idx]
+        zlim = ds_conf["zlim"]
+        
+        fig = plt.figure(figsize=(18, 6))
+        # fig.suptitle(f"Parameter Sensitivity on {ds_name}", fontsize=20, y=0.95)
+        
+        num_params = len(data_pack["params"])
+        for i, param_conf in enumerate(data_pack["params"]):
+            ax = fig.add_subplot(1, 3, i+1, projection='3d')
             
-            for method in methods:
-                ys = data_matrix[method][n_i, :]
-                if np.sum(ys) == 0: continue
-                
-                color = method_colors.get(method, 'k')
-                marker = method_markers.get(method, 'o')
-                
-                # --- 策略三：垂直帘幕 (Ribbons) ---
-                # 只给特定的方法（比如你的方法 sepfpl）加帘子，或者给所有加但非常淡
-                if method == 'sepfpl': 
-                    # 构建多边形顶点
-                    verts = []
-                    for i, r_idx in enumerate(rank_indices):
-                        verts.append((r_idx, y_pos, ys[i])) # 顶线
-                    for i, r_idx in enumerate(reversed(rank_indices)):
-                        verts.append((r_idx, y_pos, z_min)) # 底线
-                    
-                    poly = Poly3DCollection([verts], alpha=0.15, facecolor=color)
-                    ax.add_collection3d(poly)
+            # 提取该参数下，该数据集的 Local 和 Neighbor 数据
+            # param_conf["data"] 结构是 [Dogs_Loc, Dogs_Ngh, Flowers_Loc, Flowers_Ngh]
+            # 我们需要取出 indices 对应的两个列表
+            current_ds_data = [param_conf["data"][indices[0]], param_conf["data"][indices[1]]]
+            
+            # 只有最右边的子图（最后一个）显示z轴标签
+            show_zlabel = (i == num_params - 1)
+            
+            plot_ribbon_subplot(
+                ax, 
+                param_conf["x"], 
+                current_ds_data, 
+                param_conf["eps_labels"], 
+                param_conf["colors"], 
+                param_conf["xlabel"], 
+                param_conf["title"],
+                zlim,
+                show_zlabel=show_zlabel
+            )
+            
+            # 添加自定义图例 (仅在第一个子图)
+            if i == 0:
+                # 创建虚拟句柄用于图例
+                from matplotlib.lines import Line2D
+                from matplotlib.patches import Patch
+                legend_elements = [
+                    Line2D([0], [0], color='black', lw=2, label='Local Acc.'),
+                    Line2D([0], [0], color='black', lw=2, linestyle='--', label='Neighbor Acc.'),
+                ]
+                ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(-0.1, 1.0), fontsize=10, frameon=False)
 
-                # 绘制实线
-                label = method if n_i == 0 else None
-                ax.plot(rank_indices, [y_pos]*len(rank_list), ys, 
-                        color=color, marker=marker, markersize=6, 
-                        linewidth=2, alpha=1.0, label=label, zorder=10 + n_i)
-                
-                # 绘制投影线 (Drop lines)
-                for r_i, val in enumerate(ys):
-                    ax.plot([r_i, r_i], [y_pos, y_pos], [z_min, val], 
-                            color=color, linewidth=0.5, alpha=0.3, linestyle=':')
+        plt.subplots_adjust(left=0.1, right=0.90, wspace=0.01)
+        
+        save_path = Path("figures") / f"{save_name}_{ds_name.lower().replace(' ', '_')}.pdf"
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(save_path, bbox_inches='tight', dpi=300)
+        print(f"Saved: {save_path}")
+        
+        if show_plot:
+            plt.show()
+        else:
+            plt.close()
 
-        # 4. 美化
-        ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-        ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-        ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-        
-        ax.set_xlabel('\nRank ($r$)', fontweight='bold')
-        ax.set_zlabel('\nAccuracy (%)', fontweight='bold')
-        
-        # Y轴不需要刻度了，因为我们直接在地板上标了字
-        ax.set_yticks([]) 
-        ax.set_ylabel('\nNoise Level ($\\epsilon$)', fontweight='bold', labelpad=0)
-
-        ax.set_xticks(rank_indices)
-        ax.set_xticklabels([str(r) if r!=16 else 'Full' for r in rank_list])
-        ax.set_zlim(z_min, z_max)
-        
-        # 视角调整：拉高仰角，看得清“地板”的间隔
-        ax.view_init(elev=30, azim=-60)
-        
-        # 图例
-        ax.legend(loc='upper center', bbox_to_anchor=(0.5, 0.95), ncol=4, frameon=False)
-        
-        # 保存
-        fig_dir.mkdir(parents=True, exist_ok=True)
-        acc_type = 'neighbor' if use_neighbor else 'local'
-        output_path = fig_dir / f'exp2_{dataset}_{acc_type}_3d_linechart.pdf'
-        plt.tight_layout()
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
-        print(f"✅ Exp2 3D折线图已保存: {output_path}")
-        plt.close()
 
 
 # ========== 主函数 ==========
@@ -973,39 +990,29 @@ def main():
     parser.add_argument("--fig-dir", type=Path, default=DEFAULT_FIG_DIR, help="图片保存目录")
     
     parser.add_argument("--plot1", action="store_true", help="绘制图1: Exp1噪声折线图")
-    parser.add_argument("--plot2", action="store_true", help="绘制图2: Exp2柱状图（后处理数据）")
-    parser.add_argument("--plot3", action="store_true", help="绘制图3: Exp2多维分面折线图")
-    parser.add_argument("--plot4", action="store_true", help="绘制图4: Exp2 3D立体柱状图（x=noise, y=rank, z=accuracy）")
-    parser.add_argument("--all", action="store_true", help="绘制所有图表")
-    parser.add_argument("--use-neighbor", action="store_true", help="使用Neighbor Accuracy（仅对plot3有效）")
-    parser.add_argument("--no-postprocess", action="store_true", 
-                       help="禁用后处理（仅对plot1和plot2有效，默认启用后处理）")
+    parser.add_argument("--ablation", action="store_true", help="绘制消融实验分组柱状图")
+    parser.add_argument("--sensitivity", action="store_true", help="绘制参数敏感性分析折线图")
     
     args = parser.parse_args()
     
-    if not (args.plot1 or args.plot2 or args.plot3 or args.plot4 or args.all):
-        print("⚠️  未指定要绘制的图表，使用 --all 绘制所有图表，或使用 --plot1/--plot2/--plot3/--plot4 选择特定图表")
-        args.all = True
+    if not (args.plot1 or args.ablation or args.sensitivity):
+        print("⚠️  未指定要绘制的图表，使用 --plot1 绘制Exp1噪声折线图，或使用 --ablation 绘制消融实验图，或使用 --sensitivity 绘制敏感性分析图")
+        args.plot1 = True
     
-    use_postprocess = not args.no_postprocess  # 默认启用后处理
-    
-    if args.all or args.plot1:
+    if args.plot1:
         print("\n📊 正在绘制图1: Exp1噪声折线图...")
         plot_exp1_noise_linecharts(args.output_dir, args.tail_epochs, args.fig_dir)
     
-    if args.all or args.plot2:
-        print("\n📊 正在绘制图2: Exp2柱状图（后处理数据）...")
-        plot_exp2_bar_charts(args.output_dir, args.tail_epochs, args.fig_dir, use_postprocess)
+    if args.ablation:
+        print("\n📊 正在绘制消融实验分组柱状图...")
+        plot_ablation_study()
     
-    if args.all or args.plot3:
-        print("\n📊 正在绘制图3: Exp2多维分面折线图...")
-        plot_exp2_faceted_linechart(args.output_dir, args.tail_epochs, args.fig_dir, args.use_neighbor)
+    if args.sensitivity:
+        print("\n📊 正在绘制参数敏感性分析折线图...")
+        plot_sensitivity_analysis()
     
-    if args.all or args.plot4:
-        print("\n📊 正在绘制图4: Exp2 3D立体柱状图...")
-        plot_exp2_3d_bar_charts(args.output_dir, args.tail_epochs, args.fig_dir, use_postprocess)
-    
-    print(f"\n✅ 所有图表已保存到: {args.fig_dir}")
+    if args.plot1:
+        print(f"\n✅ 所有图表已保存到: {args.fig_dir}")
 
 
 if __name__ == "__main__":

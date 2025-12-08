@@ -344,7 +344,7 @@ def generate_shadow_data(args, local_trainer, local_weights, logger):
     """
     生成 Shadow 数据用于 MIA 攻击模型训练。
     
-    在训练完成后，收集模型对训练集和测试集的预测结果，保存为 shadow 数据。
+    在训练完成后，收集所有客户端模型对训练集和测试集的预测结果，保存为 shadow 数据。
     """
     import torch.nn.functional as F
     
@@ -353,43 +353,61 @@ def generate_shadow_data(args, local_trainer, local_weights, logger):
     output_dir = os.path.join(os.path.expanduser('~/code/sepfpl/outputs'), wandb_group, dataset_name)
     os.makedirs(output_dir, exist_ok=True)
     
-    # 使用最大客户端的模型来生成 shadow 数据
-    max_idx = local_trainer.max_idx
-    
-    # 加载训练好的模型权重
-    local_trainer.model.load_state_dict(local_weights[max_idx], strict=False)
-    local_trainer.set_model_mode("eval")
+    # 获取所有客户端数量
+    num_users = args.num_users
     
     # 收集预测结果
     shadow_data = []
     
-    logger.info("正在收集训练集预测结果...")
-    train_loader = local_trainer.fed_train_loader_x_dict[max_idx]
-    for batch_idx, batch in enumerate(train_loader):
-        images = batch["img"].to(local_trainer.device)
-        labels = batch["label"].to(local_trainer.device)
-        
-        with torch.no_grad():
-            outputs = local_trainer.model_inference(images)
-            predictions = F.softmax(outputs, dim=1)
-        
-        for pred, label in zip(predictions.cpu(), labels.cpu()):
-            # (prediction, membership=1, label)
-            shadow_data.append((pred, torch.tensor(1), label))
+    logger.info(f"开始收集所有 {num_users} 个客户端的 Shadow 数据...")
     
-    logger.info("正在收集测试集预测结果...")
-    test_loader = local_trainer.fed_test_local_loader_x_dict[max_idx]
-    for batch_idx, batch in enumerate(test_loader):
-        images = batch["img"].to(local_trainer.device)
-        labels = batch["label"].to(local_trainer.device)
+    # 遍历所有客户端
+    for client_idx in range(num_users):
+        logger.info(f"正在处理客户端 {client_idx+1}/{num_users}...")
         
-        with torch.no_grad():
-            outputs = local_trainer.model_inference(images)
-            predictions = F.softmax(outputs, dim=1)
+        # 加载当前客户端的模型权重
+        local_trainer.model.load_state_dict(local_weights[client_idx], strict=False)
+        local_trainer.set_model_mode("eval")
         
-        for pred, label in zip(predictions.cpu(), labels.cpu()):
-            # (prediction, membership=0, label)
-            shadow_data.append((pred, torch.tensor(0), label))
+        # 收集当前客户端的训练集预测结果
+        if client_idx in local_trainer.fed_train_loader_x_dict:
+            train_loader = local_trainer.fed_train_loader_x_dict[client_idx]
+            client_train_count = 0
+            for batch_idx, batch in enumerate(train_loader):
+                images = batch["img"].to(local_trainer.device)
+                labels = batch["label"].to(local_trainer.device)
+                
+                with torch.no_grad():
+                    outputs = local_trainer.model_inference(images)
+                    predictions = F.softmax(outputs, dim=1)
+                
+                for pred, label in zip(predictions.cpu(), labels.cpu()):
+                    # (prediction, membership=1, label)
+                    shadow_data.append((pred, torch.tensor(1), label))
+                    client_train_count += 1
+            logger.info(f"  客户端 {client_idx} 训练集样本数: {client_train_count}")
+        else:
+            logger.warning(f"  客户端 {client_idx} 的训练集数据加载器不存在，跳过")
+        
+        # 收集当前客户端的测试集预测结果
+        if client_idx in local_trainer.fed_test_local_loader_x_dict:
+            test_loader = local_trainer.fed_test_local_loader_x_dict[client_idx]
+            client_test_count = 0
+            for batch_idx, batch in enumerate(test_loader):
+                images = batch["img"].to(local_trainer.device)
+                labels = batch["label"].to(local_trainer.device)
+                
+                with torch.no_grad():
+                    outputs = local_trainer.model_inference(images)
+                    predictions = F.softmax(outputs, dim=1)
+                
+                for pred, label in zip(predictions.cpu(), labels.cpu()):
+                    # (prediction, membership=0, label)
+                    shadow_data.append((pred, torch.tensor(0), label))
+                    client_test_count += 1
+            logger.info(f"  客户端 {client_idx} 测试集样本数: {client_test_count}")
+        else:
+            logger.warning(f"  客户端 {client_idx} 的测试集数据加载器不存在，跳过")
     
     # 保存 shadow 数据
     shadow_file = os.path.join(output_dir, f"shadow_{args.noise}_{args.seed}.pkl")
@@ -667,14 +685,27 @@ def main(args):
                 # 无 HCSE 时，直接对 global_gradients 取简单平均
                 avg_global_gradient = sum(global_gradients) / cfg.DATASET.USERS
 
-            # 若启用 DP，则在全局梯度上叠加高斯噪声
+            # 若启用 DP，则在全局梯度和聚类梯度上叠加高斯噪声
             if args.noise > 0:
+                # 为全局梯度添加噪声
                 noise = torch.normal(
                     0, std,
                     size=avg_global_gradient.shape,
                     device=avg_global_gradient.device
                 )
                 avg_global_gradient += noise
+                
+                # 为聚类梯度添加噪声
+                if cluster_gradients_to_apply is not None:
+                    for idx in cluster_gradients_to_apply:
+                        cluster_grad = cluster_gradients_to_apply[idx]
+                        if cluster_grad is not None:
+                            cluster_noise = torch.normal(
+                                0, std,
+                                size=cluster_grad.shape,
+                                device=cluster_grad.device
+                            )
+                            cluster_gradients_to_apply[idx] = cluster_grad + cluster_noise
 
             # ====== 回传与本地权重同步 ======
             for idx in idxs_users:
@@ -872,6 +903,15 @@ def main(args):
                 if results_neighbor is not None:
                     log_payload["test/neighbor_acc_avg"] = avg_neighbor_acc
                 wandb.log(log_payload, step=epoch + 1)
+
+        # ---------- 确保 local_weights 包含最新的权重（从 buffer 同步） ----------
+        # 如果测试被跳过，最后一个 batch 的权重只存在于 buffer 中，需要同步到 local_weights
+        for idx in idxs_users:
+            for key, buffer in key_to_buffer.items():
+                if buffer is None or buffer[idx] is None:
+                    continue
+                # 确保 local_weights 包含 buffer 中的最新权重
+                local_weights[idx][key] = copy.deepcopy(buffer[idx])
 
         # ---------- 保存检查点 & 精度曲线 ----------
         save_checkpoint(args, epoch, local_weights, local_acc_list, neighbor_acc_list)

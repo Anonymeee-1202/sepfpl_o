@@ -93,19 +93,46 @@ python table.py --mia-only
 ```bash
 python table.py --exp1 --output-file res/exp1.txt
 
-python table.py --exp1 --no-postprocess --output-file res/exp1-raw.txt
+python table.py --exp1 --no-postprocess --output-file res/exp1-k8-p0.2-raw.txt
+
+python table.py --exp3-rdp-p --no-postprocess --output-file res/exp3-raw.txt
+
+python table.py --exp3-topk --no-postprocess --output-file res/exp3-topk-raw.txt
+
+python table.py --exp3 --no-postprocess --output-file res/exp3-raw
 ```
 
-#### 示例 2：生成实验2的表格，禁用后处理
+#### 示例 2：生成实验2的表格
 
 ```bash
-python table.py --exp2 --no-postprocess
+python table.py --exp2 --output-file res/exp2-ablation.txt
+
+python table.py --exp2 --no-postprocess --output-file res/exp2-ablation-raw.txt
 ```
 
 #### 示例 3：生成 MIA 实验表格
 
 ```bash
-python table.py --mia-only --mia-exp-name exp4-mia
+python table.py 
+
+# 使用命令行参数
+python table.py --exp4 --no-postprocess --output-file res/exp4-mia.txt
+
+# 或者直接指定
+python table.py --exp4-mia
+
+
+# 生成实验3.1 (rank敏感性分析) 的表格
+python table.py --exp3-rank --no-postprocess --output-file res/exp3-rank.txt
+
+# 生成实验3.2 (topk敏感性分析) 的表格
+python table.py --exp3-topk --no-postprocess --output-file res/exp3-topk.txt
+
+# 生成实验3.3 (rdp_p敏感性分析) 的表格
+python table.py --exp3-rdp-p --no-postprocess --output-file res/exp3-rdp-p.txt
+
+# 生成所有实验3的表格
+python table.py --exp3 --no-postprocess --output-file res/exp3-all.txt
 ```
 
 #### 示例 4：使用自定义输出目录和统计轮次

@@ -76,7 +76,7 @@ INTERPOLATION_MODES = {
 
 class AttackModel(nn.Module):
     """
-    成员推理攻击模型
+    成员推理攻击模型（增强版）
     
     输入：目标模型的预测概率向量（posterior probabilities）
     输出：二分类结果（0=非成员, 1=成员）
@@ -87,9 +87,20 @@ class AttackModel(nn.Module):
     
     def __init__(self, total_classes: int):
         super(AttackModel, self).__init__()
-        self.fc1 = nn.Linear(total_classes, 32)
-        self.fc2 = nn.Linear(32, 2)  # 二分类：非成员/成员
-        self.sigmoid = nn.Sigmoid()
+        # 增强的网络结构：更深的网络，添加批归一化和 dropout
+        self.fc1 = nn.Linear(total_classes, 128)
+        self.bn1 = nn.BatchNorm1d(128)
+        self.dropout1 = nn.Dropout(0.3)
+        
+        self.fc2 = nn.Linear(128, 64)
+        self.bn2 = nn.BatchNorm1d(64)
+        self.dropout2 = nn.Dropout(0.2)
+        
+        self.fc3 = nn.Linear(64, 32)
+        self.bn3 = nn.BatchNorm1d(32)
+        self.dropout3 = nn.Dropout(0.1)
+        
+        self.fc4 = nn.Linear(32, 2)  # 二分类：非成员/成员
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -99,11 +110,53 @@ class AttackModel(nn.Module):
             x: 输入特征，形状为 (batch_size, total_classes)
             
         Returns:
-            输出概率，形状为 (batch_size, 2)
+            输出 logits，形状为 (batch_size, 2)
         """
-        x = torch.relu(self.fc1(x))
+        # 检查 batch size，BatchNorm 在训练模式下需要 batch size > 1
+        # 如果 batch size 为 1，临时将 BatchNorm 设置为 eval 模式
+        batch_size = x.size(0) if x.dim() > 0 else 1
+        if batch_size == 1:
+            # 保存原始训练状态
+            bn1_training = self.bn1.training
+            bn2_training = self.bn2.training
+            bn3_training = self.bn3.training
+            # 临时设置为 eval 模式
+            self.bn1.eval()
+            self.bn2.eval()
+            self.bn3.eval()
+        
+        # 第一层
+        x = self.fc1(x)
+        if x.dim() > 1:
+            x = self.bn1(x)
+        x = torch.relu(x)
+        x = self.dropout1(x)
+        
+        # 第二层
         x = self.fc2(x)
-        x = self.sigmoid(x)
+        if x.dim() > 1:
+            x = self.bn2(x)
+        x = torch.relu(x)
+        x = self.dropout2(x)
+        
+        # 第三层
+        x = self.fc3(x)
+        if x.dim() > 1:
+            x = self.bn3(x)
+        x = torch.relu(x)
+        x = self.dropout3(x)
+        
+        # 恢复 BatchNorm 的原始训练状态
+        if batch_size == 1:
+            if bn1_training:
+                self.bn1.train()
+            if bn2_training:
+                self.bn2.train()
+            if bn3_training:
+                self.bn3.train()
+        
+        # 输出层（不使用激活函数，让 CrossEntropyLoss 处理）
+        x = self.fc4(x)
         return x
 
 
@@ -343,6 +396,14 @@ def extend_cfg(cfg, args, mode: str = 'test'):
         cfg.OPTIM.MAX_EPOCH = 1  # 本地训练轮数
         cfg.OPTIM.LR = args.lr  # 学习率
 
+        # SepFPL 相关参数
+        sepfpl_topk = getattr(args, 'sepfpl_topk', None)
+        rdp_p = getattr(args, 'rdp_p', None)
+        if sepfpl_topk is not None:
+            cfg.SEPFPL_TOPK = sepfpl_topk
+        if rdp_p is not None:
+            cfg.RDP_P = rdp_p
+
         cfg.MODEL.BACKBONE.PRETRAINED = True
 
 
@@ -394,15 +455,64 @@ def load_target(args) -> List[Dict]:
     """
     dataset = args.dataset_config_file.split("/")[-1].split(".")[0]
     wandb_group = getattr(args, 'wandb_group', None) or 'default'
+    
+    # 构建文件名：对于 sepfpl 相关方法，需要包含 topk 和 rdp_p 参数
+    sepfpl_methods = ['sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']
+    is_sepfpl = args.factorization in sepfpl_methods
+    
+    if is_sepfpl:
+        # sepfpl 方法文件名格式：{factorization}_{rank}_{noise}_{seed}_{topk}_{rdp_p}_{num_users}.pth.tar
+        sepfpl_topk = getattr(args, 'sepfpl_topk', None)
+        rdp_p = getattr(args, 'rdp_p', None)
+        
+        if sepfpl_topk is not None and rdp_p is not None:
+            rdp_p_str = str(rdp_p)
+            filename = f'{args.factorization}_{args.rank}_{args.noise}_{args.seed}_{sepfpl_topk}_{rdp_p_str}_{args.num_users}.pth.tar'
+        else:
+            # 如果没有提供 topk 和 rdp_p，使用旧格式
+            filename = f'{args.factorization}_{args.rank}_{args.noise}_{args.seed}_{args.num_users}.pth.tar'
+    else:
+        # 非 sepfpl 方法文件名格式：{factorization}_{rank}_{noise}_{seed}_{num_users}.pth.tar
+        filename = f'{args.factorization}_{args.rank}_{args.noise}_{args.seed}_{args.num_users}.pth.tar'
+    
     save_filename = os.path.join(
         os.path.expanduser('~/code/sepfpl/checkpoints'),
         wandb_group,
         dataset,
-        f'{args.factorization}_{args.rank}_{args.noise}_{args.seed}_{args.num_users}.pth.tar'
+        filename
     )
     
     if not os.path.exists(save_filename):
-        return [{} for i in range(args.num_users)]
+        # 如果精确匹配失败，尝试使用 glob 模式匹配（用于 sepfpl 方法）
+        if is_sepfpl:
+            sepfpl_topk = getattr(args, 'sepfpl_topk', None)
+            rdp_p = getattr(args, 'rdp_p', None)
+            if sepfpl_topk is not None and rdp_p is not None:
+                # 尝试 glob 模式匹配
+                checkpoint_dir = os.path.join(
+                    os.path.expanduser('~/code/sepfpl/checkpoints'),
+                    wandb_group,
+                    dataset
+                )
+                rdp_p_str = str(rdp_p)
+                glob_pattern = f'{args.factorization}_{args.rank}_{args.noise}_{args.seed}_*_{args.num_users}.pth.tar'
+                matches = glob.glob(os.path.join(checkpoint_dir, glob_pattern))
+                for match in matches:
+                    # 从文件名中提取 topk 和 rdp_p 值
+                    parts = os.path.basename(match).replace('.pth.tar', '').split('_')
+                    if len(parts) >= 7:
+                        try:
+                            file_topk = int(parts[5])
+                            file_rdp_p = float(parts[6])
+                            if file_topk == sepfpl_topk and abs(file_rdp_p - rdp_p) < 1e-6:
+                                save_filename = match
+                                break
+                        except (ValueError, IndexError):
+                            continue
+        
+        # 如果仍然找不到，返回空权重
+        if not os.path.exists(save_filename):
+            return [{} for i in range(args.num_users)]
     
     checkpoint = torch.load(
         save_filename,
@@ -518,9 +628,11 @@ def train_attack_models(args, auto_test: bool = True):
                 logger.warning(f"加载 shadow 文件失败: {shadow_file}, 错误: {e}")
                 shadow_files_missing.append(shadow_file)
     else:
-        # 回退：尝试默认 seed 范围 0-49
-        logger.warning(f"未在 {output_dir} 中找到匹配 {shadow_pattern} 的文件，尝试使用默认范围 0-49")
-        for seed in range(0, 50):
+        # 回退：尝试配置的 seed 范围或默认范围 0-49
+        shadow_start_seed = getattr(args, 'shadow_start_seed', 0)
+        shadow_end_seed = getattr(args, 'shadow_end_seed', 49)
+        logger.warning(f"未在 {output_dir} 中找到匹配 {shadow_pattern} 的文件，尝试使用配置的 seed 范围 {shadow_start_seed}-{shadow_end_seed}")
+        for seed in range(shadow_start_seed, shadow_end_seed + 1):
             shadow_file = os.path.join(output_dir, f"shadow_{args.noise}_{seed}.pkl")
             if os.path.exists(shadow_file):
                 try:
@@ -714,7 +826,7 @@ def test_attack_models(args):
         label_set.add(sample.label)
     label_list = list(label_set)
 
-    all_correct = []
+    label_accuracies = {}  # 存储每个 label 的准确率 {label: accuracy}
     
     # ====== 逐类别测试 ======
     for label in label_list:
@@ -754,7 +866,7 @@ def test_attack_models(args):
         data_loader = DataLoader(
             image_dataset,
             batch_size=32,  # 增加 batch size 以提高 GPU 利用率
-            shuffle=True,
+            shuffle=False,  # 测试时不应该 shuffle，确保结果可复现
             num_workers=4,  # 并行加载数据
             pin_memory=True if torch.cuda.is_available() else False,  # 固定内存加速传输
         )
@@ -792,17 +904,25 @@ def test_attack_models(args):
         
         success_rate = correct / total if total > 0 else 0.0
         logger.info(f'类别 {label} 攻击成功率: {success_rate:.4f} ({correct}/{total})')
-        all_correct.append(success_rate)
+        label_accuracies[label] = success_rate
     
     # ====== 保存结果 ======
-    if all_correct:
-        avg_success = sum(all_correct) / len(all_correct)
+    if label_accuracies:
+        avg_success = sum(label_accuracies.values()) / len(label_accuracies)
         logger.info(f'\n平均 MIA 成功率: {avg_success:.4f}')
+        
+        # 保存包含平均准确率和每个 label 准确率的字典
+        mia_results = {
+            'average': avg_success,
+            'per_label': label_accuracies
+        }
         
         mia_acc_file = os.path.join(output_dir, f'mia_acc_{args.noise}.pkl')
         with open(mia_acc_file, 'wb') as f:
-            pickle.dump(avg_success, f)
+            pickle.dump(mia_results, f)
         logger.info(f"结果已保存: {mia_acc_file}")
+        logger.info(f"  平均准确率: {avg_success:.4f}")
+        logger.info(f"  类别数量: {len(label_accuracies)}")
     else:
         logger.warning("没有计算任何准确率")
 
@@ -871,6 +991,18 @@ if __name__ == "__main__":
         default=None,
         help='wandb 中的实验分组名（group），用于组织一组相关实验'
     )
+    parser.add_argument(
+        '--shadow-start-seed',
+        type=int,
+        default=0,
+        help='Shadow 数据生成的起始 seed（用于训练模式）'
+    )
+    parser.add_argument(
+        '--shadow-end-seed',
+        type=int,
+        default=49,
+        help='Shadow 数据生成的结束 seed（包含，用于训练模式）'
+    )
     
     # ====== 测试模式额外参数 ======
     parser.add_argument(
@@ -922,6 +1054,18 @@ if __name__ == "__main__":
         type=float, 
         default=10.0, 
         help="梯度裁剪阈值 (仅测试模式)"
+    )
+    parser.add_argument(
+        "--sepfpl-topk",
+        type=int,
+        default=None,
+        help="SepFPL top-k 参数（用于 sepfpl 相关方法，仅测试模式）"
+    )
+    parser.add_argument(
+        "--rdp-p",
+        type=float,
+        default=None,
+        help="RDP 时间适应幂次参数（用于 sepfpl 相关方法，仅测试模式）"
     )
 
     # 数据集参数
