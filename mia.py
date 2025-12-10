@@ -87,20 +87,9 @@ class AttackModel(nn.Module):
     
     def __init__(self, total_classes: int):
         super(AttackModel, self).__init__()
-        # 增强的网络结构：更深的网络，添加批归一化和 dropout
-        self.fc1 = nn.Linear(total_classes, 128)
-        self.bn1 = nn.BatchNorm1d(128)
-        self.dropout1 = nn.Dropout(0.3)
-        
-        self.fc2 = nn.Linear(128, 64)
-        self.bn2 = nn.BatchNorm1d(64)
-        self.dropout2 = nn.Dropout(0.2)
-        
-        self.fc3 = nn.Linear(64, 32)
-        self.bn3 = nn.BatchNorm1d(32)
-        self.dropout3 = nn.Dropout(0.1)
-        
-        self.fc4 = nn.Linear(32, 2)  # 二分类：非成员/成员
+        # 简化的网络结构：两层全连接
+        self.fc1 = nn.Linear(total_classes, 64)
+        self.fc2 = nn.Linear(64, 2)  # 二分类：非成员/成员
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -112,51 +101,12 @@ class AttackModel(nn.Module):
         Returns:
             输出 logits，形状为 (batch_size, 2)
         """
-        # 检查 batch size，BatchNorm 在训练模式下需要 batch size > 1
-        # 如果 batch size 为 1，临时将 BatchNorm 设置为 eval 模式
-        batch_size = x.size(0) if x.dim() > 0 else 1
-        if batch_size == 1:
-            # 保存原始训练状态
-            bn1_training = self.bn1.training
-            bn2_training = self.bn2.training
-            bn3_training = self.bn3.training
-            # 临时设置为 eval 模式
-            self.bn1.eval()
-            self.bn2.eval()
-            self.bn3.eval()
-        
         # 第一层
         x = self.fc1(x)
-        if x.dim() > 1:
-            x = self.bn1(x)
         x = torch.relu(x)
-        x = self.dropout1(x)
-        
-        # 第二层
-        x = self.fc2(x)
-        if x.dim() > 1:
-            x = self.bn2(x)
-        x = torch.relu(x)
-        x = self.dropout2(x)
-        
-        # 第三层
-        x = self.fc3(x)
-        if x.dim() > 1:
-            x = self.bn3(x)
-        x = torch.relu(x)
-        x = self.dropout3(x)
-        
-        # 恢复 BatchNorm 的原始训练状态
-        if batch_size == 1:
-            if bn1_training:
-                self.bn1.train()
-            if bn2_training:
-                self.bn2.train()
-            if bn3_training:
-                self.bn3.train()
         
         # 输出层（不使用激活函数，让 CrossEntropyLoss 处理）
-        x = self.fc4(x)
+        x = self.fc2(x)
         return x
 
 
@@ -200,8 +150,9 @@ class ShadowDataset(Dataset):
 
         # 数据平衡：确保成员和非成员样本数量相等
         # 这对于二分类任务很重要，避免模型偏向多数类
-        train_data = train_data[:min(len(train_data), len(test_data))]
-        test_data = test_data[:min(len(train_data), len(test_data))]
+        min_size = min(len(train_data), len(test_data))
+        train_data = train_data[:min_size]
+        test_data = test_data[:min_size]
         self.dataset = train_data + test_data
         
         # 如果指定了 target_label，只保留该标签的数据
@@ -627,21 +578,6 @@ def train_attack_models(args, auto_test: bool = True):
             except Exception as e:
                 logger.warning(f"加载 shadow 文件失败: {shadow_file}, 错误: {e}")
                 shadow_files_missing.append(shadow_file)
-    else:
-        # 回退：尝试配置的 seed 范围或默认范围 0-49
-        shadow_start_seed = getattr(args, 'shadow_start_seed', 0)
-        shadow_end_seed = getattr(args, 'shadow_end_seed', 49)
-        logger.warning(f"未在 {output_dir} 中找到匹配 {shadow_pattern} 的文件，尝试使用配置的 seed 范围 {shadow_start_seed}-{shadow_end_seed}")
-        for seed in range(shadow_start_seed, shadow_end_seed + 1):
-            shadow_file = os.path.join(output_dir, f"shadow_{args.noise}_{seed}.pkl")
-            if os.path.exists(shadow_file):
-                try:
-                    with open(shadow_file, "rb") as f:
-                        train_data += pickle.load(f)
-                    shadow_files_found.append(shadow_file)
-                except Exception as e:
-                    logger.warning(f"加载 shadow 文件失败: {shadow_file}, 错误: {e}")
-                    shadow_files_missing.append(shadow_file)
     
     if len(train_data) == 0:
         raise ValueError(f"No shadow data found in {output_dir} (pattern: {shadow_pattern})")
@@ -695,7 +631,7 @@ def train_attack_models(args, auto_test: bool = True):
         # 初始化模型和优化器
         attack_model = AttackModel(total_classes)
         attack_model = attack_model.to(device)  # 移动到 GPU
-        optimizer = torch.optim.Adam(attack_model.parameters(), lr=0.01)
+        optimizer = torch.optim.Adam(attack_model.parameters(), lr=0.001)
 
         best_so_far = torch.inf
         best_model = None
@@ -927,13 +863,519 @@ def test_attack_models(args):
         logger.warning("没有计算任何准确率")
 
 
+def analyze_shadow_predictions(args):
+    """
+    分析不同 noise 条件下 shadow 数据中 prediction 的分布规律
+    
+    分析指标：
+    1. 预测熵（entropy）：衡量预测分布的不确定性
+    2. 最大置信度（max probability）：预测的最大概率值
+    3. 预测分布的方差：衡量预测分布的分散程度
+    4. 成员vs非成员的分布差异：比较成员和非成员样本的预测特征
+    5. 不同类别的分布差异：分析不同类别下的预测特征
+    
+    Args:
+        args: 命令行参数，需要包含：
+            - dataset_config_file: 数据集配置文件
+            - wandb_group: 实验组名
+            - noise_list: 要分析的噪声值列表（可选，默认分析所有可用的noise）
+    """
+    import json
+    from collections import defaultdict
+    
+    # ====== 初始化 ======
+    logger = init_logger_from_args(
+        args, 
+        log_dir=os.path.expanduser('~/code/sepfpl/logs'), 
+        log_to_file=True, 
+        log_to_console=True
+    )
+    
+    # ====== 路径设置 ======
+    dataset_name = args.dataset_config_file.split('/')[-1].split('.')[0]
+    wandb_group = getattr(args, 'wandb_group', None) or 'default'
+    output_dir = os.path.join(os.path.expanduser('~/code/sepfpl/outputs'), wandb_group, dataset_name)
+    
+    if not os.path.exists(output_dir):
+        logger.error(f"输出目录不存在: {output_dir}")
+        return
+    
+    # ====== 确定要分析的 noise 值列表 ======
+    noise_list = getattr(args, 'noise_list', None)
+    if noise_list is None or noise_list == '':
+        # 自动扫描所有可用的 noise 值
+        all_shadow_files = glob.glob(os.path.join(output_dir, "shadow_*.pkl"))
+        noise_set = set()
+        for file_path in all_shadow_files:
+            filename = os.path.basename(file_path)
+            try:
+                # 文件名格式: shadow_{noise}_{seed}.pkl
+                parts = filename.replace(".pkl", "").split("_")
+                if len(parts) >= 3:
+                    noise = float(parts[1])
+                    noise_set.add(noise)
+            except (ValueError, IndexError):
+                continue
+        noise_list = sorted(noise_set)
+        if noise_list:
+            logger.info(f"自动检测到以下 noise 值: {noise_list}")
+        else:
+            logger.error("未找到任何 shadow 数据文件")
+            return
+    else:
+        # 如果提供了 noise_list，解析它
+        if isinstance(noise_list, str):
+            try:
+                noise_list = [float(n.strip()) for n in noise_list.split(',') if n.strip()]
+            except ValueError as e:
+                logger.error(f"解析 noise_list 失败: {e}")
+                return
+        elif not isinstance(noise_list, list):
+            logger.error(f"noise_list 格式不正确: {type(noise_list)}")
+            return
+        logger.info(f"使用指定的 noise 值: {noise_list}")
+    
+    if not noise_list:
+        logger.error("未找到任何 noise 值进行分析")
+        return
+    
+    # ====== 存储分析结果 ======
+    analysis_results = {}
+    
+    # ====== 为每个 noise 值进行分析 ======
+    for noise in noise_list:
+        logger.info(f"\n{'='*80}")
+        logger.info(f"分析 Noise = {noise} 的 shadow 数据")
+        logger.info(f"{'='*80}")
+        
+        # 加载该 noise 下的所有 shadow 数据
+        train_data = []
+        shadow_pattern = f"shadow_{noise}_*.pkl"
+        existing_files = glob.glob(os.path.join(output_dir, shadow_pattern))
+        
+        if not existing_files:
+            logger.warning(f"Noise={noise} 下未找到 shadow 文件，跳过")
+            continue
+        
+        # 从文件名提取 seed 号，按 seed 排序加载
+        seed_to_file = {}
+        for file_path in existing_files:
+            filename = os.path.basename(file_path)
+            try:
+                seed_str = filename.replace(f"shadow_{noise}_", "").replace(".pkl", "")
+                seed = int(seed_str)
+                seed_to_file[seed] = file_path
+            except ValueError:
+                continue
+        
+        # 按 seed 排序加载
+        for seed in sorted(seed_to_file.keys()):
+            shadow_file = seed_to_file[seed]
+            try:
+                with open(shadow_file, "rb") as f:
+                    train_data += pickle.load(f)
+            except Exception as e:
+                logger.warning(f"加载 shadow 文件失败: {shadow_file}, 错误: {e}")
+        
+        if len(train_data) == 0:
+            logger.warning(f"Noise={noise} 下没有有效数据，跳过")
+            continue
+        
+        logger.info(f"成功加载 {len(train_data)} 个样本")
+        
+        # ====== 转换为 Tensor 并分离成员和非成员 ======
+        member_predictions = []  # 成员样本的预测
+        nonmember_predictions = []  # 非成员样本的预测
+        member_labels = []  # 成员样本的标签
+        nonmember_labels = []  # 非成员样本的标签
+        
+        for sample in train_data:
+            pred, membership, label = sample
+            
+            # 确保 pred 是 numpy array 或 tensor
+            if isinstance(pred, torch.Tensor):
+                pred_np = pred.cpu().numpy()
+            else:
+                pred_np = np.array(pred)
+            
+            # 确保是概率分布（归一化）
+            pred_np = pred_np / (pred_np.sum() + 1e-10)
+            
+            membership_val = membership.item() if isinstance(membership, torch.Tensor) else membership
+            label_val = label.item() if isinstance(label, torch.Tensor) else label
+            
+            if membership_val == 1:  # 成员
+                member_predictions.append(pred_np)
+                member_labels.append(label_val)
+            else:  # 非成员
+                nonmember_predictions.append(pred_np)
+                nonmember_labels.append(label_val)
+        
+        member_predictions = np.array(member_predictions)
+        nonmember_predictions = np.array(nonmember_predictions)
+        
+        logger.info(f"成员样本数: {len(member_predictions)}, 非成员样本数: {len(nonmember_predictions)}")
+        
+        # ====== 计算统计指标 ======
+        def compute_entropy(predictions):
+            """计算预测熵"""
+            # 避免 log(0)
+            predictions = np.clip(predictions, 1e-10, 1.0)
+            entropy = -np.sum(predictions * np.log(predictions), axis=1)
+            return entropy
+        
+        def compute_max_confidence(predictions):
+            """计算最大置信度"""
+            return np.max(predictions, axis=1)
+        
+        def compute_prediction_variance(predictions):
+            """计算预测分布的方差"""
+            return np.var(predictions, axis=1)
+        
+        # 成员样本的统计
+        member_entropy = compute_entropy(member_predictions)
+        member_max_conf = compute_max_confidence(member_predictions)
+        member_var = compute_prediction_variance(member_predictions)
+        
+        # 非成员样本的统计
+        nonmember_entropy = compute_entropy(nonmember_predictions)
+        nonmember_max_conf = compute_max_confidence(nonmember_predictions)
+        nonmember_var = compute_prediction_variance(nonmember_predictions)
+        
+        # ====== 按类别分析 ======
+        label_stats = {}
+        all_labels = set(member_labels + nonmember_labels)
+        
+        for label in all_labels:
+            # 获取该类别下的成员和非成员样本
+            member_mask = np.array([l == label for l in member_labels])
+            nonmember_mask = np.array([l == label for l in nonmember_labels])
+            
+            if member_mask.sum() == 0 or nonmember_mask.sum() == 0:
+                continue
+            
+            member_pred_label = member_predictions[member_mask]
+            nonmember_pred_label = nonmember_predictions[nonmember_mask]
+            
+            label_stats[int(label)] = {
+                'member_count': int(member_mask.sum()),
+                'nonmember_count': int(nonmember_mask.sum()),
+                'member_entropy_mean': float(np.mean(compute_entropy(member_pred_label))),
+                'member_entropy_std': float(np.std(compute_entropy(member_pred_label))),
+                'nonmember_entropy_mean': float(np.mean(compute_entropy(nonmember_pred_label))),
+                'nonmember_entropy_std': float(np.std(compute_entropy(nonmember_pred_label))),
+                'member_max_conf_mean': float(np.mean(compute_max_confidence(member_pred_label))),
+                'member_max_conf_std': float(np.std(compute_max_confidence(member_pred_label))),
+                'nonmember_max_conf_mean': float(np.mean(compute_max_confidence(nonmember_pred_label))),
+                'nonmember_max_conf_std': float(np.std(compute_max_confidence(nonmember_pred_label))),
+                'entropy_diff': float(np.mean(compute_entropy(member_pred_label)) - np.mean(compute_entropy(nonmember_pred_label))),
+                'max_conf_diff': float(np.mean(compute_max_confidence(member_pred_label)) - np.mean(compute_max_confidence(nonmember_pred_label))),
+            }
+        
+        # ====== 汇总统计 ======
+        noise_stats = {
+            'noise': float(noise),
+            'total_samples': int(len(train_data)),
+            'member_count': int(len(member_predictions)),
+            'nonmember_count': int(len(nonmember_predictions)),
+            'member_entropy': {
+                'mean': float(np.mean(member_entropy)),
+                'std': float(np.std(member_entropy)),
+                'min': float(np.min(member_entropy)),
+                'max': float(np.max(member_entropy)),
+            },
+            'nonmember_entropy': {
+                'mean': float(np.mean(nonmember_entropy)),
+                'std': float(np.std(nonmember_entropy)),
+                'min': float(np.min(nonmember_entropy)),
+                'max': float(np.max(nonmember_entropy)),
+            },
+            'member_max_confidence': {
+                'mean': float(np.mean(member_max_conf)),
+                'std': float(np.std(member_max_conf)),
+                'min': float(np.min(member_max_conf)),
+                'max': float(np.max(member_max_conf)),
+            },
+            'nonmember_max_confidence': {
+                'mean': float(np.mean(nonmember_max_conf)),
+                'std': float(np.std(nonmember_max_conf)),
+                'min': float(np.min(nonmember_max_conf)),
+                'max': float(np.max(nonmember_max_conf)),
+            },
+            'member_variance': {
+                'mean': float(np.mean(member_var)),
+                'std': float(np.std(member_var)),
+            },
+            'nonmember_variance': {
+                'mean': float(np.mean(nonmember_var)),
+                'std': float(np.std(nonmember_var)),
+            },
+            'entropy_diff': float(np.mean(member_entropy) - np.mean(nonmember_entropy)),
+            'max_conf_diff': float(np.mean(member_max_conf) - np.mean(nonmember_max_conf)),
+            'label_stats': label_stats,
+        }
+        
+        analysis_results[float(noise)] = noise_stats
+        
+        # ====== 打印结果 ======
+        logger.info(f"\nNoise = {noise} 的统计结果:")
+        logger.info(f"  总样本数: {noise_stats['total_samples']}")
+        logger.info(f"  成员样本数: {noise_stats['member_count']}")
+        logger.info(f"  非成员样本数: {noise_stats['nonmember_count']}")
+        logger.info(f"\n  预测熵 (Entropy):")
+        logger.info(f"    成员: {noise_stats['member_entropy']['mean']:.4f} ± {noise_stats['member_entropy']['std']:.4f}")
+        logger.info(f"    非成员: {noise_stats['nonmember_entropy']['mean']:.4f} ± {noise_stats['nonmember_entropy']['std']:.4f}")
+        logger.info(f"    差异: {noise_stats['entropy_diff']:.4f} (成员熵 - 非成员熵)")
+        logger.info(f"\n  最大置信度 (Max Confidence):")
+        logger.info(f"    成员: {noise_stats['member_max_confidence']['mean']:.4f} ± {noise_stats['member_max_confidence']['std']:.4f}")
+        logger.info(f"    非成员: {noise_stats['nonmember_max_confidence']['mean']:.4f} ± {noise_stats['nonmember_max_confidence']['std']:.4f}")
+        logger.info(f"    差异: {noise_stats['max_conf_diff']:.4f} (成员置信度 - 非成员置信度)")
+        logger.info(f"\n  预测方差 (Variance):")
+        logger.info(f"    成员: {noise_stats['member_variance']['mean']:.6f} ± {noise_stats['member_variance']['std']:.6f}")
+        logger.info(f"    非成员: {noise_stats['nonmember_variance']['mean']:.6f} ± {noise_stats['nonmember_variance']['std']:.6f}")
+        
+        # 打印前5个类别的详细统计
+        if label_stats:
+            logger.info(f"\n  前5个类别的详细统计:")
+            sorted_labels = sorted(label_stats.items(), key=lambda x: x[1]['member_count'], reverse=True)[:5]
+            for label, stats in sorted_labels:
+                logger.info(f"    类别 {label}:")
+                logger.info(f"      样本数: 成员={stats['member_count']}, 非成员={stats['nonmember_count']}")
+                logger.info(f"      熵差异: {stats['entropy_diff']:.4f}")
+                logger.info(f"      置信度差异: {stats['max_conf_diff']:.4f}")
+    
+    # ====== 保存结果到文件 ======
+    if analysis_results:
+        output_file = os.path.join(output_dir, 'shadow_prediction_analysis.json')
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(analysis_results, f, indent=2, ensure_ascii=False)
+        logger.info(f"\n{'='*80}")
+        logger.info(f"分析结果已保存到: {output_file}")
+        logger.info(f"{'='*80}")
+        
+        # ====== 打印跨 noise 的对比 ======
+        logger.info(f"\n跨 Noise 对比分析:")
+        logger.info(f"{'Noise':<10} {'成员熵':<15} {'非成员熵':<15} {'熵差异':<15} {'成员置信度':<15} {'非成员置信度':<15} {'置信度差异':<15}")
+        logger.info(f"{'-'*100}")
+        for noise in sorted(analysis_results.keys()):
+            stats = analysis_results[noise]
+            logger.info(
+                f"{noise:<10.2f} "
+                f"{stats['member_entropy']['mean']:<15.4f} "
+                f"{stats['nonmember_entropy']['mean']:<15.4f} "
+                f"{stats['entropy_diff']:<15.4f} "
+                f"{stats['member_max_confidence']['mean']:<15.4f} "
+                f"{stats['nonmember_max_confidence']['mean']:<15.4f} "
+                f"{stats['max_conf_diff']:<15.4f}"
+            )
+    else:
+        logger.warning("没有生成任何分析结果")
+
+
+# ============================================================================
+# Shadow 数据生成函数
+# ============================================================================
+
+def generate_shadow_data(args):
+    """
+    生成 Shadow 数据用于 MIA 攻击模型训练。
+    
+    此函数与 federated_main.py 中的训练过程完全解耦，可以独立运行：
+    1. 读取保存的 checkpoint 文件
+    2. 构建 trainer 和数据加载器
+    3. 对每个客户端模型进行推理，收集训练集和测试集的预测结果
+    4. 根据采样比例对数据进行采样
+    5. 保存为 shadow 数据文件
+    
+    Args:
+        args: 命令行参数，需要包含：
+            - dataset_config_file: 数据集配置文件
+            - config_file: 模型配置文件
+            - factorization, rank, noise, seed, num_users: 用于定位 checkpoint
+            - sepfpl_topk, rdp_p: sepfpl 相关方法的参数（可选）
+            - wandb_group: 实验组名（可选）
+            - shadow_sample_ratio: 采样比例（0.0-1.0），如果为 None 或 1.0 则不采样
+    """
+    import torch.nn.functional as F
+    
+    # ====== 初始化日志与配置 ======
+    logger = init_logger_from_args(
+        args, 
+        log_dir=os.path.expanduser('~/code/sepfpl/logs'), 
+        log_to_file=True, 
+        log_to_console=True
+    )
+    
+    cfg = setup_cfg(args, mode='test')
+    if cfg.SEED >= 0:
+        set_random_seed(cfg.SEED)
+    
+    if torch.cuda.is_available() and cfg.USE_CUDA:
+        torch.backends.cudnn.benchmark = True
+    
+    # ====== 获取采样比例 ======
+    sample_ratio = getattr(args, 'shadow_sample_ratio', None)
+    if sample_ratio is None:
+        sample_ratio = 1.0  # 默认不采样
+    else:
+        sample_ratio = float(sample_ratio)
+        if sample_ratio <= 0.0 or sample_ratio > 1.0:
+            raise ValueError(f"采样比例必须在 (0.0, 1.0] 范围内，当前值: {sample_ratio}")
+    
+    if sample_ratio < 1.0:
+        logger.info(f"启用采样模式，采样比例: {sample_ratio:.2%}")
+        # 为采样设置随机种子，确保可重复性
+        np.random.seed(cfg.SEED if cfg.SEED >= 0 else 42)
+    else:
+        logger.info("不进行采样，使用全部数据")
+    
+    # ====== 构建 trainer（会自动创建数据加载器） ======
+    logger.info("正在构建 trainer 和数据加载器...")
+    local_trainer = build_trainer(cfg)
+    local_trainer.set_model_mode("eval")
+    
+    # ====== 从 checkpoint 加载模型权重 ======
+    logger.info("正在从 checkpoint 加载模型权重...")
+    local_weights = load_target(args)
+    
+    # 检查是否成功加载权重
+    if not local_weights or all(len(w) == 0 for w in local_weights):
+        raise ValueError(
+            f"未能从 checkpoint 加载模型权重。请检查以下参数是否正确：\n"
+            f"  - factorization: {args.factorization}\n"
+            f"  - rank: {args.rank}\n"
+            f"  - noise: {args.noise}\n"
+            f"  - seed: {args.seed}\n"
+            f"  - num_users: {args.num_users}\n"
+            f"  - wandb_group: {getattr(args, 'wandb_group', 'default')}"
+        )
+    
+    # ====== 路径设置 ======
+    dataset_name = args.dataset_config_file.split('/')[-1].split('.')[0]
+    wandb_group = getattr(args, 'wandb_group', None) or 'default'
+    output_dir = os.path.join(os.path.expanduser('~/code/sepfpl/outputs'), wandb_group, dataset_name)
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # ====== 收集预测结果 ======
+    num_users = args.num_users
+    shadow_data = []
+    
+    logger.info(f"开始收集所有 {num_users} 个客户端的 Shadow 数据...")
+    
+    # 遍历所有客户端（使用进度条）
+    client_range = tqdm(range(num_users), desc="生成 Shadow 数据")
+    for client_idx in client_range:
+        client_range.set_description(f"处理客户端 {client_idx+1}/{num_users}")
+        
+        # 检查该客户端的权重是否存在
+        if not local_weights[client_idx] or len(local_weights[client_idx]) == 0:
+            logger.warning(f"  客户端 {client_idx} 的权重为空，跳过")
+            continue
+        
+        # 加载当前客户端的模型权重
+        local_trainer.model.load_state_dict(local_weights[client_idx], strict=False)
+        local_trainer.set_model_mode("eval")
+        
+        # 收集当前客户端的训练集预测结果
+        if client_idx in local_trainer.fed_train_loader_x_dict:
+            train_loader = local_trainer.fed_train_loader_x_dict[client_idx]
+            client_train_samples = []  # 临时存储该客户端的所有训练样本
+            client_train_count = 0
+            for batch_idx, batch in enumerate(train_loader):
+                images = batch["img"].to(local_trainer.device)
+                labels = batch["label"].to(local_trainer.device)
+                
+                with torch.no_grad():
+                    outputs = local_trainer.model_inference(images)
+                    predictions = F.softmax(outputs, dim=1)
+                
+                for pred, label in zip(predictions.cpu(), labels.cpu()):
+                    # (prediction, membership=1, label)
+                    client_train_samples.append((pred, torch.tensor(1), label))
+                    client_train_count += 1
+            
+            # 根据采样比例进行采样
+            if sample_ratio < 1.0 and len(client_train_samples) > 0:
+                num_samples = max(1, int(len(client_train_samples) * sample_ratio))
+                sampled_indices = np.random.choice(
+                    len(client_train_samples), 
+                    size=num_samples, 
+                    replace=False
+                )
+                client_train_samples = [client_train_samples[i] for i in sampled_indices]
+            
+            shadow_data.extend(client_train_samples)
+            logger.info(f"  客户端 {client_idx} 训练集样本数: {len(client_train_samples)}/{client_train_count} (采样后/原始)")
+        else:
+            logger.warning(f"  客户端 {client_idx} 的训练集数据加载器不存在，跳过")
+        
+        # 收集当前客户端的测试集预测结果
+        if client_idx in local_trainer.fed_test_local_loader_x_dict:
+            test_loader = local_trainer.fed_test_local_loader_x_dict[client_idx]
+            client_test_samples = []  # 临时存储该客户端的所有测试样本
+            client_test_count = 0
+            for batch_idx, batch in enumerate(test_loader):
+                images = batch["img"].to(local_trainer.device)
+                labels = batch["label"].to(local_trainer.device)
+                
+                with torch.no_grad():
+                    outputs = local_trainer.model_inference(images)
+                    predictions = F.softmax(outputs, dim=1)
+                
+                for pred, label in zip(predictions.cpu(), labels.cpu()):
+                    # (prediction, membership=0, label)
+                    client_test_samples.append((pred, torch.tensor(0), label))
+                    client_test_count += 1
+            
+            # 根据采样比例进行采样
+            if sample_ratio < 1.0 and len(client_test_samples) > 0:
+                num_samples = max(1, int(len(client_test_samples) * sample_ratio))
+                sampled_indices = np.random.choice(
+                    len(client_test_samples), 
+                    size=num_samples, 
+                    replace=False
+                )
+                client_test_samples = [client_test_samples[i] for i in sampled_indices]
+            
+            shadow_data.extend(client_test_samples)
+            logger.info(f"  客户端 {client_idx} 测试集样本数: {len(client_test_samples)}/{client_test_count} (采样后/原始)")
+        else:
+            logger.warning(f"  客户端 {client_idx} 的测试集数据加载器不存在，跳过")
+        
+        # 更新进度条信息
+        total_samples = len(shadow_data)
+        client_range.set_postfix({'总样本数': total_samples})
+    
+    # ====== 保存 shadow 数据 ======
+    # 构建文件名：如果使用了采样，在文件名中包含采样比例
+    if sample_ratio < 1.0:
+        # 将采样比例转换为字符串，例如 0.5 -> "0.5", 0.1 -> "0.1", 0.25 -> "0.25"
+        # 先格式化为2位小数，然后去除末尾的0和小数点
+        ratio_str = f"{sample_ratio:.2f}".rstrip('0').rstrip('.')
+        shadow_file = os.path.join(output_dir, f"shadow_{args.noise}_{args.seed}_ratio{ratio_str}.pkl")
+    else:
+        shadow_file = os.path.join(output_dir, f"shadow_{args.noise}_{args.seed}.pkl")
+    
+    with open(shadow_file, 'wb') as f:
+        pickle.dump(shadow_data, f)
+    
+    train_count = sum(1 for _, m, _ in shadow_data if m.item() == 1)
+    test_count = sum(1 for _, m, _ in shadow_data if m.item() == 0)
+    logger.info(f"✅ Shadow 数据已保存: {shadow_file}")
+    logger.info(f"   总样本数: {len(shadow_data)}")
+    logger.info(f"   训练集样本: {train_count}")
+    logger.info(f"   测试集样本: {test_count}")
+    if sample_ratio < 1.0:
+        logger.info(f"   采样比例: {sample_ratio:.2%}")
+
+
 # ============================================================================
 # 主函数
 # ============================================================================
 
 def main(args):
     """
-    主函数，根据 mode 参数决定是训练还是测试
+    主函数，根据 mode 参数决定是训练、测试、分析还是生成 shadow 数据
     
     Args:
         args: 命令行参数
@@ -944,8 +1386,14 @@ def main(args):
     elif args.mode == 'test':
         # 测试模式：仅进行测试（用于单独测试已训练的模型）
         test_attack_models(args)
+    elif args.mode == 'analyze':
+        # 分析模式：分析 shadow 数据的预测分布规律
+        analyze_shadow_predictions(args)
+    elif args.mode == 'generate_shadow':
+        # Shadow 数据生成模式：从 checkpoint 独立生成 shadow 数据
+        generate_shadow_data(args)
     else:
-        raise ValueError(f"Unknown mode: {args.mode}. Must be 'train' or 'test'.")
+        raise ValueError(f"Unknown mode: {args.mode}. Must be 'train', 'test', 'analyze', or 'generate_shadow'.")
 
 
 if __name__ == "__main__":
@@ -956,8 +1404,8 @@ if __name__ == "__main__":
         "--mode", 
         type=str, 
         default="test", 
-        choices=["train", "test"],
-        help="运行模式: 'train' 训练攻击模型, 'test' 测试攻击模型"
+        choices=["train", "test", "analyze", "generate_shadow"],
+        help="运行模式: 'train' 训练攻击模型, 'test' 测试攻击模型, 'analyze' 分析shadow数据分布, 'generate_shadow' 从checkpoint生成shadow数据"
     )
     
     # ====== 训练模式参数 ======
@@ -992,16 +1440,16 @@ if __name__ == "__main__":
         help='wandb 中的实验分组名（group），用于组织一组相关实验'
     )
     parser.add_argument(
-        '--shadow-start-seed',
-        type=int,
-        default=0,
-        help='Shadow 数据生成的起始 seed（用于训练模式）'
+        '--noise-list',
+        type=str,
+        default=None,
+        help='要分析的噪声值列表，用逗号分隔（用于analyze模式，如 "0.0,0.1,0.2,0.4"）。如果不指定，将自动扫描所有可用的noise值'
     )
     parser.add_argument(
-        '--shadow-end-seed',
-        type=int,
-        default=49,
-        help='Shadow 数据生成的结束 seed（包含，用于训练模式）'
+        '--shadow-sample-ratio',
+        type=float,
+        default=None,
+        help='Shadow 数据采样比例（0.0-1.0），用于 generate_shadow 模式。如果为 None 或 1.0 则不采样，使用全部数据。例如 0.5 表示采样50%%的数据'
     )
     
     # ====== 测试模式额外参数 ======
@@ -1129,10 +1577,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    
-    if torch.cuda.is_available():
-        print(f"检测到 {torch.cuda.device_count()} 个 GPU")
-        main(args)
-    else:
-        print("未检测到 GPU，将使用 CPU 运行")
-        main(args)
+
+    main(args)
+

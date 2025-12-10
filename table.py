@@ -677,196 +677,6 @@ def generate_exp2_ablation_table(
         
         print("=" * 80)
 
-
-def generate_mia_table(
-    exp_name: str = 'exp3-mia',
-    output_dir: Path = DEFAULT_OUTPUT_DIR,
-    datasets: Optional[List[str]] = None,
-    noise_list: Optional[List[float]] = None
-) -> None:
-    """
-    生成实验3（MIA攻击）的结果表格
-    
-    读取所有实验结果文件（mia_acc_{noise}.pkl），按数据集和噪声值组织数据，
-    生成表格并输出。直接使用读取到的攻击成功率值，不计算总平均值。
-    
-    文件路径结构（与 mia.py 保持一致）：
-        {output_dir}/{exp_name}/{dataset}/mia_acc_{noise}.pkl
-        例如：~/code/sepfpl/outputs/exp3-mia/oxford_pets/mia_acc_0.0.pkl
-    
-    Args:
-        exp_name: 实验组名（对应 mia.py 中的 wandb_group），默认为 'exp3-mia'
-        output_dir: 结果文件的基础目录，默认为 ~/code/sepfpl/outputs
-        datasets: 数据集列表，如果为None则自动扫描目录
-        noise_list: 噪声值列表，如果为None则自动扫描文件
-    """
-    # 构建实验目录路径：{output_dir}/{exp_name}
-    # 对应 mia.py 中的：~/code/sepfpl/outputs/{wandb_group}
-    exp_dir = output_dir / exp_name
-    
-    if not exp_dir.exists():
-        print(f"❌ 错误: 实验目录不存在: {exp_dir}")
-        return
-    
-    # 自动扫描数据集和噪声值
-    if datasets is None or noise_list is None:
-        dataset_dirs = [d for d in exp_dir.iterdir() 
-                       if d.is_dir() and not d.name.startswith('.')]
-        
-        if datasets is None:
-            datasets = sorted([d.name for d in dataset_dirs])
-        
-        if noise_list is None:
-            # 从所有数据集中收集噪声值
-            noise_set = set()
-            for dataset in datasets:
-                dataset_dir = exp_dir / dataset
-                if dataset_dir.exists():
-                    pattern = str(dataset_dir / 'mia_acc_*.pkl')
-                    files = glob.glob(pattern)
-                    for f in files:
-                        # 从文件名提取噪声值: mia_acc_{noise}.pkl
-                        try:
-                            noise_str = Path(f).stem.replace('mia_acc_', '')
-                            noise = float(noise_str)
-                            noise_set.add(noise)
-                        except ValueError:
-                            continue
-            noise_list = sorted(noise_set, reverse=True)  # 从大到小排序
-    
-    # 读取所有结果
-    results = {}  # {dataset: {noise: accuracy}}
-    
-    for dataset in datasets:
-        dataset_dir = exp_dir / dataset
-        if not dataset_dir.exists():
-            continue
-        
-        results[dataset] = {}
-        dataset_accs_by_noise = {}  # 用于检查不同 noise 值的结果是否相同
-        
-        for noise in noise_list:
-            # 构建文件路径：{exp_dir}/{dataset}/mia_acc_{noise}.pkl
-            # 对应 mia.py 中的保存路径：{output_dir}/{wandb_group}/{dataset_name}/mia_acc_{noise}.pkl
-            mia_acc_file = dataset_dir / f'mia_acc_{noise}.pkl'
-            if mia_acc_file.exists():
-                try:
-                    with open(mia_acc_file, 'rb') as f:
-                        acc = pickle.load(f)
-                    # mia.py 中保存的可能是 float（旧格式）或 dict（新格式）
-                    if isinstance(acc, (int, float)):
-                        # 旧格式：直接是 float 类型的平均攻击成功率
-                        acc_value = float(acc)
-                        results[dataset][noise] = acc_value
-                        dataset_accs_by_noise[noise] = acc_value
-                    elif isinstance(acc, dict):
-                        # 新格式：字典包含 'average' 和 'per_label'
-                        if 'average' in acc:
-                            acc_value = float(acc['average'])
-                            results[dataset][noise] = acc_value
-                            dataset_accs_by_noise[noise] = acc_value
-                        else:
-                            print(f"⚠️  警告: {mia_acc_file} 中的字典缺少 'average' 键")
-                            results[dataset][noise] = None
-                    else:
-                        print(f"⚠️  警告: {mia_acc_file} 中的数据格式不正确: {type(acc)}，期望 float 或 dict 类型")
-                        results[dataset][noise] = None
-                except Exception as e:
-                    print(f"⚠️  警告: 无法读取 {mia_acc_file}: {e}")
-                    results[dataset][noise] = None
-            else:
-                results[dataset][noise] = None
-        
-        # 检查不同 noise 值的结果是否完全相同（可能是训练时未正确应用 noise）
-        if len(dataset_accs_by_noise) > 1:
-            unique_values = set(dataset_accs_by_noise.values())
-            if len(unique_values) == 1:
-                print(f"⚠️  警告: 数据集 {dataset} 的所有 noise 值 ({', '.join(map(str, noise_list))}) 的攻击成功率完全相同 ({list(unique_values)[0]:.4f})")
-                print(f"   这可能表明训练时未正确应用 noise 参数，导致所有 noise 值的模型相同。")
-    
-    # 生成表格
-    table = PrettyTable()
-    
-    # 表头：第一列是数据集，后面是各个噪声值，最后一列是平均值
-    headers = ['Dataset'] + [f'Noise={n:.2f}' for n in noise_list] + ['Average']
-    table.field_names = headers
-    
-    # 对齐方式
-    table.align['Dataset'] = 'l'
-    for header in headers[1:]:
-        table.align[header] = 'r'
-    
-    # 添加数据行
-    for dataset in datasets:
-        if dataset not in results:
-            continue
-        
-        row = [dataset]
-        dataset_accs = []
-        
-        for noise in noise_list:
-            acc = results[dataset].get(noise)
-            if acc is not None:
-                row.append(f'{acc:.4f}')
-                dataset_accs.append(acc)
-            else:
-                row.append('N/A')
-        
-        # 计算该数据集的平均值
-        if dataset_accs:
-            dataset_avg = sum(dataset_accs) / len(dataset_accs)
-            row.append(f'{dataset_avg:.4f}')
-        else:
-            row.append('N/A')
-        
-        table.add_row(row)
-    
-    # 添加平均值行
-    avg_row = ['Average']
-    for noise in noise_list:
-        noise_accs = []
-        for dataset in datasets:
-            if dataset in results and results[dataset].get(noise) is not None:
-                noise_accs.append(results[dataset][noise])
-        
-        if noise_accs:
-            avg_row.append(f'{sum(noise_accs) / len(noise_accs):.4f}')
-        else:
-            avg_row.append('N/A')
-    
-    # 最后一行的平均值列（不计算总平均值）
-    avg_row.append('N/A')
-    
-    table.add_row(avg_row)
-    
-    # 输出表格
-    print("\n" + "=" * 80)
-    print(f"📊 实验3 (MIA攻击) 结果表格 - {exp_name}")
-    print("=" * 80)
-    print(table)
-    print("=" * 80)
-    
-    # 检查是否有结果
-    has_results = any(
-        results.get(dataset, {}).get(noise) is not None
-        for dataset in datasets
-        for noise in noise_list
-    )
-    if not has_results:
-        print("\n⚠️  警告: 未找到任何实验结果")
-    
-    # 保存表格到文件
-    output_file = exp_dir / 'mia_results_table.txt'
-    with open(output_file, 'w', encoding='utf-8') as f:
-        f.write("=" * 80 + "\n")
-        f.write(f"实验3 (MIA攻击) 结果表格 - {exp_name}\n")
-        f.write("=" * 80 + "\n")
-        f.write(str(table))
-        f.write("\n" + "=" * 80 + "\n")
-    
-    print(f"\n💾 表格已保存到: {output_file}")
-
-
 def generate_exp4_mia_table(
     config_key: str = 'EXPERIMENT_4_MIA',
     config: Optional[Dict[str, Any]] = None,
@@ -917,7 +727,6 @@ def generate_exp4_mia_table(
     # 读取所有结果
     # results[dataset][noise] = {'average': float, 'per_label': {label: accuracy}}
     results = {}
-    all_labels = set()  # 收集所有出现过的 label
     
     for dataset in dataset_list:
         dataset_dir = exp_dir / dataset
@@ -942,8 +751,6 @@ def generate_exp4_mia_table(
                                 'average': data.get('average', 0.0),
                                 'per_label': data['per_label']
                             }
-                            # 收集所有 label
-                            all_labels.update(data['per_label'].keys())
                         elif 'average' in data:
                             # 只有平均值的旧格式
                             results[dataset][noise] = {
@@ -989,8 +796,15 @@ def generate_exp4_mia_table(
         for header in headers[1:]:
             table.align[header] = 'r'
         
+        # 收集当前数据集的所有 label（仅该数据集的 label，不重叠）
+        dataset_labels = set()
+        for noise in noise_list:
+            if dataset in results and results[dataset].get(noise) is not None:
+                per_label = results[dataset][noise].get('per_label', {})
+                dataset_labels.update(per_label.keys())
+        
         # 如果有 per_label 数据，按 label 排序
-        if all_labels:
+        if dataset_labels:
             def label_sort_key(x):
                 """辅助函数：将 label 转换为可比较的值用于排序"""
                 if isinstance(x, int):
@@ -1000,7 +814,7 @@ def generate_exp4_mia_table(
                 else:
                     return (1, str(x))  # 其他字符串放在后面
             
-            sorted_labels = sorted(all_labels, key=label_sort_key)
+            sorted_labels = sorted(dataset_labels, key=label_sort_key)
         else:
             sorted_labels = []
         
@@ -1700,16 +1514,6 @@ def main():
         if output_file:
             sys.stdout = tee
         
-        # 如果指定了 --mia-only，只生成MIA表格
-        if args.mia_only:
-            generate_mia_table(
-                exp_name=args.mia_exp_name,
-                output_dir=args.output_dir,
-                datasets=None,  # 自动扫描
-                noise_list=None  # 自动扫描
-            )
-        else:
-            # 原有的实验1和实验2表格生成逻辑
             configs_to_run = []
             any_flag = False
             for arg_attr in EXP_ARG_MAP.keys():

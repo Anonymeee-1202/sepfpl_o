@@ -485,7 +485,9 @@ class DatasetBase:
                             user_class_dict[idx].extend(segment)
 
                 # 2.2 根据 sample_order 和 sample_per_user 进行切片分配
-                dataset = []
+                # 先按 label 收集数据，然后交错排列
+                label_data_dict = {}  # {label: [items]}
+                
                 for label, items in tracker.items():
                     if label not in user_class_dict[idx]:
                         continue
@@ -500,12 +502,12 @@ class DatasetBase:
                         for k, v in enumerate(items):
                             if k in selected_indices:
                                 sampled_items.append(v)
-                        dataset.extend(sampled_items)
+                        label_data_dict[label] = sampled_items
                     else:
                         # Non-IID
                         if repeat_rate == 0.0:
                             # 独占该类，拿走所有数据
-                            dataset.extend(items)
+                            label_data_dict[label] = items
                         else:
                             # 有重叠
                             if label in class_repeat_list:
@@ -518,10 +520,26 @@ class DatasetBase:
                                 for k, v in enumerate(items):
                                     if k in selected_indices:
                                         sampled_items.append(v)
-                                dataset.extend(sampled_items)
+                                label_data_dict[label] = sampled_items
                             else:
                                 # 是独占类：拿走所有数据
-                                dataset.extend(items)
+                                label_data_dict[label] = items
+
+                # 使用 round-robin 方式交错排列不同 label 的数据
+                dataset = []
+                if label_data_dict:
+                    # 获取所有 label 和对应的数据列表
+                    labels = list(label_data_dict.keys())
+                    data_lists = [label_data_dict[label] for label in labels]
+                    
+                    # 计算最大长度
+                    max_len = max(len(data_list) for data_list in data_lists) if data_lists else 0
+                    
+                    # Round-robin 交错排列
+                    for i in range(max_len):
+                        for j, data_list in enumerate(data_lists):
+                            if i < len(data_list):
+                                dataset.append(data_list[i])
 
                 output_dict[idx] = dataset
 

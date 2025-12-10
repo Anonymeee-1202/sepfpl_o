@@ -340,88 +340,6 @@ def load_checkpoint(args):
     return epoch, local_weights, local_acc, neighbor_acc
 
 
-def generate_shadow_data(args, local_trainer, local_weights, logger):
-    """
-    生成 Shadow 数据用于 MIA 攻击模型训练。
-    
-    在训练完成后，收集所有客户端模型对训练集和测试集的预测结果，保存为 shadow 数据。
-    """
-    import torch.nn.functional as F
-    
-    dataset_name = args.dataset_config_file.split('/')[-1].split('.')[0]
-    wandb_group = getattr(args, 'wandb_group', None) or 'default'
-    output_dir = os.path.join(os.path.expanduser('~/code/sepfpl/outputs'), wandb_group, dataset_name)
-    os.makedirs(output_dir, exist_ok=True)
-    
-    # 获取所有客户端数量
-    num_users = args.num_users
-    
-    # 收集预测结果
-    shadow_data = []
-    
-    logger.info(f"开始收集所有 {num_users} 个客户端的 Shadow 数据...")
-    
-    # 遍历所有客户端
-    for client_idx in range(num_users):
-        logger.info(f"正在处理客户端 {client_idx+1}/{num_users}...")
-        
-        # 加载当前客户端的模型权重
-        local_trainer.model.load_state_dict(local_weights[client_idx], strict=False)
-        local_trainer.set_model_mode("eval")
-        
-        # 收集当前客户端的训练集预测结果
-        if client_idx in local_trainer.fed_train_loader_x_dict:
-            train_loader = local_trainer.fed_train_loader_x_dict[client_idx]
-            client_train_count = 0
-            for batch_idx, batch in enumerate(train_loader):
-                images = batch["img"].to(local_trainer.device)
-                labels = batch["label"].to(local_trainer.device)
-                
-                with torch.no_grad():
-                    outputs = local_trainer.model_inference(images)
-                    predictions = F.softmax(outputs, dim=1)
-                
-                for pred, label in zip(predictions.cpu(), labels.cpu()):
-                    # (prediction, membership=1, label)
-                    shadow_data.append((pred, torch.tensor(1), label))
-                    client_train_count += 1
-            logger.info(f"  客户端 {client_idx} 训练集样本数: {client_train_count}")
-        else:
-            logger.warning(f"  客户端 {client_idx} 的训练集数据加载器不存在，跳过")
-        
-        # 收集当前客户端的测试集预测结果
-        if client_idx in local_trainer.fed_test_local_loader_x_dict:
-            test_loader = local_trainer.fed_test_local_loader_x_dict[client_idx]
-            client_test_count = 0
-            for batch_idx, batch in enumerate(test_loader):
-                images = batch["img"].to(local_trainer.device)
-                labels = batch["label"].to(local_trainer.device)
-                
-                with torch.no_grad():
-                    outputs = local_trainer.model_inference(images)
-                    predictions = F.softmax(outputs, dim=1)
-                
-                for pred, label in zip(predictions.cpu(), labels.cpu()):
-                    # (prediction, membership=0, label)
-                    shadow_data.append((pred, torch.tensor(0), label))
-                    client_test_count += 1
-            logger.info(f"  客户端 {client_idx} 测试集样本数: {client_test_count}")
-        else:
-            logger.warning(f"  客户端 {client_idx} 的测试集数据加载器不存在，跳过")
-    
-    # 保存 shadow 数据
-    shadow_file = os.path.join(output_dir, f"shadow_{args.noise}_{args.seed}.pkl")
-    with open(shadow_file, 'wb') as f:
-        pickle.dump(shadow_data, f)
-    
-    train_count = sum(1 for _, m, _ in shadow_data if m.item() == 1)
-    test_count = sum(1 for _, m, _ in shadow_data if m.item() == 0)
-    logger.info(f"✅ Shadow 数据已保存: {shadow_file}")
-    logger.info(f"   总样本数: {len(shadow_data)}")
-    logger.info(f"   训练集样本: {train_count}")
-    logger.info(f"   测试集样本: {test_count}")
-
-
 def main(args):
     # ====== 初始化日志与配置 ======
     # 日志会将命令行参数与关键信息打印并写入文件，便于后续复现
@@ -532,8 +450,6 @@ def main(args):
             local_trainer.update_std_for_round(epoch)
         
         # ---------- 计算当前 epoch 的全局噪声标准差（若启用 DP） ----------
-        # 注意：如果使用时间自适应，local_trainer.std 会在 update_std_for_round 中更新
-        # 因此需要在这里重新计算 std，而不是在训练循环之前计算
         if args.noise > 0:
             std = local_trainer.std / cfg.DATASET.USERS
 
@@ -905,7 +821,6 @@ def main(args):
                 wandb.log(log_payload, step=epoch + 1)
 
         # ---------- 确保 local_weights 包含最新的权重（从 buffer 同步） ----------
-        # 如果测试被跳过，最后一个 batch 的权重只存在于 buffer 中，需要同步到 local_weights
         for idx in idxs_users:
             for key, buffer in key_to_buffer.items():
                 if buffer is None or buffer[idx] is None:
@@ -928,52 +843,8 @@ def main(args):
             )
         )
 
-    # ==================== 生成 Shadow 数据（如果启用） ====================
-    if getattr(args, 'generate_shadow', False):
-        logger.info("=" * 80)
-        logger.info("开始生成 Shadow 数据...")
-        logger.info("=" * 80)
-        try:
-            # 使用训练完成后的最终权重生成 shadow 数据
-            # 注意：local_weights 在训练循环中会不断更新，训练结束后已经是最新的
-            generate_shadow_data(args, local_trainer, local_weights, logger)
-        except Exception as e:
-            logger.error(f"生成 Shadow 数据时出现错误: {e}", exc_info=True)
-        logger.info("=" * 80)
-
     # ==================== 训练结束，记录 summary ====================
-    best_window_msg = None
     if local_acc_list:
-        window_size = min(10, len(local_acc_list))
-        best_score = -float('inf')
-        best_range = (0, window_size - 1)
-        best_local_avg = 0.0
-        best_neighbor_avg = None
-
-        for start in range(0, len(local_acc_list) - window_size + 1):
-            local_window = local_acc_list[start:start + window_size]
-            local_avg = sum(local_window) / window_size
-            neighbor_avg = None
-            score = local_avg
-
-            if neighbor_acc_list and len(neighbor_acc_list) >= start + window_size:
-                neighbor_window = neighbor_acc_list[start:start + window_size]
-                neighbor_avg = sum(neighbor_window) / window_size
-                score += neighbor_avg
-
-            if score > best_score:
-                best_score = score
-                best_range = (start, start + window_size - 1)
-                best_local_avg = local_avg
-                best_neighbor_avg = neighbor_avg
-
-        neighbor_text = f"{best_neighbor_avg:.2f}%" if best_neighbor_avg is not None else "N/A"
-        best_window_msg = (
-            f"best {window_size}-epoch window: Epoch {best_range[0] + 1}-{best_range[1] + 1} | "
-            f"local_avg={best_local_avg:.2f}% | neighbor_avg={neighbor_text}"
-        )
-        logger.info(best_window_msg)
-
         max_local = max(local_acc_list)
         mean_local = np.mean(local_acc_list[-5:]) if len(local_acc_list) >= 5 else np.mean(local_acc_list)
         logger.info(f"maximum test local acc: {max_local:.3f}")
@@ -1118,12 +989,6 @@ if __name__ == "__main__":
     parser.add_argument(
         '--skip-test', action='store_true', default=False,
         help='跳过测试阶段（默认进行测试）'
-    )
-    
-    # ====== Shadow 数据生成参数 ======
-    parser.add_argument(
-        '--generate-shadow', action='store_true', default=False,
-        help='训练完成后生成 Shadow 数据（用于 MIA 攻击模型训练）'
     )
 
     args = parser.parse_args()

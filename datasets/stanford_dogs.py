@@ -44,12 +44,8 @@ class StanfordDogs(DatasetBase):
 
         # ========== 按类别内样本比例采样（保持类别集合不变） ==========
         rng = random.Random(getattr(cfg, 'SEED', 1))
-        train = self.per_class_downsample(train, 0.2, rng)
-        test = self.per_class_downsample(test, 0.2, rng)
-
-        federated_train_x, federated_test_x = self.prepare_federated_data(
-            train, test, cfg, train_sample_ratio=None, test_sample_ratio=None
-        )
+        train, test = self.per_class_downsample(train, 0.2, rng), self.per_class_downsample(test, 0.2, rng)
+        federated_train_x, federated_test_x = self.prepare_federated_data(train, test, cfg, train_sample_ratio=None, test_sample_ratio=None)
 
         super().__init__(
             total_train_x=train,

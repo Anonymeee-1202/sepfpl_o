@@ -720,12 +720,12 @@ def set_academic_style():
     plt.rcParams.update({
         'font.family': 'serif',
         'font.serif': ['Times New Roman', 'DejaVu Serif'],
-        'font.size': 12,
-        'axes.labelsize': 14,
+        'font.size': 12 + 4,
+        'axes.labelsize': 14 + 2,
         'axes.titlesize': 16,
-        'xtick.labelsize': 12,
-        'ytick.labelsize': 12,
-        'legend.fontsize': 11,
+        'xtick.labelsize': 12 + 4,
+        'ytick.labelsize': 12 + 4,
+        'legend.fontsize': 16,
         'mathtext.fontset': 'stix',
         'figure.titlesize': 18,
         'axes.linewidth': 1.0,
@@ -783,10 +783,10 @@ def get_data():
     # Target:   0.01, 0.1, 0.4
     reorder_idx_B = [2, 1, 0]
     _p_raw = [
-        [[60.66, 60.61, 59.86, 60.27], [59.56, 59.14, 60.06, 60.36], [58.28, 56.92, 56.47, 57.22]],
-        [[60.18, 60.19, 59.77, 59.68], [59.73, 59.62, 59.91, 59.91], [58.52, 56.15, 56.03, 55.96]],
-        [[70.65, 70.99, 70.91, 71.19], [70.50, 70.14, 69.89, 69.61], [67.08, 66.08, 65.07, 60.65]],
-        [[70.36, 71.13, 70.35, 70.21], [69.81, 69.71, 70.10, 69.24], [67.00, 65.77, 64.97, 59.53]]
+        [[60.61, 60.66, 59.86, 60.27], [59.56, 60.36, 60.06, 59.14], [56.92, 58.28, 56.47, 57.22]],
+        [[60.18, 60.19, 59.77, 59.68], [59.73, 59.91, 59.62, 59.91], [56.15, 58.52, 56.03, 55.96]],
+        [[70.65, 71.19, 70.99, 70.91], [70.14, 70.50, 69.89, 69.61], [66.08, 67.08, 65.07, 60.65]],
+        [[70.36, 71.13, 70.35, 70.21], [69.81, 70.10, 69.71, 69.24], [65.77, 67.00, 64.97, 59.53]]
     ]
     p_data = [[dataset[i] for i in reorder_idx_B] for dataset in _p_raw]
 
@@ -873,18 +873,18 @@ def plot_ribbon_subplot(ax, x_vals, dataset_data, eps_labels, colors, xlabel, ti
     # X轴
     ax.set_xticks(xs)
     ax.set_xticklabels([str(x) for x in x_vals])
-    ax.set_xlabel(xlabel, labelpad=5, fontweight='bold')
+    ax.set_xlabel(xlabel, labelpad=8, fontweight='bold')
     
     # Y轴
     ax.set_yticks(np.arange(num_eps))
     ax.set_yticklabels(eps_labels, verticalalignment='baseline', horizontalalignment='left')
     # 调整 Y 轴标签角度
-    plt.setp(ax.get_yticklabels(), fontsize=12)
+    plt.setp(ax.get_yticklabels(), fontsize=12 + 4)
     
     # Z轴
     ax.set_zlim(zlim)
     if show_zlabel:
-        ax.set_zlabel("Accuracy (%)", fontweight='bold', labelpad=5)
+        ax.set_zlabel("Accuracy (%)", fontweight='bold', labelpad=8)
     
     # 标题
     # ax.set_title(title, y=1.05, fontweight='bold')
@@ -955,8 +955,8 @@ def plot_sensitivity_analysis(save_name="sensitivity_analysis_refined", show_plo
                 show_zlabel=show_zlabel
             )
             
-            # 添加自定义图例 (仅在第一个子图)
-            if i == 0:
+            # 添加自定义图例 (仅在最后一个子图)
+            if i == num_params - 1:
                 # 创建虚拟句柄用于图例
                 from matplotlib.lines import Line2D
                 from matplotlib.patches import Patch
@@ -964,7 +964,7 @@ def plot_sensitivity_analysis(save_name="sensitivity_analysis_refined", show_plo
                     Line2D([0], [0], color='black', lw=2, label='Local Acc.'),
                     Line2D([0], [0], color='black', lw=2, linestyle='--', label='Neighbor Acc.'),
                 ]
-                ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(-0.1, 1.0), fontsize=10, frameon=False)
+                ax.legend(handles=legend_elements, loc='center left', bbox_to_anchor=(1.05, 0.5), fontsize=18, frameon=False)
 
         plt.subplots_adjust(left=0.1, right=0.90, wspace=0.01)
         

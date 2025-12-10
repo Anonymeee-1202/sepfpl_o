@@ -89,8 +89,17 @@ class DataManager:
             if len(dataset.federated_train_x[idx]) > max_datasize:
                 max_datasize = len(dataset.federated_train_x[idx])
                 max_idx = idx
-        mia_in = dataset.federated_train_x[max_idx][min_datasize:]
-        mia_out = dataset.federated_test_x[max_idx]
+        
+        # 收集所有客户端都参与训练的样本作为 MIA 成员样本
+        # 在截断之前收集，确保获取的是真正参与训练的数据
+        mia_in = []
+        mia_out = []
+        for idx in range(cfg.DATASET.USERS):
+            # 只取参与训练的部分（截断后的部分）
+            mia_in.extend(dataset.federated_train_x[idx][min_datasize:])
+            mia_out.extend(dataset.federated_test_x[idx])
+        
+        # 统一所有客户端的数据量（截断到 min_datasize）
         for idx in range(cfg.DATASET.USERS):
             dataset.federated_train_x[idx] = dataset.federated_train_x[idx][:min_datasize]
         fed_train_loader_x_dict = defaultdict()
