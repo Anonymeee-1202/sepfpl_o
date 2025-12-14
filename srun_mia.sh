@@ -16,8 +16,7 @@
 #   $9: round - 训练轮次（用于加载对应的checkpoint）
 #   $10: wandb-group - wandb group 参数（可选，留空则不传递）
 #   $11: task-id - 任务编号标识（可选，留空则不传递）
-#   $12: shadow-sample-ratio - shadow 数据采样比例（可选，留空则不传递）
-#   $13+: 额外参数
+#   $12+: 额外参数（包括 --noise-list 和 --shadow-sample-ratio-list）
 #
 # 测试模式参数（仅测试，不训练）：
 #   $2: root - 数据集路径
@@ -30,8 +29,7 @@
 #   $9: round - 训练轮次（用于加载对应的checkpoint）
 #   $10: wandb-group - wandb group 参数（可选，留空则不传递）
 #   $11: task-id - 任务编号标识（可选，留空则不传递）
-#   $12: shadow-sample-ratio - shadow 数据采样比例（可选，留空则不传递）
-#   $13+: 额外参数
+#   $12+: 额外参数（包括 --noise-list 和 --shadow-sample-ratio-list）
 #
 # 生成shadow数据模式参数（从checkpoint生成shadow数据）：
 #   $2: root - 数据集路径
@@ -44,8 +42,7 @@
 #   $9: round - 训练轮次（用于加载对应的checkpoint）
 #   $10: wandb-group - wandb group 参数（可选，留空则不传递）
 #   $11: task-id - 任务编号标识（可选，留空则不传递）
-#   $12: shadow-sample-ratio - shadow 数据采样比例（可选，留空则不传递）
-#   $13+: 额外参数
+#   $12+: 额外参数（包括 --noise-list 和 --shadow-sample-ratio-list）
 
 MODE="$1"
 
@@ -63,7 +60,6 @@ fi
 # 训练和测试模式使用相同的参数（因为训练后会自动测试）
 WAND_GROUP="${10:-}"
 TASK_ID="${11:-}"
-SHADOW_SAMPLE_RATIO="${12:-}"
 
 PY_ARGS=(
     --mode "$MODE"
@@ -85,12 +81,8 @@ if [ -n "$TASK_ID" ]; then
     PY_ARGS+=(--task-id "$TASK_ID")
 fi
 
-if [ -n "$SHADOW_SAMPLE_RATIO" ]; then
-    PY_ARGS+=(--shadow-sample-ratio "$SHADOW_SAMPLE_RATIO")
-fi
-
-if [ "$#" -ge 13 ]; then
-    for extra_arg in "${@:13}"; do
+if [ "$#" -ge 12 ]; then
+    for extra_arg in "${@:12}"; do
         PY_ARGS+=("$extra_arg")
     done
 fi

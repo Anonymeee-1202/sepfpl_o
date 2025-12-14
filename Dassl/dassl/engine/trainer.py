@@ -240,7 +240,8 @@ class SimpleTrainer(TrainerBase):
         self.optim = build_optimizer(self.model, cfg.OPTIM)
         self.sched = build_lr_scheduler(self.optim, cfg.OPTIM)
         self.register_model("model", self.model, self.optim, self.sched)
-        os.environ["CUDA_VISIBLE_DEVICES"] = "1,0"
+        # 注意：不在此处设置 CUDA_VISIBLE_DEVICES，应该由外部环境变量控制
+        # 这样可以支持多 GPU 并行执行不同的任务
         device_count = torch.cuda.device_count()
         if device_count > 1:
             print(f"Detected {device_count} GPUs (use nn.DataParallel)")

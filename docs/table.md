@@ -48,7 +48,7 @@ python table.py --exp1
 python table.py --exp2 --output-file res/exp2.txt
 
 # 生成实验4 (MIA) 的表格
-python table.py --exp4-mia --output-file res/exp4-mia.txt
+python table.py --exp4 --output-file res/exp4-mia.txt
 ```
 
 ### 查看帮助
@@ -266,7 +266,7 @@ python table.py --exp3-rdp-p --output-file res/exp3-rdp-p.txt
 
 ```bash
 # 生成实验4的表格
-python table.py --exp4-mia --output-file res/exp4-mia.txt
+python table.py --exp4 --output-file res/exp4-mia.txt
 
 # 使用自定义输出目录
 python table.py --exp4-mia --output-dir /path/to/outputs --output-file res/exp4-mia.txt

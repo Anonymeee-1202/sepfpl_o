@@ -81,13 +81,12 @@ def orthogonalize(matrix):
             rest -= torch.sum(col * rest, dim=0) * col
 
 def factorize_ctx(origin, rank):
-    if torch.cuda.is_available():
-        device = torch.device('cuda:0')
-    else:
-        device = torch.device('cpu')
+    # 使用 origin tensor 的设备，而不是硬编码 cuda:0
+    # 这样可以正确支持 CUDA_VISIBLE_DEVICES 环境变量
+    device = origin.device if isinstance(origin, torch.Tensor) else (torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
 
     with torch.no_grad():
-        v = torch.normal(0, 1, size=(origin.shape[1], rank)).type(origin.dtype) # [ctx_dim, rank]
+        v = torch.normal(0, 1, size=(origin.shape[1], rank), device=device, dtype=origin.dtype) # [ctx_dim, rank]
         u = torch.matmul(origin.to(device), v.to(device)) # [n_ctx, rank]
         orthogonalize(u)
         v = torch.matmul(origin.t().to(device), u.to(device)) # [ctx_dim, rank]
@@ -471,10 +470,9 @@ class TextEncoder(nn.Module):
         self.dtype = clip_model.dtype
 
     def forward(self, prompts, tokenized_prompts):
-        if torch.cuda.is_available():
-            device = torch.device('cuda:0')
-        else:
-            device = torch.device('cpu')
+        # 使用 prompts tensor 的设备，而不是硬编码 cuda:0
+        # 这样可以正确支持 CUDA_VISIBLE_DEVICES 环境变量
+        device = prompts.device if isinstance(prompts, torch.Tensor) else (torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
 
         x = prompts.to(device) + self.positional_embedding.type(self.dtype).to(device) # [100,77,512] + [77, 512]
 

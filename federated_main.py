@@ -1,3 +1,13 @@
+"""
+联邦学习主程序：支持多种矩阵分解算法和差分隐私机制
+
+主要功能：
+- 联邦提示学习（Federated Prompt Learning）
+- 支持多种算法变体：sepfpl, dpfpl, fedotp, fedpgp, dplora 等
+- 支持 HCSE（分层聚类结构熵）和时间自适应隐私分配
+- 集成 wandb 实验跟踪
+"""
+
 import argparse
 import torch
 from Dassl.dassl.utils import set_random_seed
@@ -13,6 +23,13 @@ import time
 from tqdm import tqdm
 from prettytable import PrettyTable
 from utils.logger import init_logger_from_args
+from utils.config_utils import setup_cfg
+from utils.checkpoint_utils import (
+    build_filename_suffix,
+    get_output_dir,
+    save_checkpoint,
+    load_checkpoint,
+)
 
 try:
     import wandb  # type: ignore
@@ -20,117 +37,6 @@ try:
 except ImportError:
     wandb = None
     _WANDB_AVAILABLE = False
-
-
-def extend_cfg(cfg, args):
-    """
-    扩展 Dassl 默认配置，注入本项目额外需要的配置项。
-    """
-    from yacs.config import CfgNode as CN
-
-    # ====== 矩阵分解（Factorization）相关参数 ======
-    cfg.FACTORIZATION = args.factorization
-    cfg.RANK = args.rank
-
-    # ====== 差分隐私（DP）相关参数 ======
-    cfg.NORM_THRESH = args.norm_thresh          # 梯度裁剪阈值
-    cfg.NOISE = args.noise                      # 高斯噪声尺度
-    # RDP（Rényi Differential Privacy）参数
-    cfg.RDP_ALPHA = getattr(args, 'rdp_alpha', 2.0)  # RDP 阶数 α
-    cfg.RDP_P = getattr(args, 'rdp_p', 1.1)          # sepfpl 中时间自适应隐私分配的幂次 p
-
-    # ====== 训练器（Trainer）相关配置 ======
-    # 根据 factorization 参数动态选择训练器
-    factorization_to_trainer = {
-        'promptfl': 'PromptFL',
-        'fedotp': 'FedOTP',
-        'fedpgp': 'FedPGP',
-        'dplora': 'DPLoRA',
-        'dpfpl': 'DPFPL',
-        'sepfpl': 'SepFPL',
-        'sepfpl_time_adaptive': 'SepFPLTimeAdaptive',
-        'sepfpl_hcse': 'SepFPLHCSE',
-    }
-    trainer_name = factorization_to_trainer.get(args.factorization, 'SepFPL')
-    cfg.TRAINER.NAME = trainer_name
-    
-    # 根据训练器名称动态创建配置节点
-    # 所有 factorization 方法共享相同的配置结构，但使用训练器特定的配置节点
-    if not hasattr(cfg.TRAINER, trainer_name):
-        cfg.TRAINER[trainer_name] = CN()
-    cfg.TRAINER[trainer_name].N_CTX = args.n_ctx  # 文本提示 context 个数
-    cfg.TRAINER[trainer_name].PREC = "fp32"       # 计算精度：可选 fp16, fp32, amp
-    cfg.TRAINER[trainer_name].CLASS_TOKEN_POSITION = "end"  # 类别 token 放置位置：'middle' / 'end' / 'front'
-    
-    # 为了向后兼容，同时设置 DP_FPL 配置（所有训练器共享）
-    # 这样 base_trainer.py 中的代码可以继续使用 cfg.TRAINER.DP_FPL
-    if not hasattr(cfg.TRAINER, 'DP_FPL'):
-        cfg.TRAINER.DP_FPL = CN()
-    cfg.TRAINER.DP_FPL.N_CTX = args.n_ctx
-    cfg.TRAINER.DP_FPL.PREC = "fp32"
-    cfg.TRAINER.DP_FPL.CLASS_TOKEN_POSITION = "end"
-
-    # ====== 数据集相关配置 ======
-    cfg.DATASET.ROOT = args.root               # 数据集根路径
-    cfg.DATASET.USERS = args.num_users         # 客户端数量
-    cfg.DATASET.IID = args.iid                 # 是否采用 IID 划分
-    cfg.DATASET.USEALL = args.useall           # 是否使用全部训练样本（否则为 few-shot）
-    cfg.DATASET.NUM_SHOTS = args.num_shots     # few-shot 设置下的每类样本数
-    cfg.DATASET.PARTITION = args.partition     # cifar 系列的数据划分策略
-    cfg.DATASET.BETA = args.beta               # Dirichlet 划分参数
-
-
-    # 一些特定数据集（domainnet, office）使用的 domain 数
-    cfg.DATALOADER.TRAIN_X.N_DOMAIN = 6 if args.num_users == 6 else 4
-
-    # 训练 batch size：USEALL 时使用指定 train_batch_size，否则与 NUM_SHOTS 一致
-    if args.useall:
-        cfg.DATALOADER.TRAIN_X.BATCH_SIZE = args.train_batch_size
-    else:
-        cfg.DATALOADER.TRAIN_X.BATCH_SIZE = args.num_shots
-    cfg.DATALOADER.TEST.BATCH_SIZE = args.test_batch_size
-
-    # ====== 优化器相关配置 ======
-    cfg.OPTIM.ROUND = args.round   # 全局通信轮次
-    cfg.OPTIM.MAX_EPOCH = 1        # 每轮本地训练 epoch 数（通常为 1）
-    cfg.OPTIM.LR = args.lr         # 学习率
-
-    # ====== 模型与 CLIP 路径相关配置 ======
-    cfg.MODEL.BACKBONE.PRETRAINED = True
-    if not hasattr(cfg.MODEL.BACKBONE, 'PATH'):
-        cfg.MODEL.BACKBONE.PATH = None
-    if not hasattr(cfg.MODEL.BACKBONE, 'CACHE_DIR'):
-        cfg.MODEL.BACKBONE.CACHE_DIR = None
-    if hasattr(args, 'clip_model_path') and args.clip_model_path:
-        cfg.MODEL.BACKBONE.PATH = args.clip_model_path
-    if hasattr(args, 'clip_cache_dir') and args.clip_cache_dir:
-        cfg.MODEL.BACKBONE.CACHE_DIR = args.clip_cache_dir
-
-    # ====== 随机种子 ======
-    cfg.SEED = args.seed
-
-
-def setup_cfg(args):
-    """
-    构造并返回最终配置：
-    1. 读取 Dassl 默认配置；
-    2. 根据命令行参数扩展配置；
-    3. 从数据集 / 方法配置文件中 merge 对应配置；
-    4. 冻结 cfg 防止后续随意修改。
-    """
-    cfg = get_cfg_default()
-    extend_cfg(cfg, args)
-
-    # 1) 数据集配置文件（如 configs/datasets/cifar100.yaml）
-    if args.dataset_config_file:
-        cfg.merge_from_file(args.dataset_config_file)
-
-    # 2) 算法 / 模型配置文件（如 configs/trainers/DP-FPL/vit_b16.yaml）
-    if args.config_file:
-        cfg.merge_from_file(args.config_file)
-
-    cfg.freeze()
-    return cfg
 
 
 def _should_enable_wandb(args):
@@ -203,6 +109,14 @@ def _use_time_adaptive(args) -> bool:
 def init_wandb_run(args, cfg, logger):
     """
     初始化 wandb 运行（若可用且未被禁用）。
+    
+    Args:
+        args: 命令行参数对象
+        cfg: 配置对象
+        logger: 日志记录器
+        
+    Returns:
+        wandb.Run 对象，若不可用或已禁用则返回 None
     """
     if not _WANDB_AVAILABLE:
         if _should_enable_wandb(args):
@@ -212,8 +126,8 @@ def init_wandb_run(args, cfg, logger):
         return None
 
     project = 'SepFPL'
-    group = args.wandb_group       # 实验分组名称
-    mode = 'offline'                # 默认为 offline 模式
+    group = args.wandb_group
+    mode = 'offline'
     run_name = _default_wandb_run_name(args)
     tags = _prepare_wandb_tags(args)
 
@@ -255,127 +169,605 @@ def init_wandb_run(args, cfg, logger):
     return wandb.init(**init_kwargs)
 
 
-def _build_filename_suffix(args, prefix=''):
+def initialize_prompt_buffers(args, local_weights, use_hcse_flag):
     """
-    构建文件名后缀，对于 sepfpl 相关方法，添加 topk 和 rdp_p 参数。
+    初始化提示参数缓冲区映射。
+    
+    根据不同的算法变体，决定需要维护哪些提示参数缓冲区：
+    - global_ctx: 所有算法都需要
+    - local_ctx: fedotp, dplora, dpfpl, sepfpl 系列
+    - local_u_ctx / local_v_ctx: fedpgp, dplora, dpfpl, sepfpl 系列
+    - cluster_ctx: 仅 HCSE 模式需要
     
     Args:
         args: 命令行参数对象
-        prefix: 文件名前缀（如 'acc_' 或 ''）
-    
-    Returns:
-        文件名后缀字符串（不包含扩展名）
-    
-    文件名格式：
-    - 非 sepfpl 方法: {prefix}{factorization}_{rank}_{noise}_{seed}_{num_users}
-    - sepfpl 方法: {prefix}{factorization}_{rank}_{noise}_{seed}_{topk}_{rdp_p}_{num_users}
-    """
-    # 检查是否是 sepfpl 相关方法
-    sepfpl_methods = ['sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']
-    is_sepfpl = args.factorization in sepfpl_methods
-    
-    # 基础参数（固定部分）
-    base_parts = [args.factorization, args.rank, args.noise, args.seed]
-    
-    # 如果是 sepfpl 相关方法，添加 topk 和 rdp_p（在 seed 之后，num_users 之前）
-    if is_sepfpl:
-        sepfpl_topk = getattr(args, 'sepfpl_topk', None)
-        rdp_p = getattr(args, 'rdp_p', None)
+        local_weights: 客户端权重列表
+        use_hcse_flag: 是否启用 HCSE
         
-        if sepfpl_topk is not None:
-            base_parts.append(sepfpl_topk)  # 直接添加数字，不加前缀
-        if rdp_p is not None:
-            # 直接使用 rdp_p 的字符串形式，保留原始格式（包含点号）
-            base_parts.append(str(rdp_p))
+    Returns:
+        dict: 提示参数键到缓冲区的映射
+    """
+    local_weights_g = [None for _ in range(args.num_users)]
+    local_weights_l = [None for _ in range(args.num_users)]
+    local_weights_u = [None for _ in range(args.num_users)]
+    local_weights_v = [None for _ in range(args.num_users)]
     
-    # 最后添加 num_users
-    base_parts.append(args.num_users)
+    key_to_buffer = {'prompt_learner.global_ctx': local_weights_g}
     
-    return f"{prefix}{'_'.join(map(str, base_parts))}"
+    # 根据算法变体决定维护哪些提示参数
+    if args.factorization in ['fedotp', 'dplora', 'dpfpl', 'sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']:
+        key_to_buffer['prompt_learner.local_ctx'] = local_weights_l
+    if args.factorization in ['fedpgp', 'dplora', 'dpfpl', 'sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']:
+        key_to_buffer['prompt_learner.local_u_ctx'] = local_weights_u
+        key_to_buffer['prompt_learner.local_v_ctx'] = local_weights_v
+    if use_hcse_flag:
+        key_to_buffer['prompt_learner.cluster_ctx'] = [
+            copy.deepcopy(local_weights[i]['prompt_learner.cluster_ctx'])
+            if 'prompt_learner.cluster_ctx' in local_weights[i] else None
+            for i in range(args.num_users)
+        ]
+    
+    return key_to_buffer
 
 
-def save_checkpoint(args, epoch, local_weights, local_acc, neighbor_acc):
+def collect_client_gradients(local_trainer, idxs_users, data_iters, batch, max_batch,
+                             initial_weights, local_weights, global_gradients, 
+                             key_to_buffer, use_hcse, epoch):
     """
-    保存模型检查点（包含每个客户端的权重及精度曲线）。
+    收集所有客户端的梯度并更新缓冲区。
+    
+    Args:
+        local_trainer: 本地训练器
+        idxs_users: 客户端索引列表
+        data_iters: 数据迭代器列表
+        batch: 当前批次索引
+        max_batch: 每轮最大批次数量
+        initial_weights: 初始模型权重
+        local_weights: 客户端权重列表
+        global_gradients: 全局梯度列表（输出）
+        key_to_buffer: 提示参数到缓冲区的映射
+        use_hcse: 是否使用 HCSE
+        epoch: 当前轮次
+        
+    Returns:
+        tuple: (cluster_grads, train_acc_sum, train_acc_count)
+            - cluster_grads: 聚类梯度列表（HCSE 模式）或 None
+            - train_acc_sum: 训练精度累计和
+            - train_acc_count: 训练精度计数
     """
-    dataset = args.dataset_config_file.split('/')[-1].split('.')[0]
-    wandb_group = getattr(args, 'wandb_group', None) or 'default'
-    save_dir = os.path.join(os.path.expanduser('~/code/sepfpl/checkpoints'), wandb_group, dataset)
-    os.makedirs(save_dir, exist_ok=True)
-    filename_suffix = _build_filename_suffix(args, prefix='')
-    save_filename = os.path.join(save_dir, f'{filename_suffix}.pth.tar')
-    state = {
-        "epoch": epoch + 1,
-        "local_weights": local_weights,
-        "local_acc": local_acc,
-        "neighbor_acc": neighbor_acc,
-    }
-    torch.save(state, save_filename)
+    cluster_grads = [None for _ in idxs_users] if use_hcse else None
+    train_acc_sum = 0.0
+    train_acc_count = 0
+    
+    for idx in idxs_users:
+        # 加载客户端权重
+        if epoch == 0:
+            local_trainer.model.load_state_dict(initial_weights, strict=False)
+        else:
+            local_trainer.model.load_state_dict(local_weights[idx], strict=False)
+        
+        # 前向传播
+        loss_summary = local_trainer.train_forward(
+            idx=idx,
+            train_iter=data_iters[idx],
+            current_batch=batch,
+            total_batches=max_batch
+        )
+        
+        # 累积训练精度统计
+        if loss_summary is not None and 'acc' in loss_summary:
+            train_acc_sum += loss_summary['acc']
+            train_acc_count += 1
+        
+        # 提取全局 prompt 梯度
+        local_weight = local_trainer.model.state_dict()
+        grad_global = local_trainer.model.prompt_learner.global_ctx.grad
+        if grad_global is not None:
+            global_gradients[idx] = grad_global.data.clone()
+        else:
+            global_gradients[idx] = torch.zeros_like(
+                local_trainer.model.prompt_learner.global_ctx.data
+            )
+        
+        # 将提示参数写入缓冲区
+        for key, buffer in key_to_buffer.items():
+            if buffer is None or key not in local_weight:
+                continue
+            buffer[idx] = copy.deepcopy(local_weight[key])
+        
+        # HCSE：记录 cluster_ctx 梯度
+        if use_hcse and 'prompt_learner.cluster_ctx' in local_weight:
+            if local_trainer.model.prompt_learner.cluster_ctx.grad is not None:
+                cluster_grads[idx] = local_trainer.model.prompt_learner.cluster_ctx.grad.data.clone()
+            else:
+                cluster_grads[idx] = torch.zeros_like(
+                    local_trainer.model.prompt_learner.cluster_ctx.data
+                )
+    
+    return cluster_grads, train_acc_sum, train_acc_count
 
 
-def load_checkpoint(args):
+def aggregate_gradients_with_hcse(cluster_grads, global_gradients, idxs_users, 
+                                   local_trainer, args, logger):
     """
-    从磁盘加载检查点，若不存在则返回默认初始状态。
+    使用 HCSE 方法聚合梯度。
+    
+    包括：
+    1. 按数据量加权聚合全局梯度
+    2. 计算梯度相似度矩阵
+    3. Top-k 稀疏化、对称化、指数映射
+    4. 构建编码树并聚合聚类梯度
+    
+    Args:
+        cluster_grads: 聚类梯度列表
+        global_gradients: 全局梯度列表
+        idxs_users: 客户端索引列表
+        local_trainer: 本地训练器
+        args: 命令行参数对象
+        logger: 日志记录器
+        
+    Returns:
+        tuple: (avg_global_gradient, cluster_gradients_to_apply)
+            - avg_global_gradient: 聚合后的全局梯度
+            - cluster_gradients_to_apply: 分配给各客户端的聚类梯度字典
     """
-    dataset = args.dataset_config_file.split('/')[-1].split('.')[0]
-    wandb_group = getattr(args, 'wandb_group', None) or 'default'
-    filename_suffix = _build_filename_suffix(args, prefix='')
-    save_filename = os.path.join(
-        os.path.expanduser('~/code/sepfpl/checkpoints'),
-        wandb_group,
-        dataset,
-        f'{filename_suffix}.pth.tar'
+    # 构建加权全局梯度（按各客户端数据量加权）
+    per_user_global = []
+    data_sizes = []
+    for i in idxs_users:
+        try:
+            ds_len = len(local_trainer.fed_train_loader_x_dict[i].dataset)
+        except Exception:
+            ds_len = 1
+        data_sizes.append(max(1, ds_len))
+        per_user_global.append(global_gradients[i])
+    total_size = float(sum(data_sizes))
+    weights = [s / total_size for s in data_sizes]
+    avg_global_gradient = sum(w * g for w, g in zip(weights, per_user_global))
+    
+    # 基于 HCSE 的梯度聚类与编码树聚合
+    cluster_gradients_to_apply = None
+    try:
+        from hcse.encoding_tree import (
+            PartitionTree,
+            compute_gradient_similarity_matrix_torch,
+            aggregate_gradients_by_encoding_tree,
+        )
+        
+        # 填充缺失的 cluster_grad
+        for i in range(len(cluster_grads)):
+            if cluster_grads[i] is None:
+                if 'prompt_learner.cluster_ctx' in local_trainer.model.state_dict():
+                    zshape = local_trainer.model.prompt_learner.cluster_ctx.data.shape
+                    device = local_trainer.model.prompt_learner.cluster_ctx.data.device
+                    cluster_grads[i] = torch.zeros(zshape, device=device)
+                else:
+                    cluster_grads[i] = torch.zeros_like(
+                        local_trainer.model.prompt_learner.global_ctx.data
+                    )
+        
+        # 计算梯度相似度矩阵
+        sim_mat = compute_gradient_similarity_matrix_torch(cluster_grads, normalize=True)
+        
+        # Top-k 稀疏化 + 对称化 + 指数映射
+        k = args.sepfpl_topk if hasattr(args, 'sepfpl_topk') and args.sepfpl_topk is not None else 5
+        with torch.no_grad():
+            sim_proc = sim_mat.clone()
+            n = sim_proc.shape[0]
+            for r in range(n):
+                vals, idxs = torch.topk(sim_proc[r], k=k, largest=True)
+                mask = torch.zeros_like(sim_proc[r], dtype=torch.bool)
+                mask[idxs] = True
+                mask[r] = True
+                sim_proc[r][~mask] = 0.0
+            # 对称化
+            sim_proc = torch.maximum(sim_proc, sim_proc.t())
+            # 指数映射增强对高相似度边的区分
+            sim_proc = torch.exp(sim_proc)
+        
+        adj_matrix = sim_proc.detach().cpu().numpy()
+        # 基于相似度图构建编码树
+        tree = PartitionTree(adj_matrix)
+        tree.build_encoding_tree(k=2, mode='v2')
+        
+        # 沿编码树聚合 cluster_ctx 梯度
+        aggregated_cluster_grads = aggregate_gradients_by_encoding_tree(
+            tree, cluster_grads, adj_matrix
+        )
+        
+        # 将聚合后的梯度分配给各客户端
+        cluster_gradients_to_apply = {
+            i: aggregated_cluster_grads[i]
+            for i in idxs_users
+            if aggregated_cluster_grads[i] is not None
+        }
+    except Exception as e:
+        logger.warning(f"[HCSE] 聚类与聚合出现异常，跳过本步: {e}")
+    
+    return avg_global_gradient, cluster_gradients_to_apply
+
+
+def apply_differential_privacy_noise(avg_global_gradient, cluster_gradients_to_apply, std):
+    """
+    为聚合后的梯度添加差分隐私高斯噪声。
+    
+    Args:
+        avg_global_gradient: 聚合后的全局梯度
+        cluster_gradients_to_apply: 聚类梯度字典（可能为 None）
+        std: 噪声标准差
+        
+    Returns:
+        tuple: (noisy_avg_global_gradient, noisy_cluster_gradients_to_apply)
+    """
+    # 为全局梯度添加噪声
+    noise = torch.normal(
+        0, std,
+        size=avg_global_gradient.shape,
+        device=avg_global_gradient.device
     )
-    if not os.path.exists(save_filename):
-        # epoch=0，local_weights 为 num_users 个空 dict，acc 为空列表
-        return 0, [{} for i in range(args.num_users)], [], []
-    checkpoint = torch.load(
-        save_filename,
-        map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    avg_global_gradient += noise
+    
+    # 为聚类梯度添加噪声
+    if cluster_gradients_to_apply is not None:
+        for idx in cluster_gradients_to_apply:
+            cluster_grad = cluster_gradients_to_apply[idx]
+            if cluster_grad is not None:
+                cluster_noise = torch.normal(
+                    0, std,
+                    size=cluster_grad.shape,
+                    device=cluster_grad.device
+                )
+                cluster_gradients_to_apply[idx] = cluster_grad + cluster_noise
+    
+    return avg_global_gradient, cluster_gradients_to_apply
+
+
+def update_client_weights(local_trainer, idxs_users, local_weights, initial_weights,
+                          key_to_buffer, avg_global_gradient, cluster_gradients_to_apply,
+                          get_prompt_default):
+    """
+    更新所有客户端的权重。
+    
+    对每个客户端：
+    1. 从缓冲区同步提示参数到 local_weights
+    2. 加载权重到模型
+    3. 执行反向传播更新
+    4. 将更新后的提示参数写回缓冲区
+    
+    Args:
+        local_trainer: 本地训练器
+        idxs_users: 客户端索引列表
+        local_weights: 客户端权重列表
+        initial_weights: 初始模型权重
+        key_to_buffer: 提示参数到缓冲区的映射
+        avg_global_gradient: 聚合后的全局梯度
+        cluster_gradients_to_apply: 分配给各客户端的聚类梯度字典
+        get_prompt_default: 获取默认提示参数的函数
+    """
+    for idx in idxs_users:
+        # 从缓冲区同步提示参数到 local_weights
+        for key, buffer in key_to_buffer.items():
+            should_handle = (
+                key == 'prompt_learner.global_ctx'
+                or key in local_weights[idx]
+                or key in initial_weights
+            )
+            if not should_handle or buffer is None:
+                continue
+            if not isinstance(buffer[idx], torch.Tensor):
+                buffer[idx] = copy.deepcopy(get_prompt_default(key, idx))
+            local_weights[idx][key] = buffer[idx]
+        
+        # 加载权重并执行反向传播
+        local_trainer.model.load_state_dict(local_weights[idx], strict=False)
+        
+        cluster_grad_for_idx = None
+        if cluster_gradients_to_apply is not None and idx in cluster_gradients_to_apply:
+            cluster_grad_for_idx = cluster_gradients_to_apply[idx]
+        
+        local_trainer.train_backward(
+            avg_global_gradient=avg_global_gradient,
+            aggregated_cluster_gradient=cluster_grad_for_idx,
+        )
+        
+        # 将更新后的提示参数写回缓冲区
+        local_weight = local_trainer.model.state_dict()
+        for key, buffer in key_to_buffer.items():
+            if buffer is None or key not in local_weight:
+                continue
+            copied = copy.deepcopy(local_weight[key])
+            buffer[idx] = copied
+
+
+def format_results_table(results_list, title, client_ids):
+    """
+    使用 PrettyTable 格式化测试结果为表格字符串。
+    
+    Args:
+        results_list: 测试结果列表，每个元素是一个包含多个指标的元组
+        title: 表格标题
+        client_ids: 客户端 ID 列表
+        
+    Returns:
+        str: 格式化后的表格字符串
+    """
+    if not results_list:
+        return ""
+    
+    num_metrics = len(results_list[0])
+    metric_names = ['Accuracy', 'Error Rate', 'Macro F1']
+    if num_metrics > 3:
+        metric_names.extend([f'Metric {i+4}' for i in range(num_metrics - 3)])
+    
+    table = PrettyTable()
+    table.field_names = ['Client'] + metric_names[:num_metrics]
+    table.align['Client'] = 'l'
+    for name in metric_names[:num_metrics]:
+        table.align[name] = 'r'
+    
+    # 每个客户端一行
+    for idx, res in enumerate(results_list):
+        client_id = client_ids[idx] if idx < len(client_ids) else idx
+        row = [f'Client {client_id}'] + [f'{val:.2f}' for val in res[:num_metrics]]
+        table.add_row(row)
+    
+    # 最后一行为平均值
+    avg_values = []
+    for i in range(num_metrics):
+        avg_val = sum([res[i] for res in results_list]) / len(results_list) if results_list else 0.0
+        avg_values.append(avg_val)
+    avg_row = ['Average'] + [f'{val:.2f}' for val in avg_values]
+    table.add_row(avg_row)
+    
+    table_str = f"\n{title}\n{table.get_string()}\n"
+    return table_str
+
+
+def run_test_phase(local_trainer, idxs_users, local_weights, key_to_buffer,
+                   dirichlet, epoch, max_epoch, args, logger, wandb_run):
+    """
+    运行测试阶段，评估所有客户端的模型性能。
+    
+    Args:
+        local_trainer: 本地训练器
+        idxs_users: 客户端索引列表
+        local_weights: 客户端权重列表
+        key_to_buffer: 提示参数到缓冲区的映射
+        dirichlet: 是否为 Dirichlet 划分场景
+        epoch: 当前轮次
+        max_epoch: 最大轮次
+        args: 命令行参数对象
+        logger: 日志记录器
+        wandb_run: wandb 运行对象（可能为 None）
+        
+    Returns:
+        tuple: (avg_local_acc, avg_neighbor_acc)
+            - avg_local_acc: 平均本地测试精度
+            - avg_neighbor_acc: 平均邻居测试精度（可能为 None）
+    """
+    show_test_details = getattr(args, "test_verbose_log", False)
+    test_start_time = time.time()
+    
+    if show_test_details:
+        logger.info("")
+        logger.info("=" * 80)
+        logger.info(f"                    TEST START - Epoch {epoch + 1}/{max_epoch}")
+        logger.info("=" * 80)
+        logger.info("")
+    
+    local_trainer.set_model_mode("eval")
+    
+    results_local = []
+    results_neighbor = [] if not dirichlet else None
+    
+    test_range = tqdm(idxs_users, desc=f"Epoch {epoch + 1}/{max_epoch} [Test]", leave=False)
+    for idx in test_range:
+        # 从缓冲区同步提示参数
+        for key, buffer in key_to_buffer.items():
+            if buffer is None:
+                continue
+            value = buffer[idx]
+            if value is None:
+                continue
+            if key != 'prompt_learner.global_ctx' and key not in local_weights[idx]:
+                continue
+            local_weights[idx][key] = value
+        
+        local_trainer.model.load_state_dict(local_weights[idx], strict=False)
+        
+        # 评估本地性能
+        results_local.append(local_trainer.test(idx=idx, split='local'))
+        # 评估邻居性能（仅在非 Dirichlet 场景使用）
+        if results_neighbor is not None:
+            results_neighbor.append(local_trainer.test(idx=idx, split='neighbor'))
+        
+        # 更新测试进度条
+        local_acc = [res[0] for res in results_local]
+        avg_local_acc = sum(local_acc) / len(local_acc) if local_acc else 0.0
+        postfix_dict = {'local_acc': f'{avg_local_acc:.2f}%'}
+        if results_neighbor is not None and len(results_neighbor) > 0:
+            neighbor_acc = [res[0] for res in results_neighbor]
+            avg_neighbor_acc = sum(neighbor_acc) / len(neighbor_acc) if neighbor_acc else 0.0
+            postfix_dict['neighbor_acc'] = f'{avg_neighbor_acc:.2f}%'
+        else:
+            postfix_dict['neighbor_acc'] = 'N/A'
+        test_range.set_postfix(postfix_dict)
+    
+    # 格式化并输出测试结果
+    local_table = format_results_table(
+        results_local,
+        "================= Local Test Results ==================",
+        idxs_users
     )
-    epoch = checkpoint["epoch"]
-    local_weights = checkpoint["local_weights"]
-    local_acc = checkpoint["local_acc"]
-    neighbor_acc = checkpoint["neighbor_acc"]
-    return epoch, local_weights, local_acc, neighbor_acc
+    if show_test_details:
+        logger.info(local_table)
+    
+    local_acc = [res[0] for res in results_local]
+    avg_local_acc = sum(local_acc) / len(local_acc) if local_acc else 0.0
+    
+    avg_neighbor_acc = None
+    if results_neighbor is not None:
+        neighbor_table = format_results_table(
+            results_neighbor,
+            "================= Neighbor Test Results ==================",
+            idxs_users
+        )
+        if show_test_details:
+            logger.info(neighbor_table)
+        
+        neighbor_acc = [res[0] for res in results_neighbor]
+        avg_neighbor_acc = sum(neighbor_acc) / len(neighbor_acc) if neighbor_acc else 0.0
+    
+    test_duration = time.time() - test_start_time
+    if show_test_details:
+        logger.info("")
+        logger.info("=" * 80)
+        logger.info(f"                    TEST FINISH - Epoch {epoch + 1}/{max_epoch}")
+        logger.info(f"                    测试耗时: {test_duration:.2f}s")
+        logger.info("=" * 80)
+        logger.info("")
+    else:
+        neighbor_summary = f"{avg_neighbor_acc:.2f}%" if avg_neighbor_acc is not None else "N/A"
+        logger.info(
+            f"[Epoch {epoch + 1}/{max_epoch}] 测试耗时: {test_duration:.2f}s | "
+            f"local_acc: {avg_local_acc:.2f}% | neighbor_acc: {neighbor_summary}"
+        )
+    
+    # 记录到 wandb
+    if wandb_run:
+        log_payload = {
+            "test/epoch": epoch + 1,
+            "test/local_acc_avg": avg_local_acc,
+            "test/duration_sec": test_duration,
+        }
+        if results_neighbor is not None:
+            log_payload["test/neighbor_acc_avg"] = avg_neighbor_acc
+        wandb.log(log_payload, step=epoch + 1)
+    
+    return avg_local_acc, avg_neighbor_acc
+
+
+def save_training_results(args, epoch, local_weights, local_acc_list, neighbor_acc_list):
+    """
+    保存训练结果：检查点和精度曲线。
+    
+    Args:
+        args: 命令行参数对象
+        epoch: 当前轮次
+        local_weights: 客户端权重列表
+        local_acc_list: 本地精度历史列表
+        neighbor_acc_list: 邻居精度历史列表
+    """
+    save_checkpoint(args, epoch, local_weights, local_acc_list, neighbor_acc_list)
+    output_dir = get_output_dir(args)
+    os.makedirs(output_dir, exist_ok=True)
+    filename_suffix = build_filename_suffix(args, prefix='acc_')
+    pickle.dump(
+        [local_acc_list, neighbor_acc_list],
+        open(
+            os.path.join(output_dir, f'{filename_suffix}.pkl'),
+            'wb'
+        )
+    )
+
+
+def log_training_summary(local_acc_list, neighbor_acc_list, dirichlet, logger, wandb_run):
+    """
+    记录训练摘要：最大精度和平均精度。
+    
+    Args:
+        local_acc_list: 本地精度历史列表
+        neighbor_acc_list: 邻居精度历史列表
+        dirichlet: 是否为 Dirichlet 划分场景
+        logger: 日志记录器
+        wandb_run: wandb 运行对象（可能为 None）
+    """
+    # 计算本地精度统计
+    if local_acc_list:
+        max_local = max(local_acc_list)
+        mean_local = np.mean(local_acc_list[-5:]) if len(local_acc_list) >= 5 else np.mean(local_acc_list)
+        logger.info(f"maximum test local acc: {max_local:.3f}")
+        logger.info(f"mean of local acc: {mean_local:.3f}")
+    else:
+        max_local = None
+        mean_local = None
+    
+    # 计算邻居精度统计
+    if not dirichlet and neighbor_acc_list:
+        max_neighbor = max(neighbor_acc_list)
+        mean_neighbor = np.mean(neighbor_acc_list[-5:]) if len(neighbor_acc_list) >= 5 else np.mean(neighbor_acc_list)
+        logger.info(f"maximum test neighbor acc: {max_neighbor:.3f}")
+        logger.info(f"mean of neighbor acc: {mean_neighbor:.3f}")
+    else:
+        max_neighbor = None
+        mean_neighbor = None
+    
+    # 记录到 wandb
+    if wandb_run:
+        summary_updates = {}
+        if max_local is not None:
+            summary_updates["summary/local_acc_max"] = max_local
+        if mean_local is not None:
+            summary_updates["summary/local_acc_mean"] = mean_local
+        if max_neighbor is not None:
+            summary_updates["summary/neighbor_acc_max"] = max_neighbor
+        if mean_neighbor is not None:
+            summary_updates["summary/neighbor_acc_mean"] = mean_neighbor
+        wandb_run.summary.update(summary_updates)
+        wandb_run.finish()
+
+
 
 
 def main(args):
+    """
+    联邦学习主函数。
+    
+    执行完整的联邦训练流程：
+    1. 初始化环境（日志、配置、训练器）
+    2. 初始化提示参数缓冲区
+    3. 训练循环（多轮通信）
+    4. 测试评估
+    5. 保存结果和摘要
+    
+    Args:
+        args: 命令行参数对象
+    """
     # ====== 初始化日志与配置 ======
-    # 日志会将命令行参数与关键信息打印并写入文件，便于后续复现
-    logger = init_logger_from_args(args, log_dir=os.path.expanduser('~/code/sepfpl/logs'), log_to_file=True, log_to_console=True)
-
-    cfg = setup_cfg(args)
+    logger = init_logger_from_args(
+        args, 
+        log_dir=os.path.expanduser('~/code/sepfpl/logs'), 
+        log_to_file=True, 
+        log_to_console=True
+    )
+    
+    cfg = setup_cfg(args, mode='full')
     if cfg.SEED >= 0:
         set_random_seed(cfg.SEED)
-
+    
     if torch.cuda.is_available() and cfg.USE_CUDA:
         torch.backends.cudnn.benchmark = True
-
-    # ====== 判断是否为 Dirichlet 非IID 划分场景（只在 cifar10 / cifar100 中使用 neighbor 评估逻辑） ======
+    
+    # ====== 判断是否为 Dirichlet 非IID 划分场景 ======
+    # 只在 cifar10 / cifar100 中使用 neighbor 评估逻辑
     dirichlet = args.dataset_config_file.split('/')[-1].split('.')[0] in ['cifar10', 'cifar100']
-
-    # 根据当前 factorization 预先确定 HCSE / 时间自适应开关
+    
+    # ====== 确定算法特性开关 ======
     use_hcse_flag = _use_hcse(args)
     use_time_adaptive_flag = _use_time_adaptive(args)
-
+    
     # ====== 初始化联邦训练相关缓存 ======
-    global_gradients = [None for _ in range(args.num_users)]  # 每个客户端的全局 prompt 梯度
-    local_weights = [{} for _ in range(args.num_users)]       # 每个客户端当前权重
-    local_weights_g = [None for _ in range(args.num_users)]   # global_ctx
-    local_weights_l = [None for _ in range(args.num_users)]   # local_ctx
-    local_weights_u = [None for _ in range(args.num_users)]   # local_u_ctx
-    local_weights_v = [None for _ in range(args.num_users)]   # local_v_ctx
-
+    global_gradients = [None for _ in range(args.num_users)]
+    local_weights = [{} for _ in range(args.num_users)]
+    
     # ====== 构建训练器并保存初始权重 ======
     local_trainer = build_trainer(cfg)
     wandb_run = init_wandb_run(args, cfg, logger)
     if wandb_run:
-        # 监控梯度（不记录计算图，以减小开销）
         wandb.watch(local_trainer.model, log='gradients', log_freq=200, log_graph=False)
     initial_weights = copy.deepcopy(local_trainer.model.state_dict())
-
-    # ====== 初始化 sepfpl / sepfpl_hcse 的 cluster_ctx 提示 ======
+    
+    # ====== 初始化 cluster_ctx 提示（HCSE 模式） ======
     try:
         if use_hcse_flag and 'prompt_learner.cluster_ctx' in initial_weights:
             for i in range(args.num_users):
@@ -385,289 +777,127 @@ def main(args):
                     )
     except Exception as e:
         logger.warning(f"[Init] cluster_ctx 初始化失败（可忽略，后续训练会自动写入）：{e}")
-
+    
     # ====== 训练过程统计量 ======
     start_epoch = 0
     max_epoch = cfg.OPTIM.ROUND
     local_acc_list, neighbor_acc_list = [], []
-
-    # 若设置了 resume，则尝试从检查点恢复
+    
+    # ====== 从检查点恢复（如果启用） ======
     if args.resume == 'True':
         start_epoch, local_weights, local_acc_list, neighbor_acc_list = load_checkpoint(args)
         logger.info(f"Resume from epoch {start_epoch}")
     if start_epoch == max_epoch - 1:
-        # 已经训练到最后一轮，无需继续
+        logger.info("已经训练到最后一轮，无需继续")
         return
-
-    # ====== 统计每轮最大 batch 数，用于进度条显示 ======
+    
+    # ====== 统计每轮最大 batch 数 ======
     train_loaders = getattr(local_trainer, "fed_train_loader_x_dict", {})
-    if train_loaders:
-        max_batches_per_epoch = max(len(loader) for loader in train_loaders.values())
-    else:
-        max_batches_per_epoch = 0
-
-    # ====== 建立提示参数到缓冲区的映射，便于统一读写 ======
-    key_to_buffer = {'prompt_learner.global_ctx': local_weights_g}
-
-    # 是否使用 HCSE（sepfpl / sepfpl_hcse）决定是否维护 cluster_ctx
-    use_hcse_for_buffer = use_hcse_flag
-    # 针对不同算法变体，决定是否维护 local_ctx / local_u_ctx / local_v_ctx
-    if args.factorization in ['fedotp', 'dplora', 'dpfpl', 'sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']:
-        key_to_buffer['prompt_learner.local_ctx'] = local_weights_l
-    if args.factorization in ['fedpgp', 'dplora', 'dpfpl', 'sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']:
-        key_to_buffer['prompt_learner.local_u_ctx'] = local_weights_u
-        key_to_buffer['prompt_learner.local_v_ctx'] = local_weights_v
-    if use_hcse_for_buffer:
-        key_to_buffer['prompt_learner.cluster_ctx'] = [
-            copy.deepcopy(local_weights[i]['prompt_learner.cluster_ctx'])
-            if 'prompt_learner.cluster_ctx' in local_weights[i] else None
-            for i in range(args.num_users)
-        ]
-
+    max_batches_per_epoch = max(len(loader) for loader in train_loaders.values()) if train_loaders else 0
+    
+    # ====== 初始化提示参数缓冲区映射 ======
+    key_to_buffer = initialize_prompt_buffers(args, local_weights, use_hcse_flag)
+    
+    # ====== 定义获取默认提示参数的函数 ======
     def get_prompt_default(key, idx):
         """
-        在某些客户端缺失某个提示参数时，提供一个合理的默认值：
-        - global_ctx：直接使用初始权重；
-        - 其他：优先尝试使用该客户端的 global_ctx，否则用初始权重。
+        在某些客户端缺失某个提示参数时，提供一个合理的默认值。
+        
+        Args:
+            key: 提示参数键名
+            idx: 客户端索引
+            
+        Returns:
+            torch.Tensor: 默认提示参数
         """
         if key == 'prompt_learner.global_ctx':
             return initial_weights['prompt_learner.global_ctx']
-        fallback = local_weights[idx].get('prompt_learner.global_ctx', initial_weights['prompt_learner.global_ctx'])
+        fallback = local_weights[idx].get(
+            'prompt_learner.global_ctx', 
+            initial_weights['prompt_learner.global_ctx']
+        )
         return initial_weights.get(key, fallback)
 
     # ==================== 全局通信轮主循环 ====================
     for epoch in range(start_epoch, max_epoch):
         idxs_users = list(range(0, cfg.DATASET.USERS))
-
+        
         # ---------- Epoch 初始化：计时与训练精度统计 ----------
         local_trainer.reset_epoch_timer()
         epoch_start_time = time.time()
         train_acc_sum = 0.0
         train_acc_count = 0
-
+        
         # ---------- 时间自适应隐私分配：根据轮数更新噪声标准差 ----------
         if use_time_adaptive_flag and hasattr(local_trainer, 'update_std_for_round'):
             local_trainer.update_std_for_round(epoch)
         
         # ---------- 计算当前 epoch 的全局噪声标准差（若启用 DP） ----------
+        std = None
         if args.noise > 0:
-            std = local_trainer.std / cfg.DATASET.USERS
-
+            if cfg.MIA:
+                std = local_trainer.std * math.sqrt(2)
+            else:
+                std = local_trainer.std / cfg.DATASET.USERS
+        
         # ---------- 为每个客户端准备数据迭代器 ----------
         data_iters = []
         for idx in idxs_users:
             local_trainer.set_model_mode("train")
             loader = local_trainer.fed_train_loader_x_dict[idx]
             data_iters.append(iter(loader))
-        max_batch = max_batches_per_epoch
-
-        # 是否使用 HCSE：直接依据 factorization 判断
-        use_hcse = use_hcse_flag
-
+        
         # ---------- 批次循环：收集梯度并更新提示参数 ----------
         batch_range = tqdm(
-            range(0, max_batch),
+            range(0, max_batches_per_epoch),
             desc=f"Epoch {epoch + 1}/{max_epoch} [Batch]",
             leave=False
         )
+        
         for batch in batch_range:
             local_trainer.set_model_mode("train")
-
-            # HCSE 模式下，需要收集 cluster_ctx 的梯度
-            cluster_grads = [None for _ in idxs_users] if use_hcse else None
-
-            # ====== 逐客户端本地前向与梯度收集 ======
-            for idx in idxs_users:
-                if epoch == 0:
-                    # 首轮从 initial_weights 开始
-                    local_trainer.model.load_state_dict(initial_weights, strict=False)
-                else:
-                    # 之后各轮从各自的 local_weights 开始
-                    local_trainer.model.load_state_dict(local_weights[idx], strict=False)
-
-                loss_summary = local_trainer.train_forward(
-                    idx=idx,
-                    train_iter=data_iters[idx],
-                    current_batch=batch,
-                    total_batches=max_batch
+            
+            # ====== 收集客户端梯度 ======
+            cluster_grads, batch_acc_sum, batch_acc_count = collect_client_gradients(
+                local_trainer, idxs_users, data_iters, batch, max_batches_per_epoch,
+                initial_weights, local_weights, global_gradients,
+                key_to_buffer, use_hcse_flag, epoch
+            )
+            train_acc_sum += batch_acc_sum
+            train_acc_count += batch_acc_count
+            
+            # ====== 聚合梯度 ======
+            if use_hcse_flag:
+                avg_global_gradient, cluster_gradients_to_apply = aggregate_gradients_with_hcse(
+                    cluster_grads, global_gradients, idxs_users, local_trainer, args, logger
                 )
-                # 累积训练精度统计
-                if loss_summary is not None and 'acc' in loss_summary:
-                    train_acc_sum += loss_summary['acc']
-                    train_acc_count += 1
-
-                # 取出当前客户端的权重与全局 prompt 梯度
-                local_weight = local_trainer.model.state_dict()
-                grad_global = local_trainer.model.prompt_learner.global_ctx.grad
-                if grad_global is not None:
-                    global_gradients[idx] = grad_global.data.clone()
-                else:
-                    global_gradients[idx] = torch.zeros_like(
-                        local_trainer.model.prompt_learner.global_ctx.data
-                    )
-
-                # 将各类 prompt 参数写入 buffer，后续用于聚合 / 回传
-                for key, buffer in key_to_buffer.items():
-                    if buffer is None or key not in local_weight:
-                        continue
-                    buffer[idx] = copy.deepcopy(local_weight[key])
-
-                # HCSE：记录 cluster_ctx 对应的梯度
-                if use_hcse and 'prompt_learner.cluster_ctx' in local_weight:
-                    if local_trainer.model.prompt_learner.cluster_ctx.grad is not None:
-                        cluster_grads[idx] = local_trainer.model.prompt_learner.cluster_ctx.grad.data.clone()
-                    else:
-                        cluster_grads[idx] = torch.zeros_like(
-                            local_trainer.model.prompt_learner.cluster_ctx.data
-                        )
-
-            # ====== 计算全局梯度（以及可选的聚类梯度） ======
-            aggregated_cluster_grads = None
-            cluster_gradients_to_apply = None
-
-            if use_hcse:
-                # ---------- 构建加权全局梯度（按各客户端数据量加权） ----------
-                per_user_global = []
-                data_sizes = []
-                for i in idxs_users:
-                    try:
-                        ds_len = len(local_trainer.fed_train_loader_x_dict[i].dataset)
-                    except Exception:
-                        ds_len = 1
-                    data_sizes.append(max(1, ds_len))
-                    per_user_global.append(global_gradients[i])
-                total_size = float(sum(data_sizes))
-                weights = [s / total_size for s in data_sizes]
-                avg_global_gradient = sum(w * g for w, g in zip(weights, per_user_global))
-
-                # ---------- 基于 HCSE 的梯度聚类与编码树聚合 ----------
-                try:
-                    from hcse.encoding_tree import (
-                        PartitionTree,
-                        compute_gradient_similarity_matrix_torch,
-                        aggregate_gradients_by_encoding_tree,
-                    )
-
-                    # 若有客户端 cluster_grad 缺失，则填充为零向量
-                    for i in range(len(cluster_grads)):
-                        if cluster_grads[i] is None:
-                            if 'prompt_learner.cluster_ctx' in local_trainer.model.state_dict():
-                                zshape = local_trainer.model.prompt_learner.cluster_ctx.data.shape
-                                device = local_trainer.model.prompt_learner.cluster_ctx.data.device
-                                cluster_grads[i] = torch.zeros(zshape, device=device)
-                            else:
-                                cluster_grads[i] = torch.zeros_like(
-                                    local_trainer.model.prompt_learner.global_ctx.data
-                                )
-
-                    # 计算梯度相似度矩阵
-                    sim_mat = compute_gradient_similarity_matrix_torch(cluster_grads, normalize=True)
-
-                    # ====== Top-k 稀疏化 + 对称化 + 指数映射 ======
-                    k = args.sepfpl_topk if hasattr(args, 'sepfpl_topk') and args.sepfpl_topk is not None else 5
-                    with torch.no_grad():
-                        sim_proc = sim_mat.clone()
-                        n = sim_proc.shape[0]
-                        for r in range(n):
-                            vals, idxs = torch.topk(sim_proc[r], k=k, largest=True)
-                            mask = torch.zeros_like(sim_proc[r], dtype=torch.bool)
-                            mask[idxs] = True
-                            mask[r] = True
-                            sim_proc[r][~mask] = 0.0
-                        # 对称化
-                        sim_proc = torch.maximum(sim_proc, sim_proc.t())
-                        # 指数映射增强对高相似度边的区分
-                        sim_proc = torch.exp(sim_proc)
-
-                    adj_matrix = sim_proc.detach().cpu().numpy()
-                    # 基于相似度图构建编码树
-                    tree = PartitionTree(adj_matrix)
-                    tree.build_encoding_tree(k=2, mode='v2')
-
-                    # 沿编码树聚合 cluster_ctx 梯度
-                    aggregated_cluster_grads = aggregate_gradients_by_encoding_tree(
-                        tree, cluster_grads, adj_matrix
-                    )
-
-                    # 将聚合后的梯度分配给各客户端
-                    cluster_gradients_to_apply = {
-                        i: aggregated_cluster_grads[i]
-                        for i in idxs_users
-                        if aggregated_cluster_grads[i] is not None
-                    }
-                except Exception as e:
-                    logger.warning(f"[HCSE] 聚类与聚合出现异常，跳过本步: {e}")
             else:
                 # 无 HCSE 时，直接对 global_gradients 取简单平均
                 avg_global_gradient = sum(global_gradients) / cfg.DATASET.USERS
-
-            # 若启用 DP，则在全局梯度和聚类梯度上叠加高斯噪声
-            if args.noise > 0:
-                # 为全局梯度添加噪声
-                noise = torch.normal(
-                    0, std,
-                    size=avg_global_gradient.shape,
-                    device=avg_global_gradient.device
+                cluster_gradients_to_apply = None
+            
+            # ====== 应用差分隐私噪声 ======
+            if std is not None:
+                avg_global_gradient, cluster_gradients_to_apply = apply_differential_privacy_noise(
+                    avg_global_gradient, cluster_gradients_to_apply, std
                 )
-                avg_global_gradient += noise
-                
-                # 为聚类梯度添加噪声
-                if cluster_gradients_to_apply is not None:
-                    for idx in cluster_gradients_to_apply:
-                        cluster_grad = cluster_gradients_to_apply[idx]
-                        if cluster_grad is not None:
-                            cluster_noise = torch.normal(
-                                0, std,
-                                size=cluster_grad.shape,
-                                device=cluster_grad.device
-                            )
-                            cluster_gradients_to_apply[idx] = cluster_grad + cluster_noise
-
-            # ====== 回传与本地权重同步 ======
-            for idx in idxs_users:
-                # 对各类 prompt 参数，若 buffer 中无有效值，则用默认值填充
-                for key, buffer in key_to_buffer.items():
-                    should_handle = (
-                        key == 'prompt_learner.global_ctx'
-                        or key in local_weights[idx]
-                        or key in initial_weights
-                    )
-                    if not should_handle or buffer is None:
-                        continue
-                    if not isinstance(buffer[idx], torch.Tensor):
-                        buffer[idx] = copy.deepcopy(get_prompt_default(key, idx))
-                    local_weights[idx][key] = buffer[idx]
-
-                # 加载当前客户端的权重并执行“后向一步”
-                local_trainer.model.load_state_dict(local_weights[idx], strict=False)
-
-                cluster_grad_for_idx = None
-                if cluster_gradients_to_apply is not None and idx in cluster_gradients_to_apply:
-                    cluster_grad_for_idx = cluster_gradients_to_apply[idx]
-
-                local_trainer.train_backward(
-                    avg_global_gradient=avg_global_gradient,
-                    aggregated_cluster_gradient=cluster_grad_for_idx,
-                )
-
-                # 回写更新后的提示参数到 buffer
-                local_weight = local_trainer.model.state_dict()
-                for key, buffer in key_to_buffer.items():
-                    if buffer is None or key not in local_weight:
-                        continue
-                    copied = copy.deepcopy(local_weight[key])
-                    buffer[idx] = copied
-
-            # ====== 更新批次进度条信息（训练精度） ======
+            
+            # ====== 更新客户端权重 ======
+            update_client_weights(
+                local_trainer, idxs_users, local_weights, initial_weights,
+                key_to_buffer, avg_global_gradient, cluster_gradients_to_apply,
+                get_prompt_default
+            )
+            
+            # ====== 更新批次进度条信息 ======
             if train_acc_count > 0:
                 avg_acc = train_acc_sum / train_acc_count
                 batch_range.set_postfix({'avg_acc': f'{avg_acc:.2f}%'})
             else:
                 batch_range.set_postfix({'avg_acc': 'N/A'})
-
+        
         # ====== 每轮训练结束后的日志与 wandb 记录 ======
-        train_stage_end = time.time()
-        train_stage_duration = train_stage_end - epoch_start_time
+        train_stage_duration = time.time() - epoch_start_time
         avg_train_acc = (train_acc_sum / train_acc_count) if train_acc_count > 0 else 0.0
         logger.info(
             f"[Epoch {epoch + 1}/{max_epoch}] 训练耗时: {train_stage_duration:.2f}s | "
@@ -683,198 +913,30 @@ def main(args):
                 step=epoch + 1,
             )
         # ==================== 测试阶段 ====================
-        # 前2个epoch训练完后执行第一次测试，之后在奇数epoch时测试，或者最后一轮也测试
-        # 如果设置了 --skip-test，则跳过测试
+        # 测试策略：前2个epoch训练完后执行第一次测试，之后在奇数epoch时测试，或者最后一轮也测试
         should_test = not getattr(args, 'skip_test', False) and ((epoch % 2 == 1) or (epoch == max_epoch - 1))
         
         if should_test:
-            show_test_details = getattr(args, "test_verbose_log", False)
-            test_start_time = time.time()
-            if show_test_details:
-                logger.info("")
-                logger.info("=" * 80)
-                logger.info(f"                    TEST START - Epoch {epoch + 1}/{max_epoch}")
-                logger.info("=" * 80)
-                logger.info("")
-            local_trainer.set_model_mode("eval")
-
-            results_local = []                    # 每个客户端的本地测试结果
-            results_neighbor = [] if not dirichlet else None  # 邻居测试结果（Dirichlet 场景下可选）
-            avg_neighbor_acc = None
-
-            test_range = tqdm(idxs_users, desc=f"Epoch {epoch + 1}/{max_epoch} [Test]", leave=False)
-            for idx in test_range:
-                # 将 buffer 中存储的 prompt 参数同步回各客户端的权重
-                for key, buffer in key_to_buffer.items():
-                    if buffer is None:
-                        continue
-                    value = buffer[idx]
-                    if value is None:
-                        continue
-                    if key != 'prompt_learner.global_ctx' and key not in local_weights[idx]:
-                        continue
-                    local_weights[idx][key] = value
-
-                local_trainer.model.load_state_dict(local_weights[idx], strict=False)
-
-                # local split：评估个性化性能
-                results_local.append(local_trainer.test(idx=idx, split='local'))
-                # neighbor split：评估泛化到"邻居"数据的能力（仅在非 Dirichlet 场景使用）
-                if results_neighbor is not None:
-                    results_neighbor.append(local_trainer.test(idx=idx, split='neighbor'))
-
-                # 动态更新测试进度条中的平均精度信息
-                local_acc = [res[0] for res in results_local]
-                avg_local_acc = sum(local_acc) / len(local_acc) if local_acc else 0.0
-                postfix_dict = {'local_acc': f'{avg_local_acc:.2f}%'}
-                if results_neighbor is not None and len(results_neighbor) > 0:
-                    neighbor_acc = [res[0] for res in results_neighbor]
-                    avg_neighbor_acc = sum(neighbor_acc) / len(neighbor_acc) if neighbor_acc else 0.0
-                    postfix_dict['neighbor_acc'] = f'{avg_neighbor_acc:.2f}%'
-                else:
-                    postfix_dict['neighbor_acc'] = 'N/A'
-                test_range.set_postfix(postfix_dict)
-
-            # ---------- 将测试结果格式化为 PrettyTable 表格 ----------
-            def format_results_table(results_list, title, client_ids):
-                """使用 PrettyTable 格式化测试结果为表格字符串。"""
-                if not results_list:
-                    return ""
-
-                num_metrics = len(results_list[0])
-                metric_names = ['Accuracy', 'Error Rate', 'Macro F1']
-                if num_metrics > 3:
-                    metric_names.extend([f'Metric {i+4}' for i in range(num_metrics - 3)])
-
-                table = PrettyTable()
-                table.field_names = ['Client'] + metric_names[:num_metrics]
-                table.align['Client'] = 'l'
-                for name in metric_names[:num_metrics]:
-                    table.align[name] = 'r'
-
-                # 每个客户端一行
-                for idx, res in enumerate(results_list):
-                    client_id = client_ids[idx] if idx < len(client_ids) else idx
-                    row = [f'Client {client_id}'] + [f'{val:.2f}' for val in res[:num_metrics]]
-                    table.add_row(row)
-
-                # 最后一行为平均值
-                avg_values = []
-                for i in range(num_metrics):
-                    avg_val = sum([res[i] for res in results_list]) / len(results_list) if results_list else 0.0
-                    avg_values.append(avg_val)
-                avg_row = ['Average'] + [f'{val:.2f}' for val in avg_values]
-                table.add_row(avg_row)
-
-                table_str = f"\n{title}\n{table.get_string()}\n"
-                return table_str
-
-            # Local 测试结果
-            local_table = format_results_table(
-                results_local,
-                "================= Local Test Results ==================",
-                idxs_users
+            avg_local_acc, avg_neighbor_acc = run_test_phase(
+                local_trainer, idxs_users, local_weights, key_to_buffer,
+                dirichlet, epoch, max_epoch, args, logger, wandb_run
             )
-            if show_test_details:
-                logger.info(local_table)
-
-            local_acc = [res[0] for res in results_local]
-            avg_local_acc = sum(local_acc) / len(local_acc) if local_acc else 0.0
             local_acc_list.append(avg_local_acc)
-
-            # Neighbor 测试结果（若存在）
-            if results_neighbor is not None:
-                neighbor_table = format_results_table(
-                    results_neighbor,
-                    "================= Neighbor Test Results ==================",
-                    idxs_users
-                )
-                if show_test_details:
-                    logger.info(neighbor_table)
-
-                neighbor_acc = [res[0] for res in results_neighbor]
-                avg_neighbor_acc = sum(neighbor_acc) / len(neighbor_acc) if neighbor_acc else 0.0
+            if avg_neighbor_acc is not None:
                 neighbor_acc_list.append(avg_neighbor_acc)
-
-            test_duration = time.time() - test_start_time
-            if show_test_details:
-                logger.info("")
-                logger.info("=" * 80)
-                logger.info(f"                    TEST FINISH - Epoch {epoch + 1}/{max_epoch}")
-                logger.info(f"                    测试耗时: {test_duration:.2f}s")
-                logger.info("=" * 80)
-                logger.info("")
-            else:
-                neighbor_summary = f"{avg_neighbor_acc:.2f}%" if avg_neighbor_acc is not None else "N/A"
-                logger.info(
-                    f"[Epoch {epoch + 1}/{max_epoch}] 测试耗时: {test_duration:.2f}s | "
-                    f"local_acc: {avg_local_acc:.2f}% | neighbor_acc: {neighbor_summary}"
-                )
-            if wandb_run:
-                log_payload = {
-                    "test/epoch": epoch + 1,
-                    "test/local_acc_avg": avg_local_acc,
-                    "test/duration_sec": test_duration,
-                }
-                if results_neighbor is not None:
-                    log_payload["test/neighbor_acc_avg"] = avg_neighbor_acc
-                wandb.log(log_payload, step=epoch + 1)
-
+        
         # ---------- 确保 local_weights 包含最新的权重（从 buffer 同步） ----------
         for idx in idxs_users:
             for key, buffer in key_to_buffer.items():
                 if buffer is None or buffer[idx] is None:
                     continue
-                # 确保 local_weights 包含 buffer 中的最新权重
                 local_weights[idx][key] = copy.deepcopy(buffer[idx])
-
+        
         # ---------- 保存检查点 & 精度曲线 ----------
-        save_checkpoint(args, epoch, local_weights, local_acc_list, neighbor_acc_list)
-        dataset_name = args.dataset_config_file.split('/')[-1].split('.')[0]
-        wandb_group = getattr(args, 'wandb_group', None) or 'default'
-        output_dir = os.path.join(os.path.expanduser('~/code/sepfpl/outputs'), wandb_group, dataset_name)
-        os.makedirs(output_dir, exist_ok=True)
-        filename_suffix = _build_filename_suffix(args, prefix='acc_')
-        pickle.dump(
-            [local_acc_list, neighbor_acc_list],
-            open(
-                os.path.join(output_dir, f'{filename_suffix}.pkl'),
-                'wb'
-            )
-        )
-
+        save_training_results(args, epoch, local_weights, local_acc_list, neighbor_acc_list)
+    
     # ==================== 训练结束，记录 summary ====================
-    if local_acc_list:
-        max_local = max(local_acc_list)
-        mean_local = np.mean(local_acc_list[-5:]) if len(local_acc_list) >= 5 else np.mean(local_acc_list)
-        logger.info(f"maximum test local acc: {max_local:.3f}")
-        logger.info(f"mean of local acc: {mean_local:.3f}")
-    else:
-        max_local = None
-        mean_local = None
-
-    if not dirichlet and neighbor_acc_list:
-        max_neighbor = max(neighbor_acc_list)
-        mean_neighbor = np.mean(neighbor_acc_list[-5:]) if len(neighbor_acc_list) >= 5 else np.mean(neighbor_acc_list)
-        logger.info(f"maximum test neighbor acc: {max_neighbor:.3f}")
-        logger.info(f"mean of neighbor acc: {mean_neighbor:.3f}")
-    else:
-        max_neighbor = None
-        mean_neighbor = None
-
-    # 将关键 summary 写入 wandb
-    if wandb_run:
-        summary_updates = {}
-        if max_local is not None:
-            summary_updates["summary/local_acc_max"] = max_local
-        if mean_local is not None:
-            summary_updates["summary/local_acc_mean"] = mean_local
-        if max_neighbor is not None:
-            summary_updates["summary/neighbor_acc_max"] = max_neighbor
-        if mean_neighbor is not None:
-            summary_updates["summary/neighbor_acc_mean"] = mean_neighbor
-        wandb_run.summary.update(summary_updates)
-        wandb_run.finish()
+    log_training_summary(local_acc_list, neighbor_acc_list, dirichlet, logger, wandb_run)
 
 
 if __name__ == "__main__":

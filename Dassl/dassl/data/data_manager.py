@@ -96,7 +96,7 @@ class DataManager:
         mia_out = []
         for idx in range(cfg.DATASET.USERS):
             # 只取参与训练的部分（截断后的部分）
-            mia_in.extend(dataset.federated_train_x[idx][min_datasize:])
+            mia_in.extend(dataset.federated_train_x[idx][:min_datasize])
             mia_out.extend(dataset.federated_test_x[idx])
         
         # 统一所有客户端的数据量（截断到 min_datasize）

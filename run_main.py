@@ -92,7 +92,7 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
     },
     'EXPERIMENT_4_MIA': {
         'exp_name': 'exp4-mia',
-        'seed_list': list(range(1, 11)),
+        'seed_list': list(range(11, 15)),
         'dataset_list': ['caltech-101', 'stanford_dogs', 'oxford_flowers', 'food-101'],
         'factorization_list': ['sepfpl'],
         'noise_list': [0.0, 0.4, 0.2, 0.1, 0.05, 0.01],
@@ -101,6 +101,7 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         'round': 10,
         'sepfpl_topk': 8,
         'rdp_p': 0.2,
+        'shadow_sample_ratio_list': [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
     },
 }
 
@@ -133,7 +134,14 @@ class Task:
     gpu: Optional[str] = None
     
     # 用于去重的唯一标识符 (基于关键参数)
-    unique_key: str = "" 
+    unique_key: str = ""
+    
+    # 是否允许在同一个 GPU 上并行执行多个任务（仅用于 attack_train）
+    allow_parallel: bool = False
+    
+    # MIA 实验的阶段标识：'fed_train', 'generate_shadow', 'attack_train', 'attack_test'
+    # 用于确保执行顺序：fed_train -> generate_shadow -> attack_train -> attack_test
+    stage: Optional[str] = None 
 
 class CommandBuilder:
     """构建 Shell 命令的工具类"""
@@ -148,14 +156,31 @@ class CommandBuilder:
         env_vars: Dict[str, str] = None
     ) -> str:
         dataset_yaml = f'configs/datasets/{dataset}.yaml'
+        extra_args = extra_args or []
         
-        parts = ["bash", script_name, shlex.quote(ROOT_DIR), shlex.quote(dataset_yaml)]
-        parts.extend([str(users), shlex.quote(factorization), str(rank)])
-        parts.extend([str(noise), str(seed), str(round_num)])
-        parts.extend([shlex.quote(exp_name), shlex.quote(task_id)])
-        
-        if extra_args:
-            parts.extend([str(arg) for arg in extra_args])
+        # srun_mia.sh 需要 mode 作为第一个参数（在 root 之前）
+        # srun_main.sh 不需要 mode
+        if script_name == 'srun_mia.sh':
+            # 提取 mode（应该是 extra_args 的第一个参数）
+            mode = extra_args[0] if extra_args else 'train'
+            remaining_extra = extra_args[1:] if len(extra_args) > 1 else []
+            
+            parts = ["bash", script_name, mode, shlex.quote(ROOT_DIR), shlex.quote(dataset_yaml)]
+            parts.extend([str(users), shlex.quote(factorization), str(rank)])
+            parts.extend([str(noise), str(seed), str(round_num)])
+            parts.extend([shlex.quote(exp_name) if exp_name else '""', shlex.quote(task_id) if task_id else '""'])
+            # 额外参数（如 --sepfpl-topk, --rdp-p, --noise-list, --shadow-sample-ratio-list）作为 $12+
+            if remaining_extra:
+                parts.extend([str(arg) for arg in remaining_extra if arg])  # 过滤空字符串
+        else:
+            # srun_main.sh 的标准格式
+            parts = ["bash", script_name, shlex.quote(ROOT_DIR), shlex.quote(dataset_yaml)]
+            parts.extend([str(users), shlex.quote(factorization), str(rank)])
+            parts.extend([str(noise), str(seed), str(round_num)])
+            parts.extend([shlex.quote(exp_name) if exp_name else '""', shlex.quote(task_id) if task_id else '""'])
+            # sepfpl_topk 和 rdp_p 作为 $11 和 $12
+            if extra_args:
+                parts.extend([str(arg) for arg in extra_args if arg])  # 过滤空字符串
             
         cmd_str = " ".join(parts)
         
@@ -190,89 +215,184 @@ def generate_tasks_for_config(
     sepfpl_topk_list = config.get('sepfpl_topk_list') or ([config.get('sepfpl_topk')] if config.get('sepfpl_topk') is not None else [None])
     rdp_p_list = config.get('rdp_p_list') or ([config.get('rdp_p')] if config.get('rdp_p') is not None else [None])
     
+    is_mia = 'MIA' in config_key
+    # 对于 MIA 实验，处理 shadow_sample_ratio_list 与 noise_list 的对应关系
+    shadow_sample_ratio_list = []  # 用于attack_train阶段
+    if is_mia:
+        shadow_sample_ratio_list = config.get('shadow_sample_ratio_list', [])
+        if shadow_sample_ratio_list:
+            # 确保 noise_list 和 shadow_sample_ratio_list 长度一致
+            if len(noise_list) != len(shadow_sample_ratio_list):
+                raise ValueError(f"MIA实验配置错误: noise_list长度({len(noise_list)})与shadow_sample_ratio_list长度({len(shadow_sample_ratio_list)})不一致")
+            # 将 noise 和 shadow_sample_ratio 配对（用于generate_shadow阶段）
+            noise_shadow_pairs = list(zip(noise_list, shadow_sample_ratio_list))
+        else:
+            # 如果没有 shadow_sample_ratio_list，使用单个值或默认值
+            shadow_sample_ratio = config.get('shadow_sample_ratio', None)
+            noise_shadow_pairs = [(n, shadow_sample_ratio) for n in noise_list]
+    else:
+        shadow_sample_ratio = config.get('shadow_sample_ratio', None)
+        noise_shadow_pairs = None
+    
     # 生成笛卡尔积
-    combinations = list(itertools.product(
-        seed_list, dataset_list, users_list, rank_list, noise_list, factorization_list,
-        sepfpl_topk_list, rdp_p_list
-    ))
+    if is_mia and noise_shadow_pairs:
+        # MIA 实验：使用配对的 noise 和 shadow_sample_ratio
+        combinations = []
+        for seed, ds, u, r, fact, topk, rdpp in itertools.product(
+            seed_list, dataset_list, users_list, rank_list, factorization_list,
+            sepfpl_topk_list, rdp_p_list
+        ):
+            for noise, shadow_ratio in noise_shadow_pairs:
+                combinations.append((seed, ds, u, r, noise, fact, topk, rdpp, shadow_ratio))
+    else:
+        # 标准实验：使用原有的笛卡尔积
+        combinations = list(itertools.product(
+            seed_list, dataset_list, users_list, rank_list, noise_list, factorization_list,
+            sepfpl_topk_list, rdp_p_list
+        ))
+        # 为兼容性，为每个组合添加 None 作为 shadow_sample_ratio
+        combinations = [(*comb, None) for comb in combinations]
     
     total_combs = len(combinations)
-    is_mia = 'MIA' in config_key
     
     # --- MIA 逻辑 ---
     if is_mia:
-        # MIA 任务分为两类：Target/Shadow (依赖 Seed) 和 Attack (跨 Seed, 通常只跑一次)
-        # 1. Target & Shadow Tasks
-        for idx, (seed, ds, u, r, n, fact, topk, rdpp) in enumerate(combinations, 1):
-            if not (mia_flags['fed_train'] or mia_flags['generate_shadow']): continue
-            
-            steps = []
-            common_args = [topk if topk is not None else '""', rdpp if rdpp is not None else '""']
-            base_mia_args = {
-                'script_name': 'srun_mia.sh', 'dataset': ds, 'users': u, 'factorization': fact,
-                'rank': r, 'noise': n, 'seed': seed, 'round_num': config.get('round', 10),
-                'exp_name': config['exp_name']
-            }
-
-            if mia_flags['fed_train']:
-                cmd = CommandBuilder.build(**base_mia_args, task_id='target', extra_args=['target', '--skip-test'] + common_args)
-                steps.append(TaskStep('Train Target', cmd))
-            
-            if mia_flags['generate_shadow']:
-                # Shadow 模式下脚本需要 'generate_shadow' 参数
-                cmd = CommandBuilder.build(**base_mia_args, task_id='shadow', extra_args=['generate_shadow', '""'] + [f"--sepfpl-topk {topk}" if topk else "", f"--rdp-p {rdpp}" if rdpp else ""])
-                steps.append(TaskStep('Gen Shadow', cmd))
-
-            if steps:
+        # MIA 任务分为4个阶段，确保执行顺序：
+        # 1. fed_train (可选)
+        # 2. generate_shadow (完整生成所有shadow数据)
+        # 3. attack_train (并行执行)
+        # 4. attack_test
+        
+        # 阶段1: fed_train (可选)
+        if mia_flags['fed_train']:
+            for idx, comb in enumerate(combinations, 1):
+                seed, ds, u, r, n, fact, topk, rdpp, shadow_ratio = comb
+                common_args = [topk if topk is not None else '""', rdpp if rdpp is not None else '""']
+                # MIA 实验时跳过测试以加快训练速度
+                common_args.append('--skip-test')
+                cmd = CommandBuilder.build(
+                    'srun_main.sh', ds, u, fact, r, n, seed, config.get('round', 10),
+                    config['exp_name'], f"[{idx}/{total_combs}]", extra_args=common_args
+                )
                 gpu = gpu_pool[(idx - 1) % len(gpu_pool)] if gpu_pool else None
-                task_id = f"[{idx}/{total_combs}]"
-                desc = f"MIA-Fed | {ds} | {fact} | s={seed}"
-                # Unique Key 用于去重，包含所有参数
+                task_id = f"[Fed-{idx}/{total_combs}]"
+                desc = f"MIA-Fed | {ds} | {fact} | s={seed} | n={n}"
                 ukey = f"{ds}-{u}-{fact}-{r}-{n}-{seed}-{topk}-{rdpp}-fed"
-                tasks.append(Task(task_id, desc, steps, gpu, ukey))
-
-        # 2. Attack Tasks (去重 Seed)
-        if mia_flags['attack_train'] or mia_flags['attack_test']:
+                tasks.append(Task(task_id, desc, [TaskStep('Train Target', cmd)], gpu, ukey, stage='fed_train'))
+        
+        # 阶段2: generate_shadow (完整生成所有shadow数据)
+        if mia_flags['generate_shadow']:
+            for idx, comb in enumerate(combinations, 1):
+                seed, ds, u, r, n, fact, topk, rdpp, shadow_ratio = comb
+                base_mia_args = {
+                    'script_name': 'srun_mia.sh', 'dataset': ds, 'users': u, 'factorization': fact,
+                    'rank': r, 'noise': n, 'seed': seed, 'round_num': config.get('round', 10),
+                    'exp_name': config['exp_name'], 'task_id': f"[Shadow-{idx}/{total_combs}]"
+                }
+                extra_flags = []
+                if topk is not None:
+                    extra_flags.append(f"--sepfpl-topk {topk}")
+                if rdpp is not None:
+                    extra_flags.append(f"--rdp-p {rdpp}")
+                cmd = CommandBuilder.build(**base_mia_args, extra_args=['generate_shadow'] + extra_flags)
+                gpu = gpu_pool[(idx - 1) % len(gpu_pool)] if gpu_pool else None
+                task_id = f"[Shadow-{idx}/{total_combs}]"
+                desc = f"MIA-Shadow | {ds} | {fact} | s={seed} | n={n} | ratio={shadow_ratio}"
+                ukey = f"{ds}-{u}-{fact}-{r}-{n}-{seed}-{topk}-{rdpp}-{shadow_ratio}-shadow"
+                tasks.append(Task(task_id, desc, [TaskStep('Gen Shadow', cmd)], gpu, ukey, stage='generate_shadow'))
+        
+        # 阶段3: attack_train (每个数据集只创建一个任务，使用所有shadow_sample_ratio合成训练数据)
+        if mia_flags['attack_train']:
             seen_attacks = set()
-            attack_tasks_temp = []
+            attack_train_tasks = []
             
-            for (seed, ds, u, r, n, fact, topk, rdpp) in combinations:
-                key = (ds, u, r, n, fact, topk, rdpp)
+            # 为每个数据集创建一个训练任务
+            for ds in dataset_list:
+                for u in users_list:
+                    for r in rank_list:
+                        for fact in factorization_list:
+                            for topk in sepfpl_topk_list:
+                                for rdpp in rdp_p_list:
+                                    # 去重key：每个数据集只创建一个任务
+                                    key = (ds, u, r, fact, topk, rdpp)
+                                    if key in seen_attacks: continue
+                                    seen_attacks.add(key)
+                                    
+                                    # Attack 训练时使用第一个seed和第一个noise（仅用于参数传递）
+                                    first_seed = seed_list[0] if seed_list else 1
+                                    first_noise = noise_list[0] if noise_list else 0.0
+                                    
+                                    base_mia_args = {
+                                        'script_name': 'srun_mia.sh', 'dataset': ds, 'users': u, 'factorization': fact,
+                                        'rank': r, 'noise': first_noise, 'seed': first_seed, 'round_num': config.get('round', 10),
+                                        'exp_name': config['exp_name']
+                                    }
+                                    
+                                    # 传递所有的noise_list和shadow_sample_ratio_list
+                                    extra_flags = []
+                                    if topk is not None:
+                                        extra_flags.append(f"--sepfpl-topk {topk}")
+                                    if rdpp is not None:
+                                        extra_flags.append(f"--rdp-p {rdpp}")
+                                    
+                                    # 传递noise_list和shadow_sample_ratio_list
+                                    if noise_list:
+                                        noise_str = ','.join(map(str, noise_list))
+                                        extra_flags.append(f"--noise-list {noise_str}")
+                                    if shadow_sample_ratio_list:
+                                        ratio_str = ','.join(map(str, shadow_sample_ratio_list))
+                                        extra_flags.append(f"--shadow-sample-ratio-list {ratio_str}")
+                                    
+                                    cmd = CommandBuilder.build(**base_mia_args, task_id='attack', extra_args=['train'] + extra_flags)
+                                    desc = f"MIA-Attack-Train | {ds} | {fact} | (all noise, all ratios)"
+                                    ukey = f"{ds}-{u}-{fact}-{r}-attack-train-{topk}-{rdpp}"
+                                    attack_train_tasks.append(Task("", desc, [TaskStep('Train Attack', cmd)], None, ukey, allow_parallel=True, stage='attack_train'))
+            
+            # 分配 GPU 给 Attack Train 任务
+            for i, t in enumerate(attack_train_tasks):
+                t.task_id = f"[AttackTrain-{i+1}/{len(attack_train_tasks)}]"
+                t.gpu = gpu_pool[i % len(gpu_pool)] if gpu_pool else None
+                tasks.append(t)
+        
+        # 阶段4: attack_test
+        if mia_flags['attack_test']:
+            seen_attacks = set()
+            attack_test_tasks = []
+            
+            for comb in combinations:
+                seed, ds, u, r, n, fact, topk, rdpp, shadow_ratio = comb
+                key = (ds, u, r, n, fact, topk, rdpp, shadow_ratio)
                 if key in seen_attacks: continue
                 seen_attacks.add(key)
                 
                 # Attack 通常只用第一个 seed
-                first_seed = seed 
-                steps = []
+                first_seed = seed_list[0] if seed_list else 1
                 base_mia_args = {
                     'script_name': 'srun_mia.sh', 'dataset': ds, 'users': u, 'factorization': fact,
                     'rank': r, 'noise': n, 'seed': first_seed, 'round_num': config.get('round', 10),
                     'exp_name': config['exp_name']
                 }
-                extra_flags = [f"--sepfpl-topk {topk}" if topk else "", f"--rdp-p {rdpp}" if rdpp else ""]
-
-                if mia_flags['attack_train']:
-                    cmd = CommandBuilder.build(**base_mia_args, task_id='attack', extra_args=['train', '""'] + extra_flags)
-                    steps.append(TaskStep('Train Attack', cmd))
+                extra_flags = []
+                if topk is not None:
+                    extra_flags.append(f"--sepfpl-topk {topk}")
+                if rdpp is not None:
+                    extra_flags.append(f"--rdp-p {rdpp}")
                 
-                if mia_flags['attack_test']:
-                    cmd = CommandBuilder.build(**base_mia_args, task_id='attack', extra_args=['test', '""'] + extra_flags)
-                    steps.append(TaskStep('Test Attack', cmd))
-
-                if steps:
-                    desc = f"MIA-Attack | {ds} | {fact} | n={n}"
-                    ukey = f"{ds}-{u}-{fact}-{r}-{n}-attack-{topk}-{rdpp}"
-                    attack_tasks_temp.append(Task("", desc, steps, None, ukey)) # ID 和 GPU 稍后分配
+                cmd = CommandBuilder.build(**base_mia_args, task_id='attack', extra_args=['test'] + extra_flags)
+                desc = f"MIA-Attack-Test | {ds} | {fact} | n={n} | ratio={shadow_ratio}"
+                ukey = f"{ds}-{u}-{fact}-{r}-{n}-attack-test-{topk}-{rdpp}-{shadow_ratio}"
+                attack_test_tasks.append(Task("", desc, [TaskStep('Test Attack', cmd)], None, ukey, stage='attack_test'))
             
-            # 分配 GPU 给 Attack 任务 (Attack 任务通常较快，或需要并行)
-            for i, t in enumerate(attack_tasks_temp):
-                t.task_id = f"[Attack-{i+1}/{len(attack_tasks_temp)}]"
+            # 分配 GPU 给 Attack Test 任务
+            for i, t in enumerate(attack_test_tasks):
+                t.task_id = f"[AttackTest-{i+1}/{len(attack_test_tasks)}]"
                 t.gpu = gpu_pool[i % len(gpu_pool)] if gpu_pool else None
                 tasks.append(t)
 
     # --- 标准实验逻辑 ---
     else:
-        for idx, (seed, ds, u, r, n, fact, topk, rdpp) in enumerate(combinations, 1):
+        for idx, comb in enumerate(combinations, 1):
+            seed, ds, u, r, n, fact, topk, rdpp, _ = comb
             gpu = gpu_pool[(idx - 1) % len(gpu_pool)] if gpu_pool else None
             
             extra = []
@@ -306,23 +426,99 @@ class ScriptWriter:
         生成 Bash 脚本。
         支持：串行模式、GPU并行模式、以及多线程并行模式 (Thread grouping)。
         """
-        # 按 GPU 分组
-        tasks_by_gpu = defaultdict(list)
-        for t in tasks:
-            key = t.gpu if t.gpu else "cpu"
-            tasks_by_gpu[key].append(t)
+        # 检查是否有MIA任务（有stage字段）
+        has_mia_tasks = any(t.stage is not None for t in tasks)
+        
+        if has_mia_tasks:
+            # MIA任务：按阶段分组，确保执行顺序
+            # 阶段顺序：fed_train -> generate_shadow -> attack_train -> attack_test
+            stage_order = ['fed_train', 'generate_shadow', 'attack_train', 'attack_test']
             
-        # 如果启用线程并行，对每个 GPU 的任务进行分组
-        if num_parallel_threads and num_parallel_threads > 1:
-            strategy_desc = f"并行线程模式 (每GPU {num_parallel_threads} 任务)"
-            # 将 List[Task] 转换为 List[List[Task]] (Chunking)
+            # 按阶段分组任务
+            tasks_by_stage = defaultdict(list)
+            for t in tasks:
+                if t.stage:
+                    tasks_by_stage[t.stage].append(t)
+                else:
+                    # 非MIA任务放在最后
+                    tasks_by_stage['other'].append(t)
+            
+            # 按GPU和阶段分组
+            grouped_tasks_by_gpu = {}
+            for gpu_key in set(t.gpu if t.gpu else "cpu" for t in tasks):
+                chunks = []
+                
+                # 按阶段顺序处理
+                for stage in stage_order:
+                    if stage not in tasks_by_stage:
+                        continue
+                    
+                    # 获取该阶段在该GPU上的任务
+                    stage_tasks = [t for t in tasks_by_stage[stage] 
+                                  if (t.gpu if t.gpu else "cpu") == gpu_key]
+                    
+                    if not stage_tasks:
+                        continue
+                    
+                    # attack_train 阶段允许并行
+                    if stage == 'attack_train' and num_parallel_threads and num_parallel_threads > 1:
+                        # 将attack_train任务分组并行执行
+                        parallel_chunks = [stage_tasks[i:i + num_parallel_threads] 
+                                         for i in range(0, len(stage_tasks), num_parallel_threads)]
+                        chunks.extend(parallel_chunks)
+                    else:
+                        # 其他阶段串行执行
+                        chunks.extend([[t] for t in stage_tasks])
+                
+                # 处理非MIA任务
+                if 'other' in tasks_by_stage:
+                    other_tasks = [t for t in tasks_by_stage['other'] 
+                                 if (t.gpu if t.gpu else "cpu") == gpu_key]
+                    chunks.extend([[t] for t in other_tasks])
+                
+                if chunks:
+                    grouped_tasks_by_gpu[gpu_key] = chunks
+        else:
+            # 非MIA任务：按 GPU 分组
+            tasks_by_gpu = defaultdict(list)
+            for t in tasks:
+                key = t.gpu if t.gpu else "cpu"
+                tasks_by_gpu[key].append(t)
+            
+            # 根据任务的 allow_parallel 标志决定是否并行执行
             grouped_tasks_by_gpu = {}
             for gpu, task_list in tasks_by_gpu.items():
-                chunks = [task_list[i:i + num_parallel_threads] for i in range(0, len(task_list), num_parallel_threads)]
+                # 将任务分为两类：允许并行的和不允许并行的
+                parallel_tasks = [t for t in task_list if t.allow_parallel]
+                serial_tasks = [t for t in task_list if not t.allow_parallel]
+                
+                chunks = []
+                
+                # 处理允许并行的任务
+                if parallel_tasks and num_parallel_threads and num_parallel_threads > 1:
+                    parallel_chunks = [parallel_tasks[i:i + num_parallel_threads] 
+                                     for i in range(0, len(parallel_tasks), num_parallel_threads)]
+                    chunks.extend(parallel_chunks)
+                else:
+                    chunks.extend([[t] for t in parallel_tasks])
+                
+                # 处理不允许并行的任务
+                chunks.extend([[t] for t in serial_tasks])
+                
                 grouped_tasks_by_gpu[gpu] = chunks
+        
+        # 生成策略描述
+        if has_mia_tasks:
+            if num_parallel_threads and num_parallel_threads > 1:
+                strategy_desc = f"MIA阶段模式 (fed_train -> generate_shadow -> attack_train并行({num_parallel_threads}/GPU) -> attack_test)"
+            else:
+                strategy_desc = "MIA阶段模式 (fed_train -> generate_shadow -> attack_train -> attack_test, 串行)"
         else:
-            strategy_desc = "GPU 并行模式 (同一GPU串行)"
-            grouped_tasks_by_gpu = {g: [[t] for t in tl] for g, tl in tasks_by_gpu.items()} # 每个 chunk 只有一个任务
+            has_parallel = any(t.allow_parallel for t in tasks)
+            if has_parallel and num_parallel_threads and num_parallel_threads > 1:
+                strategy_desc = f"混合模式 (attack_train: 每GPU {num_parallel_threads} 任务并行, 其他: 串行)"
+            else:
+                strategy_desc = "GPU 并行模式 (同一GPU串行)"
 
         with open(output_path, 'w', encoding='utf-8') as f:
             # --- Header ---
@@ -335,47 +531,152 @@ class ScriptWriter:
 
 """)
 
-            # --- Workers Definition ---
-            sorted_gpus = sorted(grouped_tasks_by_gpu.keys(), key=lambda x: (len(x), x))
-            
-            for gpu_key in sorted_gpus:
-                worker_name = f"run_worker_{gpu_key}".replace(',', '_') # handle multi-gpu string
-                chunks = grouped_tasks_by_gpu[gpu_key]
+            if has_mia_tasks:
+                # MIA模式：按阶段执行，确保全局阶段同步
+                stage_order = ['fed_train', 'generate_shadow', 'attack_train', 'attack_test']
+                stage_names = {
+                    'fed_train': '阶段1: Fed Train',
+                    'generate_shadow': '阶段2: Generate Shadow',
+                    'attack_train': '阶段3: Attack Train (并行)',
+                    'attack_test': '阶段4: Attack Test'
+                }
                 
-                f.write(f"{worker_name}() {{\n")
-                f.write(f"    echo '🚀 [Worker {gpu_key}] 启动，共 {len(chunks)} 组任务'\n")
+                # 按阶段和GPU组织任务
+                tasks_by_stage_gpu = defaultdict(lambda: defaultdict(list))
+                for t in tasks:
+                    if t.stage:
+                        gpu_key = t.gpu if t.gpu else "cpu"
+                        tasks_by_stage_gpu[t.stage][gpu_key].append(t)
+                    elif 'other' not in tasks_by_stage_gpu:
+                        # 非MIA任务
+                        gpu_key = t.gpu if t.gpu else "cpu"
+                        tasks_by_stage_gpu['other'][gpu_key].append(t)
                 
-                for i, chunk in enumerate(chunks, 1):
-                    f.write(f"    # --- Group {i}/{len(chunks)} ---\n")
-                    f.write("    pids=()\n")
+                sorted_gpus = sorted(set(t.gpu if t.gpu else "cpu" for t in tasks), key=lambda x: (len(x), x))
+                
+                # 为每个阶段生成执行代码
+                for stage in stage_order:
+                    if stage not in tasks_by_stage_gpu:
+                        continue
                     
-                    for task in chunk:
-                        env_prefix = f"CUDA_VISIBLE_DEVICES={task.gpu} " if task.gpu and task.gpu != 'cpu' else ""
-                        f.write(f"    # Task: {task.description}\n")
-                        
-                        # 如果任务有多个步骤，需要用 () 组合成子shell或 && 连接
-                        # 这里使用 simple && execution chain inside a background block
-                        cmds_chain = " && ".join([f"echo '  -> {s.name}' && {s.command}" for s in task.steps])
-                        
-                        # 后台执行整个任务链
-                        f.write(f"    ({env_prefix}{cmds_chain}) &\n")
-                        f.write(f"    pids+=($!)\n")
+                    stage_tasks_by_gpu = tasks_by_stage_gpu[stage]
+                    stage_name = stage_names.get(stage, f'阶段: {stage}')
                     
-                    # 等待该组所有任务完成 (Sync point)
-                    f.write(f"\n    echo '⏳ [Worker {gpu_key}] 等待第 {i} 组任务完成...'\n")
-                    f.write("    for pid in \"${pids[@]}\"; do wait \"$pid\"; done\n")
-                    f.write(f"    echo '✅ [Worker {gpu_key}] 第 {i} 组完成'\n\n")
+                    f.write(f"\n# ========== {stage_name} ==========\n")
+                    f.write(f"echo '================ {stage_name} ================'\n")
+                    
+                    # 为每个GPU创建该阶段的worker函数
+                    stage_workers = []
+                    for gpu_key in sorted_gpus:
+                        if gpu_key not in stage_tasks_by_gpu:
+                            continue
+                        
+                        gpu_tasks = stage_tasks_by_gpu[gpu_key]
+                        worker_name = f"run_stage_{stage}_{gpu_key}".replace(',', '_').replace('-', '_')
+                        stage_workers.append(worker_name)
+                        
+                        f.write(f"{worker_name}() {{\n")
+                        f.write(f"    echo '🚀 [Worker {gpu_key}] {stage_name} 启动'\n")
+                        
+                        # attack_train 阶段允许并行
+                        if stage == 'attack_train' and num_parallel_threads and num_parallel_threads > 1:
+                            # 将任务分组并行执行
+                            chunks = [gpu_tasks[i:i + num_parallel_threads] 
+                                     for i in range(0, len(gpu_tasks), num_parallel_threads)]
+                        else:
+                            # 其他阶段串行执行
+                            chunks = [[t] for t in gpu_tasks]
+                        
+                        for i, chunk in enumerate(chunks, 1):
+                            f.write(f"    # --- Group {i}/{len(chunks)} ---\n")
+                            f.write("    pids=()\n")
+                            
+                            for task in chunk:
+                                # 确保环境变量正确传递到所有子进程
+                                if task.gpu and task.gpu != 'cpu':
+                                    env_export = f"export CUDA_VISIBLE_DEVICES={task.gpu}; "
+                                else:
+                                    env_export = ""
+                                f.write(f"    # Task: {task.description}\n")
+                                
+                                cmds_chain = " && ".join([f"echo '  -> {s.name}' && {s.command}" for s in task.steps])
+                                f.write(f"    ({env_export}{cmds_chain}) &\n")
+                                f.write(f"    pids+=($!)\n")
+                            
+                            f.write(f"\n    echo '⏳ [Worker {gpu_key}] 等待第 {i} 组任务完成...'\n")
+                            f.write("    for pid in \"${pids[@]}\"; do wait \"$pid\"; done\n")
+                            f.write(f"    echo '✅ [Worker {gpu_key}] 第 {i} 组完成'\n\n")
+                        
+                        f.write(f"    echo '🎉 [Worker {gpu_key}] {stage_name} 完成'\n")
+                        f.write("}\n\n")
+                    
+                    # 并行启动该阶段的所有worker
+                    for worker_name in stage_workers:
+                        f.write(f"{worker_name} &\n")
+                    
+                    # 等待该阶段所有worker完成（全局同步点）
+                    f.write("\n# 等待该阶段所有任务完成\n")
+                    f.write("wait\n")
+                    f.write(f"echo '✅ {stage_name} 所有任务完成'\n\n")
                 
-                f.write(f"    echo '🎉 [Worker {gpu_key}] 所有任务完成'\n")
-                f.write("}\n\n")
+                # 处理非MIA任务（如果有）
+                if 'other' in tasks_by_stage_gpu:
+                    f.write("\n# ========== 其他任务 ==========\n")
+                    other_tasks_by_gpu = tasks_by_stage_gpu['other']
+                    for gpu_key in sorted_gpus:
+                        if gpu_key not in other_tasks_by_gpu:
+                            continue
+                        for task in other_tasks_by_gpu[gpu_key]:
+                            # 确保环境变量正确传递到所有子进程
+                            if task.gpu and task.gpu != 'cpu':
+                                env_export = f"export CUDA_VISIBLE_DEVICES={task.gpu}; "
+                            else:
+                                env_export = ""
+                            cmds_chain = " && ".join([f"echo '  -> {s.name}' && {s.command}" for s in task.steps])
+                            f.write(f"({env_export}{cmds_chain})\n")
+                
+                f.write("\necho '🏁 所有阶段已完成。'\n")
+            else:
+                # 非MIA模式：原有的并行执行逻辑
+                sorted_gpus = sorted(grouped_tasks_by_gpu.keys(), key=lambda x: (len(x), x))
+                
+                for gpu_key in sorted_gpus:
+                    worker_name = f"run_worker_{gpu_key}".replace(',', '_')
+                    chunks = grouped_tasks_by_gpu[gpu_key]
+                    
+                    f.write(f"{worker_name}() {{\n")
+                    f.write(f"    echo '🚀 [Worker {gpu_key}] 启动，共 {len(chunks)} 组任务'\n")
+                    
+                    for i, chunk in enumerate(chunks, 1):
+                        f.write(f"    # --- Group {i}/{len(chunks)} ---\n")
+                        f.write("    pids=()\n")
+                        
+                        for task in chunk:
+                            # 确保环境变量正确传递到所有子进程
+                            if task.gpu and task.gpu != 'cpu':
+                                env_export = f"export CUDA_VISIBLE_DEVICES={task.gpu}; "
+                            else:
+                                env_export = ""
+                            f.write(f"    # Task: {task.description}\n")
+                            
+                            cmds_chain = " && ".join([f"echo '  -> {s.name}' && {s.command}" for s in task.steps])
+                            f.write(f"    ({env_export}{cmds_chain}) &\n")
+                            f.write(f"    pids+=($!)\n")
+                        
+                        f.write(f"\n    echo '⏳ [Worker {gpu_key}] 等待第 {i} 组任务完成...'\n")
+                        f.write("    for pid in \"${pids[@]}\"; do wait \"$pid\"; done\n")
+                        f.write(f"    echo '✅ [Worker {gpu_key}] 第 {i} 组完成'\n\n")
+                    
+                    f.write(f"    echo '🎉 [Worker {gpu_key}] 所有任务完成'\n")
+                    f.write("}\n\n")
 
-            # --- Execution ---
-            f.write("echo '================ 开始执行 ================'\n")
-            for gpu_key in sorted_gpus:
-                worker_name = f"run_worker_{gpu_key}".replace(',', '_')
-                f.write(f"{worker_name} &\n")
-            
-            f.write("\nwait\necho '🏁 所有 Worker 已退出。'\n")
+                # --- Execution ---
+                f.write("echo '================ 开始执行 ================'\n")
+                for gpu_key in sorted_gpus:
+                    worker_name = f"run_worker_{gpu_key}".replace(',', '_')
+                    f.write(f"{worker_name} &\n")
+                
+                f.write("\nwait\necho '🏁 所有 Worker 已退出。'\n")
             
         os.chmod(output_path, 0o755)
         return output_path

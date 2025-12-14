@@ -98,7 +98,14 @@ MIA 实验流程较长，支持**分阶段控制**以方便调试和断点续跑
 ```bash
 python run_main.py --exp4 --gpus "0,1"
 
+python run_main.py --exp4 --gpus "0,1" --fed-train --generate-shadow --attack-train --attack-test --threads 2
+
 python run_main.py --exp4 --gpus "0,1" --generate-shadow --attack-train --attack-test --threads 2
+
+python run_main.py --exp4 --gpus "0,1" --attack-train --attack-test --threads 2
+
+python run_main.py --exp4 --gpus "0,1" --attack-test --threads 2
+
 ```
 
 ### 分阶段生成 (调试推荐)
