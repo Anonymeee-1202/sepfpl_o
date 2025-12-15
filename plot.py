@@ -94,202 +94,215 @@ def _parse_stat_value(stat_str: str) -> Tuple[float, float]:
     except (ValueError, IndexError):
         return 0.0, 0.0
 
-def plot_ablation_study(save_name="ablation_study_comparison"):
+class AbalationStudyPlotter:
     """
+    消融实验分组柱状图绘制器
+    
     绘制顶刊学术风格的消融实验分组柱状图。
     特点：Times New Roman字体、大字号、专业配色、纹理填充、去边框。
     """
     
-    # ================= 0. 全局样式设置 (Academic Style) =================
-    # 使用字典更新 rcParams，确保无需安装额外包即可获得学术风格
-    academic_params = {
-        'font.family': 'serif',
-        'font.serif': ['Times New Roman', 'DejaVu Serif', 'Liberation Serif', 'serif'],  # 字体回退
-        'font.size': 14 + 4,
-        'axes.labelsize': 16 * 1.2,
-        'axes.titlesize': 18 * 1.2,
-        'xtick.labelsize': 14 * 1.2,
-        'ytick.labelsize': 14 * 1.2,
-        'legend.fontsize': 20,
-        'figure.titlesize': 20 * 1.2,
-        'axes.linewidth': 1.5,   # 坐标轴线变粗
-        'xtick.major.width': 1.5,
-        'ytick.major.width': 1.5,
-        'lines.linewidth': 1.5,  # 误差棒变粗
-        'mathtext.fontset': 'stix', # 数学公式字体与 Times 更搭
-    }
-    plt.rcParams.update(academic_params)
-
-    # ================= 1. 数据准备 =================
-    data = {
-        "Caltech-101": {
-            "Local Accuracy": {
-                "Baseline":     [92.57, 91.73, 87.74],
-                "w/ TA":        [94.34, 93.76, 88.88],
-                "w/ SE":        [94.96, 94.32, 89.08],
-                "SepFPL (Ours)":[95.42, 94.52, 90.46]
+    @staticmethod
+    def _set_academic_style():
+        """配置学术风格的绘图参数"""
+        academic_params = {
+            'font.family': 'serif',
+            'font.serif': ['Times New Roman', 'DejaVu Serif', 'Liberation Serif', 'serif'],  # 字体回退
+            'font.size': 14 + 4,
+            'axes.labelsize': 16 * 1.2,
+            'axes.titlesize': 18 * 1.2,
+            'xtick.labelsize': 14 * 1.2,
+            'ytick.labelsize': 14 * 1.2,
+            'legend.fontsize': 20,
+            'figure.titlesize': 20 * 1.2,
+            'axes.linewidth': 1.5,   # 坐标轴线变粗
+            'xtick.major.width': 1.5,
+            'ytick.major.width': 1.5,
+            'lines.linewidth': 1.5,  # 误差棒变粗
+            'mathtext.fontset': 'stix', # 数学公式字体与 Times 更搭
+        }
+        plt.rcParams.update(academic_params)
+    
+    @staticmethod
+    def _get_data():
+        """返回封装好的实验数据"""
+        return {
+            "Caltech-101": {
+                "Local Accuracy": {
+                    "Baseline":     [92.57, 91.73, 87.74],
+                    "w/ TA":        [94.34, 93.76, 88.88],
+                    "w/ SE":        [94.96, 94.32, 89.08],
+                    "SepFPL (Ours)":[95.42, 94.52, 90.46]
+                },
+                "Neighbor Accuracy": {
+                    "Baseline":     [91.93, 91.26, 87.37],
+                    "w/ TA":        [92.81, 91.46, 88.65],
+                    "w/ SE":        [92.86, 92.85, 89.30],
+                    "SepFPL (Ours)":[93.40, 92.86, 89.77]
+                },
+                "Local Std": {
+                    "Baseline":     [0.95, 1.29, 1.27],
+                    "w/ TA":        [0.34, 0.41, 1.11],
+                    "w/ SE":        [0.40, 0.42, 0.94],
+                    "SepFPL (Ours)":[0.72, 0.44, 0.94]
+                },
+                "Neighbor Std": {
+                    "Baseline":     [0.61, 0.70, 1.00],
+                    "w/ TA":        [0.60, 0.63, 0.89],
+                    "w/ SE":        [0.51, 0.29, 1.46],
+                    "SepFPL (Ours)":[0.37, 0.35, 1.05]
+                }
             },
-            "Neighbor Accuracy": {
-                "Baseline":     [91.93, 91.26, 87.37],
-                "w/ TA":        [92.81, 91.46, 88.65],
-                "w/ SE":        [92.86, 92.85, 89.30],
-                "SepFPL (Ours)":[93.40, 92.86, 89.77]
-            },
-            "Local Std": {
-                "Baseline":     [0.95, 1.29, 1.27],
-                "w/ TA":        [0.34, 0.41, 1.11],
-                "w/ SE":        [0.40, 0.42, 0.94],
-                "SepFPL (Ours)":[0.72, 0.44, 0.94]
-            },
-            "Neighbor Std": {
-                "Baseline":     [0.61, 0.70, 1.00],
-                "w/ TA":        [0.60, 0.63, 0.89],
-                "w/ SE":        [0.51, 0.29, 1.46],
-                "SepFPL (Ours)":[0.37, 0.35, 1.05]
-            }
-        },
-        "Stanford Dogs": {
-            "Local Accuracy": {
-                "Baseline":     [59.94, 58.29, 54.95],
-                "w/ TA":        [60.08, 58.95, 55.00],
-                "w/ SE":        [62.40, 61.17, 56.60],
-                "SepFPL (Ours)":[64.53, 63.36, 56.71]
-            },
-            "Neighbor Accuracy": {
-                "Baseline":     [59.35, 58.59, 53.83],
-                "w/ TA":        [59.50, 58.84, 53.93],
-                "w/ SE":        [60.77, 60.46, 55.16],
-                "SepFPL (Ours)":[61.92, 61.16, 55.97]
-            },
-            "Local Std": {
-                "Baseline":     [1.04, 0.90, 0.56],
-                "w/ TA":        [0.78, 0.61, 0.92],
-                "w/ SE":        [0.88, 0.40, 1.18],
-                "SepFPL (Ours)":[0.95, 1.05, 1.26]
-            },
-            "Neighbor Std": {
-                "Baseline":     [0.81, 0.59, 0.89],
-                "w/ TA":        [0.75, 0.91, 1.11],
-                "w/ SE":        [0.73, 0.72, 0.73],
-                "SepFPL (Ours)":[0.50, 0.32, 0.81]
+            "Stanford Dogs": {
+                "Local Accuracy": {
+                    "Baseline":     [59.94, 58.29, 54.95],
+                    "w/ TA":        [60.08, 58.95, 55.00],
+                    "w/ SE":        [62.40, 61.17, 56.60],
+                    "SepFPL (Ours)":[64.53, 63.36, 56.71]
+                },
+                "Neighbor Accuracy": {
+                    "Baseline":     [59.35, 58.59, 53.83],
+                    "w/ TA":        [59.50, 58.84, 53.93],
+                    "w/ SE":        [60.77, 60.46, 55.16],
+                    "SepFPL (Ours)":[61.92, 61.16, 55.97]
+                },
+                "Local Std": {
+                    "Baseline":     [1.04, 0.90, 0.56],
+                    "w/ TA":        [0.78, 0.61, 0.92],
+                    "w/ SE":        [0.88, 0.40, 1.18],
+                    "SepFPL (Ours)":[0.95, 1.05, 1.26]
+                },
+                "Neighbor Std": {
+                    "Baseline":     [0.81, 0.59, 0.89],
+                    "w/ TA":        [0.75, 0.91, 1.11],
+                    "w/ SE":        [0.73, 0.72, 0.73],
+                    "SepFPL (Ours)":[0.50, 0.32, 0.81]
+                }
             }
         }
-    }
-
-    # ================= 2. 绘图配置 =================
-    datasets = ["Caltech-101", "Stanford Dogs"]
-    metrics = ["Local Accuracy", "Neighbor Accuracy"]
-    epsilon_labels = ["0.4", "0.1", "0.01"]
-    # 统一 Key 名称以匹配数据
-    methods = ["Baseline", "w/ TA", "w/ SE", "SepFPL (Ours)"]
     
-    # --- 学术配色方案 (Color Palette) ---
-    # 1. 灰色系 (Baseline): 低调对比
-    # 2. 蓝色系 (TA): 冷色调
-    # 3. 绿色系 (SE): 冷色调
-    # 4. 红色/橙色系 (Ours): 暖色调，高亮突出
-    colors = ['#E0E0E0', '#99C1C2', '#8DA0CB', '#FC8D62'] 
-    
-    # --- 纹理填充 (Hatching) ---
-    # 增加黑白打印时的辨识度
-    # '/' = 斜线, '.' = 点, 'x' = 交叉, '' = 无
-    hatches = ['///', '...', 'xx', ''] 
+    @classmethod
+    def plot(cls, save_name="ablation_study_comparison"):
+        """
+        生成消融实验分组柱状图
+        
+        Args:
+            save_name: 保存文件名前缀
+        """
+        # ================= 0. 全局样式设置 (Academic Style) =================
+        cls._set_academic_style()
+        
+        # ================= 1. 数据准备 =================
+        data = cls._get_data()
+        
+        # ================= 2. 绘图配置 =================
+        datasets = ["Caltech-101", "Stanford Dogs"]
+        metrics = ["Local Accuracy", "Neighbor Accuracy"]
+        epsilon_labels = ["0.4", "0.1", "0.01"]
+        # 统一 Key 名称以匹配数据
+        methods = ["Baseline", "w/ TA", "w/ SE", "SepFPL (Ours)"]
+        
+        # --- 学术配色方案 (Color Palette) ---
+        # 1. 灰色系 (Baseline): 低调对比
+        # 2. 蓝色系 (TA): 冷色调
+        # 3. 绿色系 (SE): 冷色调
+        # 4. 红色/橙色系 (Ours): 暖色调，高亮突出
+        colors = ['#E0E0E0', '#99C1C2', '#8DA0CB', '#FC8D62'] 
+        
+        # --- 纹理填充 (Hatching) ---
+        # 增加黑白打印时的辨识度
+        # '/' = 斜线, '.' = 点, 'x' = 交叉, '' = 无
+        hatches = ['///', '...', 'xx', ''] 
 
-    x = np.arange(len(epsilon_labels))
-    width = 0.2 
+        x = np.arange(len(epsilon_labels))
+        width = 0.2 
 
-    # 初始化画布：2行2列，增加 DPI 保证清晰度
-    fig, axes = plt.subplots(2, 2, figsize=(14, 11), sharex=True, dpi=300)
+        # 路径处理
+        save_dir = Path("figures") # 或者是 DEFAULT_FIG_DIR
+        save_dir.mkdir(exist_ok=True)
 
-    # ================= 3. 循环绘图 =================
-    for row_idx, dataset in enumerate(datasets):
-        for col_idx, metric in enumerate(metrics):
-            ax = axes[row_idx, col_idx]
-            
-            # 数据提取
-            y_data = data[dataset][metric]
-            std_key = "Local Std" if metric == "Local Accuracy" else "Neighbor Std"
-            y_err = data[dataset][std_key]
-            
-            # 绘制柱子
-            for i, method in enumerate(methods):
-                offset = (i - 1.5) * width
+        # ================= 3. 循环绘图 - 为每个组合创建独立图片 =================
+        for row_idx, dataset in enumerate(datasets):
+            for col_idx, metric in enumerate(metrics):
+                # 为每个组合创建独立的图片
+                fig, ax = plt.subplots(1, 1, figsize=(7, 5.5), dpi=300)
                 
-                # 图例 Label 仅在第一个子图设置
-                label = method if (row_idx == 0 and col_idx == 0) else ""
+                # 数据提取
+                y_data = data[dataset][metric]
+                std_key = "Local Std" if metric == "Local Accuracy" else "Neighbor Std"
+                y_err = data[dataset][std_key]
                 
-                # 绘制柱状图
-                bars = ax.bar(x + offset, y_data[method], width, 
-                              label=label,
-                              color=colors[i], 
-                              edgecolor='black', # 黑色边框
-                              linewidth=1.2,     # 边框宽度
-                              alpha=1.0,         # 不透明
-                              yerr=y_err[method], 
-                              capsize=4,         # 误差棒帽子宽度
-                              error_kw={'elinewidth': 1.5, 'ecolor': '#333333'}, # 误差棒样式
-                              zorder=3)          # 确保柱子在网格线之上
-                
-                # 应用纹理 (Hatching)
-                # 注意：matplotlib 的 hatch 颜色默认随 edgecolor，
-                # 这里我们保持黑色边框，纹理也是黑色的
-                for bar in bars:
-                    bar.set_hatch(hatches[i])
+                # 绘制柱子
+                for i, method in enumerate(methods):
+                    offset = (i - 1.5) * width
+                    
+                    # 每个图片都设置图例 Label
+                    label = method
+                    
+                    # 绘制柱状图
+                    bars = ax.bar(x + offset, y_data[method], width, 
+                                  label=label,
+                                  color=colors[i], 
+                                  edgecolor='black', # 黑色边框
+                                  linewidth=1.2,     # 边框宽度
+                                  alpha=1.0,         # 不透明
+                                  yerr=y_err[method], 
+                                  capsize=4,         # 误差棒帽子宽度
+                                  error_kw={'elinewidth': 1.5, 'ecolor': '#333333'}, # 误差棒样式
+                                  zorder=3)          # 确保柱子在网格线之上
+                    
+                    # 应用纹理 (Hatching)
+                    # 注意：matplotlib 的 hatch 颜色默认随 edgecolor，
+                    # 这里我们保持黑色边框，纹理也是黑色的
+                    for bar in bars:
+                        bar.set_hatch(hatches[i])
 
-            # --- 样式微调 ---
-            # 标题与坐标轴
-            ax.set_title(f"{dataset} - {metric}", fontweight='bold', pad=12)
-            
-            if row_idx == 1:
+                # --- 样式微调 ---
+                # 坐标轴
                 ax.set_xlabel(r"Privacy Budget ($\epsilon$)", fontweight='bold')
                 ax.set_xticks(x)
                 ax.set_xticklabels(epsilon_labels)
-            
-            if col_idx == 0:
                 ax.set_ylabel("Accuracy (%)", fontweight='bold')
 
-            # --- 核心美化：网格与边框 ---
-            # 仅保留 Y 轴网格，虚线，灰色，置于底层
-            ax.grid(axis='y', linestyle='--', alpha=0.6, color='gray', zorder=0)
-            
-            # 移除顶部和右侧边框 (Despine)
-            ax.spines['top'].set_visible(False)
-            ax.spines['right'].set_visible(False)
-            # 加粗左侧和底部边框
-            ax.spines['left'].set_linewidth(1.5)
-            ax.spines['bottom'].set_linewidth(1.5)
+                # --- 核心美化：网格与边框 ---
+                # 仅保留 Y 轴网格，虚线，灰色，置于底层
+                ax.grid(axis='y', linestyle='--', alpha=0.6, color='gray', zorder=0)
+                
+                # 移除顶部和右侧边框 (Despine)
+                ax.spines['top'].set_visible(False)
+                ax.spines['right'].set_visible(False)
+                # 加粗左侧和底部边框
+                ax.spines['left'].set_linewidth(1.5)
+                ax.spines['bottom'].set_linewidth(1.5)
 
-            # --- Y轴范围动态调整 ---
-            # 留出一点头部空间给误差棒
-            if dataset == "Caltech-101":
-                ax.set_ylim(85, 99) 
-            else:
-                ax.set_ylim(45, 70)
+                # --- Y轴范围动态调整 ---
+                # 留出一点头部空间给误差棒
+                if dataset == "Caltech-101":
+                    ax.set_ylim(80, 102) 
+                else:
+                    ax.set_ylim(40, 75)
 
-    # ================= 4. 全局图例与保存 =================
-    # 获取图例句柄
-    handles, labels = axes[0, 0].get_legend_handles_labels()
-    
-    # 在顶部居中放置图例，无边框，背景透明
-    fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.0), 
-               ncol=4, frameon=False, columnspacing=1.5)
+                # ================= 4. 图例与保存 =================
+                # 获取图例句柄
+                handles, labels = ax.get_legend_handles_labels()
+                
+                # 在每个图片的上侧居中放置图例，无边框，背景透明，2行2列布局
+                ax.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.0), 
+                         ncol=2, frameon=False, columnspacing=1.5)
 
-    plt.tight_layout()
-    # 调整顶部边距，防止标题被图例遮挡
-    # 减少上下子图间距(hspace)，增加图和图例之间的间距(top降低)
-    plt.subplots_adjust(top=0.88, hspace=0.15, wspace=0.15) 
+                plt.tight_layout()
+                # 调整顶部边距，防止标题被图例遮挡
+                plt.subplots_adjust(top=0.85)
 
-    # 路径处理
-    save_dir = Path("figures") # 或者是 DEFAULT_FIG_DIR
-    save_dir.mkdir(exist_ok=True)
-    
-    pdf_path = save_dir / f"{save_name}.pdf"
-    
-    plt.savefig(pdf_path, bbox_inches='tight')
-
-    print(f"✅ 学术图表已生成:\n - {pdf_path}")
-    
-    plt.close()
+                # 生成文件名：基于数据集和指标
+                dataset_short = dataset.replace("-", "_").replace(" ", "_").lower()
+                metric_short = metric.replace(" ", "_").lower()
+                pdf_path = save_dir / f"{save_name}_{dataset_short}_{metric_short}.pdf"
+                
+                plt.savefig(pdf_path, bbox_inches='tight')
+                print(f"✅ 学术图表已生成:\n - {pdf_path}")
+                
+                plt.close()
 
 
 # ================= 敏感性分析3D Ribbon图绘制器 =================
@@ -334,9 +347,10 @@ class SensitivityAnalysisPlotter:
         eps_labels_B = [r'$\epsilon=0.01$', r'$\epsilon=0.1$', r'$\epsilon=0.4$']
 
         # 颜色配置 (用于不同 Epsilon)
-        # 使用渐变色：深蓝 -> 蓝 -> 浅蓝 -> 紫(无噪)
-        colors_A = ['#08519c', '#3182bd', '#6baed6', '#9e9ac8'] 
-        colors_B = ['#08519c', '#3182bd', '#6baed6']
+        # 使用区分度高的浅色系，便于区分不同隐私预算
+        # 浅色系但对比度高的配色方案
+        colors_A = ['#81c784', '#64b5f6', '#ba68c8', '#ffb74d']  # 浅绿 -> 浅蓝 -> 浅紫 -> 浅橙(无噪)
+        colors_B = ['#81c784', '#64b5f6', '#ba68c8']  # 浅绿 -> 浅蓝 -> 浅紫
 
         # --- Rank Data ---
         rank_x = [1, 2, 4, 8, 16]
@@ -403,6 +417,15 @@ class SensitivityAnalysisPlotter:
         return adjusted
     
     @staticmethod
+    def _darken_color(color, darken_factor=0.4):
+        """将颜色变深，用于点的填充色"""
+        import matplotlib.colors as mcolors
+        rgb = mcolors.to_rgb(color)
+        # 向黑色方向混合（变深）
+        darkened = tuple(c * (1 - darken_factor) for c in rgb)
+        return darkened
+    
+    @staticmethod
     def _plot_ribbon_subplot(ax, x_vals, dataset_data, eps_labels, colors, xlabel, title, zlim, show_zlabel=True):
         """
         在给定的 3D 轴上绘制单个参数的 Ribbon 图。
@@ -427,26 +450,32 @@ class SensitivityAnalysisPlotter:
         # 辅助函数：绘制单条 Ribbon
         def add_ribbon(y_index, z_values, color, label=None, linestyle='-', is_neighbor=False):
             # 1. 顶部线条
-            line_color = SensitivityAnalysisPlotter._adjust_color_for_neighbor(color) if is_neighbor else color
-            line_width = 2.2 if not is_neighbor else 2.0  # Local 线条更粗，更突出
+            base_color = SensitivityAnalysisPlotter._adjust_color_for_neighbor(color) if is_neighbor else color
+            # 线条颜色使用更深的版本，增加对比度
+            line_color = SensitivityAnalysisPlotter._darken_color(base_color, darken_factor=0.3)
+            # 增加线条宽度，使线条更明显
+            line_width = 2.0  # Local 线条更粗，更突出
+            # 点的填充色使用黑色，边缘色也是黑色（实心黑点）
             ax.plot(xs, [y_index]*len(xs), z_values, 
                     color=line_color, linewidth=line_width, linestyle=linestyle,
-                    marker='o', markersize=5 if not is_neighbor else 4, 
-                    markerfacecolor='white', markeredgecolor=line_color, markeredgewidth=1.5,
+                    marker='o', markersize=6, 
+                    markerfacecolor=line_color, markeredgecolor='white', markeredgewidth=0.5,
                     zorder=10 + y_index, label=label)
             
-            # 2. 填充面 (PolyCollection) - 仅用于 Local
-            if not is_neighbor:
-                verts = []
-                # 底部基准线 (z=zmin)
-                z_min = zlim[0]
-                polygon = [(x, z_min) for x in xs] + [(x, z) for x, z in zip(xs, z_values)][::-1]
-                verts.append(polygon)
-                
-                # 使用稍深的颜色用于填充，增加对比度
-                poly = PolyCollection(verts, facecolors=color, edgecolors=color, 
-                                     alpha=0.4, linewidths=0.5) # 降低透明度，添加边框
-                ax.add_collection3d(poly, zs=y_index, zdir='y')
+            # 2. 填充面 (PolyCollection) - Local 和 Neighbor 都绘制
+            verts = []
+            # 底部基准线 (z=zmin)
+            z_min = zlim[0]
+            polygon = [(x, z_min) for x in xs] + [(x, z) for x, z in zip(xs, z_values)][::-1]
+            verts.append(polygon)
+            
+            # 填充面使用更浅的颜色和更高的透明度，以突出线条
+            fill_color = base_color  # 使用基础颜色，而不是加深后的线条颜色
+            # 降低填充面的透明度，使线条更明显
+            fill_alpha = 0.2 if is_neighbor else 0.25
+            poly = PolyCollection(verts, facecolors=fill_color, edgecolors='none', 
+                                 alpha=fill_alpha, linewidths=0)
+            ax.add_collection3d(poly, zs=y_index, zdir='y')
         
         # 获取 Local 和 Neighbor 数据
         loc_data_list = dataset_data[0]
@@ -457,11 +486,12 @@ class SensitivityAnalysisPlotter:
             c = colors[i]
             
             # 绘制 Local Ribbon（实线，带填充）
-            add_ribbon(i, loc_data_list[i], c, label=f"{eps_labels[i]}" if i==0 else None, 
+            add_ribbon(i, loc_data_list[i], c, label=None, 
                       linestyle='-', is_neighbor=False)
             
             # 绘制 Neighbor Line（虚线，无填充，使用稍浅的颜色）
-            add_ribbon(i, ngh_data_list[i], c, linestyle='--', is_neighbor=True)
+            add_ribbon(i, ngh_data_list[i], c, label=None, 
+                      linestyle='--', is_neighbor=True)
 
         # --- 坐标轴设置 ---
         # X轴
@@ -500,7 +530,7 @@ class SensitivityAnalysisPlotter:
         ax.yaxis.line.set_color('#666666')
         ax.zaxis.line.set_color('#666666')
         
-        ax.grid(False) # 移除默认网格
+        # ax.grid(False) # 移除默认网格
         
         # 手动添加 Z 轴网格线 (仅在背板) - 使用更明显的颜色
         for z in np.linspace(zlim[0], zlim[1], 5):
@@ -508,7 +538,7 @@ class SensitivityAnalysisPlotter:
                     color='#999999', alpha=0.3, linestyle='--', linewidth=0.8)
 
     @classmethod
-    def plot(cls, save_name="sensitivity_analysis_refined", show_plot=True):
+    def plot(cls, save_name="sensitivity_analysis", show_plot=True):
         """
         生成参数敏感性分析的3D Ribbon图
         
@@ -519,23 +549,35 @@ class SensitivityAnalysisPlotter:
         cls._set_academic_style()
         data_pack = cls._get_data()
         
-        # 为每个数据集生成一张大图 (1行3列)
+        # 为每个子图生成独立的图片
         for ds_conf in data_pack["datasets"]:
             ds_name = ds_conf["name"]
             indices = ds_conf["indices"] # [loc_idx, ngh_idx]
             zlim = ds_conf["zlim"]
             
-            fig = plt.figure(figsize=(18, 6))
-            
             num_params = len(data_pack["params"])
             for i, param_conf in enumerate(data_pack["params"]):
-                ax = fig.add_subplot(1, 3, i+1, projection='3d')
+                # 为每个子图创建独立的图片
+                fig = plt.figure(figsize=(6, 5))
+                ax = fig.add_subplot(1, 1, 1, projection='3d')
                 
                 # 提取该参数下，该数据集的 Local 和 Neighbor 数据
                 current_ds_data = [param_conf["data"][indices[0]], param_conf["data"][indices[1]]]
                 
-                # 只有最右边的子图（最后一个）显示z轴标签
-                show_zlabel = (i == num_params - 1)
+                # 为每个图片单独计算z轴范围
+                all_values = []
+                for data_list in current_ds_data:
+                    for data in data_list:
+                        all_values.extend(data)
+                z_min = min(all_values)
+                z_max = max(all_values)
+                # 添加边距（5%的边距）
+                z_range = z_max - z_min
+                z_margin = z_range * 0.05
+                zlim = (z_min - z_margin, z_max + z_margin)
+                
+                # 每个图片都显示z轴标签
+                show_zlabel = True
                 
                 cls._plot_ribbon_subplot(
                     ax, 
@@ -549,26 +591,41 @@ class SensitivityAnalysisPlotter:
                     show_zlabel=show_zlabel
                 )
                 
-                # 添加自定义图例 (仅在最后一个子图)
-                if i == num_params - 1:
-                    from matplotlib.lines import Line2D
-                    legend_elements = [
-                        Line2D([0], [0], color='black', lw=2, label='Local Acc.'),
-                        Line2D([0], [0], color='black', lw=2, linestyle='--', label='Neighbor Acc.'),
-                    ]
-                    ax.legend(handles=legend_elements, loc='center left', bbox_to_anchor=(1.05, 0.5), fontsize=18, frameon=False)
+                # 为每个图片添加图例（1行，只有两个图例项：Local 和 Neighbor）
+                from matplotlib.lines import Line2D
+                legend_elements = [
+                    Line2D([0], [0], color='black', lw=2, linestyle='-', label='Local'),
+                    Line2D([0], [0], color='black', lw=2, linestyle='--', label='Neighbor'),
+                ]
+                ax.legend(handles=legend_elements, loc='upper center', 
+                         bbox_to_anchor=(0.5, 1.0), ncol=2, fontsize=14, 
+                         frameon=False, columnspacing=1.0)
 
-            plt.subplots_adjust(left=0.1, right=0.90, wspace=0.01)
-            
-            save_path = Path("figures") / f"{save_name}_{ds_name.lower().replace(' ', '_')}.pdf"
-            save_path.parent.mkdir(parents=True, exist_ok=True)
-            plt.savefig(save_path, bbox_inches='tight', dpi=300)
-            print(f"Saved: {save_path}")
-            
-            if show_plot:
-                plt.show()
-            else:
-                plt.close()
+                # 手动调整边距，为3D图的轴标签和图例留出足够空间
+                # 不使用 tight_layout，因为它对3D图支持不好
+                plt.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.90)
+                
+                # 生成文件名：基于数据集和参数
+                ds_short = ds_name.lower().replace(' ', '_')
+                # 从title中提取参数名称，例如 "(a) Impact of Rank" -> "rank"
+                title_lower = param_conf["title"].lower()
+                if "rank" in title_lower:
+                    param_short = "rank"
+                elif "topk" in title_lower or "topm" in title_lower:
+                    param_short = "topk"
+                elif "schedule" in title_lower or "factor" in title_lower or "p" in title_lower:
+                    param_short = "p"
+                else:
+                    param_short = title_lower.replace(' ', '_').replace('(', '').replace(')', '').replace('$', '').replace('impact_of_', '').replace('_', '')
+                save_path = Path("figures") / f"{save_name}_{ds_short}_{param_short}.pdf"
+                save_path.parent.mkdir(parents=True, exist_ok=True)
+                plt.savefig(save_path, bbox_inches='tight', dpi=300)
+                print(f"Saved: {save_path}")
+                
+                if show_plot:
+                    plt.show()
+                else:
+                    plt.close()
 
 # ================= MIA分析绘图类 =================
 class MiaAnalysisPlotter:
@@ -832,9 +889,9 @@ class MiaAnalysisPlotter:
                 max_acc = max(all_accs)
                 ax.set_ylim(bottom=max(0, min_acc - 5), top=min(105, max_acc + 5))
         
-        # 图例（只在需要时显示，且放在右侧）
+        # 图例（放在左下角，2x2格式）
         if show_legend:
-            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), frameon=False)
+            ax.legend(loc='lower left', frameon=False, ncol=2)
     
     def plot(self):
         """绘制包含3个子图的综合分析图"""
@@ -865,69 +922,116 @@ class MiaAnalysisPlotter:
         all_acc_accs = [acc for accs in dataset_mia_map.values() for acc in accs if acc > 0]
         
         # 计算 Local 和 Neighbor 的共同范围
+        # 降低最小值以为图例留出空间
         combined_accs = all_local_accs + all_neighbor_accs
         if combined_accs:
             min_acc = min(combined_accs)
             max_acc = max(combined_accs)
-            shared_y_lim = (max(0, min_acc - 5), min(105, max_acc + 5))
+            # 降低最小值，为左下角图例留出空间
+            shared_y_lim = (max(0, min_acc - 30), min(105, max_acc + 10))
         else:
             shared_y_lim = None
         
         # 计算 MIA 的Y轴范围
+        # 降低最小值以为图例留出空间
         if all_acc_accs:
             min_mia = min(all_acc_accs)
             max_mia = max(all_acc_accs)
-            mia_y_lim = (max(0, min_mia - 5), min(105, max_mia + 5))
+            # 降低最小值，为左下角图例留出空间
+            mia_y_lim = (max(0, min_mia - 30), min(105, max_mia + 10))
         else:
             mia_y_lim = None
         
-        # 创建包含3个子图的figure
-        fig, axes = plt.subplots(1, 3, figsize=(24, 6))
+        self.fig_dir.mkdir(parents=True, exist_ok=True)
         
-        # 绘制第一个子图：Local Accuracy（无标题，使用共享Y轴范围）
+        # 统一的绘图区域布局参数（确保三张图的绘图区域大小一致）
+        plot_left = 0.12
+        plot_right = 0.95
+        plot_bottom = 0.12
+        plot_top = 0.95
+        
+        # 绘制第一张图：Local Accuracy
+        fig1, ax1 = plt.subplots(figsize=(8, 6))
         self._plot_subplot(
-            axes[0], 
+            ax1, 
             dataset_local_map, 
             datasets, 
             noise_list,
-            'Local Accuracy (%)',
+            'Accuracy (%)',
             title=None,
-            show_legend=False,
+            show_legend=True,
             y_lim=shared_y_lim
         )
+        plt.subplots_adjust(left=plot_left, right=plot_right, bottom=plot_bottom, top=plot_top)
+        output_path1 = self.fig_dir / 'mia_local_accuracy.pdf'
+        plt.savefig(output_path1, bbox_inches='tight', dpi=300)
+        print(f"✅ Local Accuracy图已保存: {output_path1}")
+        plt.close()
         
-        # 绘制第二个子图：Neighbor Accuracy（无标题，使用共享Y轴范围）
+        # 绘制第二张图：Neighbor Accuracy
+        fig2, ax2 = plt.subplots(figsize=(8, 6))
         self._plot_subplot(
-            axes[1], 
+            ax2, 
             dataset_neighbor_map, 
             datasets, 
             noise_list,
-            'Neighbor Accuracy (%)',
+            'Accuracy (%)',
             title=None,
-            show_legend=False,
+            show_legend=True,
             y_lim=shared_y_lim
         )
+        plt.subplots_adjust(left=plot_left, right=plot_right, bottom=plot_bottom, top=plot_top)
+        output_path2 = self.fig_dir / 'mia_neighbor_accuracy.pdf'
+        plt.savefig(output_path2, bbox_inches='tight', dpi=300)
+        print(f"✅ Neighbor Accuracy图已保存: {output_path2}")
+        plt.close()
         
-        # 绘制第三个子图：MIA Success Rate（无标题，包含图例）
+        # 绘制第三张图：MIA Success Rate（包含图例和baseline）
+        fig3, ax3 = plt.subplots(figsize=(8, 6))
         self._plot_subplot(
-            axes[2], 
+            ax3, 
             dataset_mia_map, 
             datasets, 
             noise_list,
-            'MIA Success Rate (%)',
+            'Accuracy (%)',
             title=None,
             show_legend=True,
             y_lim=mia_y_lim
         )
         
-        # 调整布局，为右侧图例留出空间
-        plt.tight_layout(rect=[0, 0, 0.97, 1])
+        # 在第三个子图上绘制50%基线虚线
+        baseline_value = 50.0
+        ax3.axhline(y=baseline_value, color='gray', linestyle='--', linewidth=5, 
+                   alpha=0.7, zorder=5, label='_nolegend_')  # _nolegend_ 确保不显示在图例中
         
-        # 保存图片
-        self.fig_dir.mkdir(parents=True, exist_ok=True)
-        output_path = self.fig_dir / 'mia_analysis_combined.pdf'
-        plt.savefig(output_path, bbox_inches='tight', dpi=300)
-        print(f"✅ MIA综合分析图已保存: {output_path}")
+        # 获取当前Y轴范围，用于确定箭头位置
+        y_min, y_max = ax3.get_ylim()
+        x_min, x_max = ax3.get_xlim()
+        
+        # 计算箭头起始位置（在图的左侧，稍微高于50%基线）
+        arrow_x_start = x_min + (x_max - x_min) * 0.65  # 距离左边界65%的位置
+        arrow_y_start = baseline_value + (y_max - baseline_value) * 0.15  # 基线以上15%的位置
+        
+        # 箭头指向的位置（在50%基线上）
+        arrow_x_end = x_min + (x_max - x_min) * 0.3  # 距离左边界30%的位置
+        arrow_y_end = baseline_value
+        
+        # 绘制箭头和文字标注
+        ax3.annotate('baseline', 
+                    xy=(arrow_x_end, arrow_y_end),  # 箭头指向的位置
+                    xytext=(arrow_x_start, arrow_y_start),  # 文字位置
+                    arrowprops=dict(arrowstyle='->', lw=2, color='gray', alpha=0.7),
+                    fontsize=plt.rcParams['legend.fontsize'],
+                    color='gray',
+                    ha='left',
+                    va='bottom',
+                    zorder=15)
+        
+        # 第三张图也使用和前两张图相同的布局参数（图例在左下角，不需要额外空间）
+        plt.subplots_adjust(left=plot_left, right=plot_right, bottom=plot_bottom, top=plot_top)
+        output_path3 = self.fig_dir / 'mia_success_rate.pdf'
+        plt.savefig(output_path3, bbox_inches='tight', dpi=300)
+        print(f"✅ MIA Success Rate图已保存: {output_path3}")
         plt.close()
 
 
@@ -959,7 +1063,7 @@ def main():
     
     if args.ablation:
         print("\n📊 正在绘制消融实验分组柱状图...")
-        plot_ablation_study()
+        AbalationStudyPlotter.plot()
     
     if args.sensitivity:
         print("\n📊 正在绘制参数敏感性分析折线图...")
