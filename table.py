@@ -301,206 +301,21 @@ def read_data_for_exp2(exp_name: str, dataset: str, factorization: str, rank: in
     return format_stats(per_seed_local), format_stats(per_seed_neighbor)
 
 
-def generate_exp2_ablation_table(
-    config_key: str = 'EXPERIMENT_2_ABLATION',
-    config: Optional[Dict[str, Any]] = None,
-    output_dir: Path = DEFAULT_OUTPUT_DIR,
-    tail_epochs: int = DEFAULT_TAIL_EPOCHS,
-    enable_postprocess: bool = True
-) -> None:
-    """
-    生成实验2 (Ablation Study) 的专门表格
-    
-    实验2的特点：
-    - 多个数据集：caltech-101, stanford_dogs, oxford_flowers, food-101
-    - 多个方法：dpfpl, sepfpl_time_adaptive, sepfpl_hcse, sepfpl
-    - 多个噪声值：0.4, 0.1, 0.01
-    - 单 Rank：8
-    - sepfpl_topk: 4 (用于 sepfpl_hcse 和 sepfpl)
-    - rdp_p: 0.8 (用于 sepfpl_time_adaptive 和 sepfpl)
-    
-    表格格式：
-    - 每个数据集生成一个表格（Local 和 Neighbor 分开）
-    - 可选：生成跨数据集的汇总表格
-    """
-    # 获取配置
-    if config is None:
-        if config_key not in EXPERIMENT_CONFIGS:
-            print(f"❌ 错误: 配置键 '{config_key}' 不存在")
-            return
-        config = EXPERIMENT_CONFIGS[config_key]
-    
-    exp_name = config.get('exp_name', 'exp2-ablation')
-    dataset_list = config.get('dataset_list', [])
-    factorization_list = config.get('factorization_list', [])
-    noise_list = config.get('noise_list', [0.4, 0.1, 0.01])
-    seed_list = config.get('seed_list', [1])
-    rank_list = config.get('rank_list', [8])
-    num_users_list = config.get('num_users_list', [config.get('num_users', 10)])
-    sepfpl_topk = config.get('sepfpl_topk', 4)
-    rdp_p = config.get('rdp_p', 0.8)
-    
-    exp_type = 'exp2'  # 明确指定为 exp2 类型
-    postprocess_status = "启用" if enable_postprocess else "禁用"
-    
-    print(f"\n{'='*80}")
-    print(f"📊 实验2 (Ablation Study) - {exp_name}")
-    print(f"   配置键: {config_key} | 后处理: {postprocess_status}")
-    print(f"   参数: Rank={rank_list[0] if rank_list else 8}, TopK={sepfpl_topk}, rdp_p={rdp_p}")
-    print(f"{'='*80}")
-    
-    rank = rank_list[0] if rank_list else 8
-    
-    # 存储所有数据集的结果，用于后续汇总
-    all_results = {}  # {dataset: {acc_type: {noise: [method1_val, method2_val, ...]}}}
-    
-    # 为每个数据集生成表格
-    for dataset in dataset_list:
-        for num_users in num_users_list:
-            header_info = f"Dataset: {dataset}"
-            if len(num_users_list) > 1:
-                header_info += f" | Users: {num_users}"
-            print(f"\n{'='*60}")
-            print(f">>> {header_info} (Rank={rank}, TopK={sepfpl_topk}, rdp_p={rdp_p})")
-            print(f"{'='*60}")
-            
-            # 构建表头
-            headers = ['Noise'] + factorization_list
-            t_local = PrettyTable(headers)
-            t_neighbor = PrettyTable(headers)
-            t_local.align['Noise'] = 'l'
-            t_neighbor.align['Noise'] = 'l'
-            for header in headers[1:]:
-                t_local.align[header] = 'r'
-                t_neighbor.align[header] = 'r'
-            
-            # 存储当前数据集的结果
-            dataset_local_results = {}
-            dataset_neighbor_results = {}
-            
-            for noise in noise_list:
-                # 根据方法类型使用不同的读取函数
-                l_list, n_list = [], []
-                for factorization in factorization_list:
-                    l_stat, n_stat = read_data_for_exp2(
-                        exp_name, dataset, factorization, rank, noise,
-                        seed_list, num_users, sepfpl_topk, rdp_p,
-                        output_dir, tail_epochs
-                    )
-                    l_list.append(l_stat)
-                    n_list.append(n_stat)
-                
-                if enable_postprocess:
-                    l_proc = postprocess_results(l_list, factorization_list, exp_type)
-                    n_proc = postprocess_results(n_list, factorization_list, exp_type)
-                else:
-                    l_proc = l_list
-                    n_proc = n_list
-                
-                t_local.add_row([noise] + l_proc)
-                t_neighbor.add_row([noise] + n_proc)
-                
-                # 保存结果用于汇总
-                dataset_local_results[noise] = l_proc
-                dataset_neighbor_results[noise] = n_proc
-            
-            # 输出表格
-            print(f'\n📊 [Local Accuracy] (Rank={rank})')
-            print(t_local)
-            print(f'\n📊 [Neighbor Accuracy] (Rank={rank})')
-            print(t_neighbor)
-            
-            # 保存结果
-            if dataset not in all_results:
-                all_results[dataset] = {}
-            all_results[dataset]['local'] = dataset_local_results
-            all_results[dataset]['neighbor'] = dataset_neighbor_results
-            
-            print("-" * 60)
-    
-    # 生成跨数据集的汇总表格（可选）
-    if len(dataset_list) > 1:
-        print(f"\n{'='*80}")
-        print(f"📊 跨数据集汇总 (Rank={rank})")
-        print(f"{'='*80}")
-        
-        # 为每个噪声值生成一个汇总表格
-        for acc_type, use_neighbor in [('Local', False), ('Neighbor', True)]:
-            print(f'\n📊 {acc_type} Accuracy 汇总')
-            
-            # 表头：第一列是数据集，后面是各个方法
-            summary_headers = ['Dataset'] + factorization_list
-            summary_table = PrettyTable(summary_headers)
-            summary_table.align['Dataset'] = 'l'
-            for header in summary_headers[1:]:
-                summary_table.align[header] = 'r'
-            
-            # 为每个噪声值生成一个表格
-            for noise in noise_list:
-                print(f'\n  Noise = {noise}')
-                noise_table = PrettyTable(summary_headers)
-                noise_table.align['Dataset'] = 'l'
-                for header in summary_headers[1:]:
-                    noise_table.align[header] = 'r'
-                
-                for dataset in dataset_list:
-                    if dataset in all_results:
-                        acc_key = 'neighbor' if use_neighbor else 'local'
-                        if noise in all_results[dataset][acc_key]:
-                            row = [dataset] + all_results[dataset][acc_key][noise]
-                            noise_table.add_row(row)
-                
-                print(noise_table)
-            
-            # 计算每个方法的平均值（跨数据集）
-            print(f'\n  {acc_type} Accuracy 平均值（跨数据集）')
-            avg_table = PrettyTable(summary_headers)
-            avg_table.align['Dataset'] = 'l'
-            for header in summary_headers[1:]:
-                avg_table.align[header] = 'r'
-            
-            for noise in noise_list:
-                # 计算每个方法在该噪声值下的平均值
-                method_avgs = []
-                for method_idx, method in enumerate(factorization_list):
-                    method_values = []
-                    for dataset in dataset_list:
-                        if dataset in all_results:
-                            acc_key = 'neighbor' if use_neighbor else 'local'
-                            if noise in all_results[dataset][acc_key]:
-                                val_str = all_results[dataset][acc_key][noise][method_idx]
-                                val = extract_value(val_str)
-                                if val > 0:
-                                    method_values.append(val)
-                    
-                    if method_values:
-                        avg_val = mean(method_values)
-                        std_val = stdev(method_values) if len(method_values) > 1 else 0.0
-                        method_avgs.append(f'{avg_val:.2f} ± {std_val:.2f}')
-                    else:
-                        method_avgs.append('N/A')
-                
-                avg_table.add_row([f'Noise={noise}'] + method_avgs)
-            
-            print(avg_table)
-        
-        print("=" * 80)
-
-def generate_exp4_mia_table(
-    config_key: str = 'EXPERIMENT_4_MIA',
+def generate_exp2_mia_table(
+    config_key: str = 'EXPERIMENT_2_MIA',
     config: Optional[Dict[str, Any]] = None,
     output_dir: Path = DEFAULT_OUTPUT_DIR,
     enable_postprocess: bool = True
 ) -> None:
     """
-    生成实验4（MIA攻击）的结果表格，展示每个 label 的攻击成功率
+    生成实验2（MIA攻击）的结果表格，展示每个 label 的攻击成功率
     
     读取所有实验结果文件（mia_acc_{noise}.pkl），按数据集和噪声值组织数据，
     生成表格展示每个 label 在不同 noise 下的攻击成功率。
     
     文件路径结构（与 mia.py 保持一致）：
         {output_dir}/{exp_name}/{dataset}/mia_acc_{noise}.pkl
-        例如：~/code/sepfpl/outputs/exp4-mia/oxford_flowers/mia_acc_0.0.pkl
+        例如：~/code/sepfpl/outputs/exp2-mia/oxford_flowers/mia_acc_0.0.pkl
     
     Args:
         config_key: 实验配置键名
@@ -514,7 +329,7 @@ def generate_exp4_mia_table(
             return
         config = EXPERIMENT_CONFIGS[config_key]
     
-    exp_name = config.get('exp_name', 'exp4-mia')
+    exp_name = config.get('exp_name', 'exp2-mia')
     dataset_list = config.get('dataset_list', [])
     noise_list = config.get('noise_list', [])
     
@@ -600,7 +415,7 @@ def generate_exp4_mia_table(
             continue
         
         print("\n" + "=" * 100)
-        print(f"📊 实验4 (MIA攻击) 结果表格 - {exp_name} - {dataset}")
+        print(f"📊 实验2 (MIA攻击) 结果表格 - {exp_name} - {dataset}")
         print("=" * 100)
         
         # 创建表格
@@ -693,7 +508,7 @@ def generate_exp4_mia_table(
         output_file.parent.mkdir(parents=True, exist_ok=True)
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write("=" * 100 + "\n")
-            f.write(f"实验4 (MIA攻击) 结果表格 - {exp_name} - {dataset}\n")
+            f.write(f"实验2 (MIA攻击) 结果表格 - {exp_name} - {dataset}\n")
             f.write("=" * 100 + "\n")
             f.write(str(table))
             f.write("\n" + "=" * 100 + "\n")
@@ -1019,286 +834,6 @@ def read_data_with_topk(exp_name: str, dataset: str, factorization: str, rank: i
     return format_stats(per_seed_local), format_stats(per_seed_neighbor)
 
 
-def generate_exp3_rank_table(
-    config_key: str = 'EXPERIMENT_3_Sensitivity_Analysis_rank',
-    config: Optional[Dict[str, Any]] = None,
-    output_dir: Path = DEFAULT_OUTPUT_DIR,
-    tail_epochs: int = DEFAULT_TAIL_EPOCHS,
-    enable_postprocess: bool = False
-) -> None:
-    """
-    生成实验3.1 (rank敏感性分析) 的结果表格
-    
-    实验特点：
-    - 固定 sepfpl_topk=4, rdp_p=0.8
-    - 变化 rank 值：[1, 2, 4, 8, 16]
-    - 变化 noise 值：[0, 0.4, 0.1, 0.01]
-    
-    表格格式：
-    - 行：noise 值
-    - 列：rank 值
-    - 每个单元格显示 Local 和 Neighbor 的准确率
-    """
-    # 获取配置
-    if config is None:
-        if config_key not in EXPERIMENT_CONFIGS:
-            print(f"❌ 错误: 配置键 '{config_key}' 不存在")
-            return
-        config = EXPERIMENT_CONFIGS[config_key]
-    
-    exp_name = config.get('exp_name', 'exp3-sensitivity-analysis-rank')
-    dataset_list = config.get('dataset_list', [])
-    factorization_list = config.get('factorization_list', ['sepfpl'])
-    noise_list = config.get('noise_list', [0, 0.4, 0.1, 0.01])
-    seed_list = config.get('seed_list', [1])
-    rank_list = config.get('rank_list', [1, 2, 4, 8, 16])
-    num_users_list = config.get('num_users_list', [config.get('num_users', 10)])
-    sepfpl_topk = config.get('sepfpl_topk', 8)  # 更新默认值以匹配配置
-    rdp_p = config.get('rdp_p', 0.2)  # 更新默认值以匹配配置
-    
-    postprocess_status = "启用" if enable_postprocess else "禁用"
-    
-    # 实验三的数据保存在 outputs/exp3 目录下
-    exp3_output_dir = output_dir / 'exp3'
-    
-    print(f"\n{'='*80}")
-    print(f"📊 实验3.1 (rank敏感性分析) - {exp_name}")
-    print(f"   配置键: {config_key} | 后处理: {postprocess_status}")
-    print(f"   数据目录: {exp3_output_dir}")
-    print(f"{'='*80}")
-    
-    # 为每个数据集生成表格
-    for dataset in dataset_list:
-        for num_users in num_users_list:
-            header_info = f"Dataset: {dataset}"
-            if len(num_users_list) > 1:
-                header_info += f" | Users: {num_users}"
-            print(f"\n{'='*60}")
-            print(f">>> {header_info} (TopK={sepfpl_topk}, rdp_p={rdp_p})")
-            print(f"{'='*60}")
-            
-            # 分别生成 Local 和 Neighbor 表格
-            for acc_type, use_neighbor in [('Local', False), ('Neighbor', True)]:
-                print(f'\n📊 {acc_type} Accuracy ({dataset})')
-                
-                # 构建表头：第一列是 Noise，后面是各个 rank 值
-                headers = ['Noise'] + [f'rank={rank}' if rank != 16 else 'rank=16 (Full)' for rank in rank_list]
-                table = PrettyTable(headers)
-                table.align['Noise'] = 'l'
-                for header in headers[1:]:
-                    table.align[header] = 'r'
-                
-                # 为每个 noise 值构建一行
-                for noise in noise_list:
-                    row = [noise]
-                    
-                    # 为每个 rank 值读取数据
-                    for rank in rank_list:
-                        l_stat, n_stat = read_data_with_sepfpl_params(
-                            exp_name, dataset, factorization_list[0], rank, noise,
-                            seed_list, num_users, sepfpl_topk, rdp_p,
-                            exp3_output_dir, tail_epochs, skip_exp_name=True
-                        )
-                        
-                        # 选择 Local 或 Neighbor
-                        stat = n_stat if use_neighbor else l_stat
-                        row.append(stat)
-                    
-                    table.add_row(row)
-                
-                print(table)
-            
-            print("-" * 60)
-
-
-def generate_exp3_topk_table(
-    config_key: str = 'EXPERIMENT_3_Sensitivity_Analysis_sepfpl_topk',
-    config: Optional[Dict[str, Any]] = None,
-    output_dir: Path = DEFAULT_OUTPUT_DIR,
-    tail_epochs: int = DEFAULT_TAIL_EPOCHS,
-    enable_postprocess: bool = False
-) -> None:
-    """
-    生成实验3.2 (sepfpl_topk敏感性分析) 的结果表格
-    
-    实验特点：
-    - 固定 rank=8, rdp_p=0.8
-    - 变化 sepfpl_topk 值：[2, 4, 6, 8]
-    - 变化 noise 值：[0.4, 0.1, 0.01]
-    
-    表格格式：
-    - 行：noise 值
-    - 列：sepfpl_topk 值
-    - 每个单元格显示 Local 和 Neighbor 的准确率
-    """
-    # 获取配置
-    if config is None:
-        if config_key not in EXPERIMENT_CONFIGS:
-            print(f"❌ 错误: 配置键 '{config_key}' 不存在")
-            return
-        config = EXPERIMENT_CONFIGS[config_key]
-    
-    exp_name = config.get('exp_name', 'exp3-sensitivity-analysis-sepfpl-topk')
-    dataset_list = config.get('dataset_list', [])
-    factorization_list = config.get('factorization_list', ['sepfpl'])
-    noise_list = config.get('noise_list', [0, 0.4, 0.1, 0.01])  # 更新默认值以匹配配置
-    seed_list = config.get('seed_list', [1])
-    rank_list = config.get('rank_list', [8])
-    num_users_list = config.get('num_users_list', [config.get('num_users', 10)])
-    sepfpl_topk_list = config.get('sepfpl_topk_list', [2, 4, 6, 8])
-    rdp_p = config.get('rdp_p', 0.2)  # 更新默认值以匹配配置
-    
-    postprocess_status = "启用" if enable_postprocess else "禁用"
-    
-    # 实验三的数据保存在 outputs/exp3 目录下
-    exp3_output_dir = output_dir / 'exp3'
-    
-    print(f"\n{'='*80}")
-    print(f"📊 实验3.2 (sepfpl_topk敏感性分析) - {exp_name}")
-    print(f"   配置键: {config_key} | 后处理: {postprocess_status}")
-    print(f"   数据目录: {exp3_output_dir}")
-    print(f"{'='*80}")
-    
-    rank = rank_list[0] if rank_list else 8
-    
-    # 为每个数据集生成表格
-    for dataset in dataset_list:
-        for num_users in num_users_list:
-            header_info = f"Dataset: {dataset}"
-            if len(num_users_list) > 1:
-                header_info += f" | Users: {num_users}"
-            print(f"\n{'='*60}")
-            print(f">>> {header_info} (Rank={rank}, rdp_p={rdp_p})")
-            print(f"{'='*60}")
-            
-            # 分别生成 Local 和 Neighbor 表格
-            for acc_type, use_neighbor in [('Local', False), ('Neighbor', True)]:
-                print(f'\n📊 {acc_type} Accuracy ({dataset})')
-                
-                # 构建表头：第一列是 Noise，后面是各个 topk 值
-                headers = ['Noise'] + [f'topk={topk}' for topk in sepfpl_topk_list]
-                table = PrettyTable(headers)
-                table.align['Noise'] = 'l'
-                for header in headers[1:]:
-                    table.align[header] = 'r'
-                
-                # 为每个 noise 值构建一行
-                for noise in noise_list:
-                    row = [noise]
-                    
-                    # 为每个 topk 值读取数据
-                    for topk in sepfpl_topk_list:
-                        l_stat, n_stat = read_data_with_topk(
-                            exp_name, dataset, factorization_list[0], rank, noise,
-                            seed_list, num_users, topk, rdp_p,
-                            exp3_output_dir, tail_epochs, skip_exp_name=True
-                        )
-                        
-                        # 选择 Local 或 Neighbor
-                        stat = n_stat if use_neighbor else l_stat
-                        row.append(stat)
-                    
-                    table.add_row(row)
-                
-                print(table)
-            
-            print("-" * 60)
-
-
-def generate_exp3_rdp_p_table(
-    config_key: str = 'EXPERIMENT_3_Sensitivity_Analysis_rdp_p',
-    config: Optional[Dict[str, Any]] = None,
-    output_dir: Path = DEFAULT_OUTPUT_DIR,
-    tail_epochs: int = DEFAULT_TAIL_EPOCHS,
-    enable_postprocess: bool = False
-) -> None:
-    """
-    生成实验3.3 (rdp_p敏感性分析) 的结果表格
-    
-    实验特点：
-    - 固定 rank=8, sepfpl_topk=8
-    - 变化 rdp_p 值：[0, 0.1, 0.2, 0.4, 0.8]
-    - 变化 noise 值：[0.4, 0.1, 0.01]
-    
-    表格格式：
-    - 行：noise 值
-    - 列：rdp_p 值
-    - 每个单元格显示 Local 和 Neighbor 的准确率
-    """
-    # 获取配置
-    if config is None:
-        if config_key not in EXPERIMENT_CONFIGS:
-            print(f"❌ 错误: 配置键 '{config_key}' 不存在")
-            return
-        config = EXPERIMENT_CONFIGS[config_key]
-    
-    exp_name = config.get('exp_name', 'exp3-sensitivity-analysis-rdp-p')
-    dataset_list = config.get('dataset_list', [])
-    factorization_list = config.get('factorization_list', ['sepfpl'])
-    noise_list = config.get('noise_list', [0.4, 0.1, 0.01])
-    seed_list = config.get('seed_list', [1])
-    rank_list = config.get('rank_list', [8])
-    num_users_list = config.get('num_users_list', [config.get('num_users', 10)])
-    sepfpl_topk = config.get('sepfpl_topk', 8)
-    rdp_p_list = config.get('rdp_p_list', [0, 0.2, 0.5, 1])  # 更新默认值以匹配配置
-    
-    postprocess_status = "启用" if enable_postprocess else "禁用"
-    
-    # 实验三的数据保存在 outputs/exp3 目录下
-    exp3_output_dir = output_dir / 'exp3'
-    
-    print(f"\n{'='*80}")
-    print(f"📊 实验3.3 (rdp_p敏感性分析) - {exp_name}")
-    print(f"   配置键: {config_key} | 后处理: {postprocess_status}")
-    print(f"   数据目录: {exp3_output_dir}")
-    print(f"{'='*80}")
-    
-    rank = rank_list[0] if rank_list else 8
-    
-    # 为每个数据集生成表格
-    for dataset in dataset_list:
-        for num_users in num_users_list:
-            header_info = f"Dataset: {dataset}"
-            if len(num_users_list) > 1:
-                header_info += f" | Users: {num_users}"
-            print(f"\n{'='*60}")
-            print(f">>> {header_info} (Rank={rank}, TopK={sepfpl_topk})")
-            print(f"{'='*60}")
-            
-            # 分别生成 Local 和 Neighbor 表格
-            for acc_type, use_neighbor in [('Local', False), ('Neighbor', True)]:
-                print(f'\n📊 {acc_type} Accuracy ({dataset})')
-                
-                # 构建表头：第一列是 Noise，后面是各个 rdp_p 值
-                headers = ['Noise'] + [f'rdp_p={rdp_p}' for rdp_p in rdp_p_list]
-                table = PrettyTable(headers)
-                table.align['Noise'] = 'l'
-                for header in headers[1:]:
-                    table.align[header] = 'r'
-                
-                # 为每个 noise 值构建一行
-                for noise in noise_list:
-                    row = [noise]
-                    
-                    # 为每个 rdp_p 值读取数据
-                    for rdp_p in rdp_p_list:
-                        l_stat, n_stat = read_data_with_rdp_p(
-                            exp_name, dataset, factorization_list[0], rank, noise,
-                            seed_list, num_users, sepfpl_topk, rdp_p,
-                            exp3_output_dir, tail_epochs, skip_exp_name=True
-                        )
-                        
-                        # 选择 Local 或 Neighbor
-                        stat = n_stat if use_neighbor else l_stat
-                        row.append(stat)
-                    
-                    table.add_row(row)
-                
-                print(table)
-            
-            print("-" * 60)
-
-
 def main():
     parser = argparse.ArgumentParser(description="SepFPL 实验结果生成工具", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
@@ -1348,45 +883,9 @@ def main():
             
             for key in configs_to_run:
                 if key in EXPERIMENT_CONFIGS:
-                    # 对于 EXPERIMENT_2_ABLATION，使用专门的表格生成函数
-                    if key == 'EXPERIMENT_2_ABLATION':
-                        generate_exp2_ablation_table(
-                            config_key=key,
-                            config=EXPERIMENT_CONFIGS[key],
-                            output_dir=args.output_dir,
-                            tail_epochs=args.tail_epochs,
-                            enable_postprocess=enable_postprocess
-                        )
-                    # 对于 EXPERIMENT_3_Sensitivity_Analysis_rank，使用专门的表格生成函数
-                    elif key == 'EXPERIMENT_3_Sensitivity_Analysis_rank':
-                        generate_exp3_rank_table(
-                            config_key=key,
-                            config=EXPERIMENT_CONFIGS[key],
-                            output_dir=args.output_dir,
-                            tail_epochs=args.tail_epochs,
-                            enable_postprocess=enable_postprocess
-                        )
-                    # 对于 EXPERIMENT_3_Sensitivity_Analysis_sepfpl_topk，使用专门的表格生成函数
-                    elif key == 'EXPERIMENT_3_Sensitivity_Analysis_sepfpl_topk':
-                        generate_exp3_topk_table(
-                            config_key=key,
-                            config=EXPERIMENT_CONFIGS[key],
-                            output_dir=args.output_dir,
-                            tail_epochs=args.tail_epochs,
-                            enable_postprocess=enable_postprocess
-                        )
-                    # 对于 EXPERIMENT_3_Sensitivity_Analysis_rdp_p，使用专门的表格生成函数
-                    elif key == 'EXPERIMENT_3_Sensitivity_Analysis_rdp_p':
-                        generate_exp3_rdp_p_table(
-                            config_key=key,
-                            config=EXPERIMENT_CONFIGS[key],
-                            output_dir=args.output_dir,
-                            tail_epochs=args.tail_epochs,
-                            enable_postprocess=enable_postprocess
-                        )
-                    # 对于 EXPERIMENT_4_MIA，使用专门的表格生成函数
-                    elif key == 'EXPERIMENT_4_MIA':
-                        generate_exp4_mia_table(
+                    # 对于 EXPERIMENT_2_MIA，使用专门的表格生成函数
+                    if key == 'EXPERIMENT_2_MIA':
+                        generate_exp2_mia_table(
                             config_key=key,
                             config=EXPERIMENT_CONFIGS[key],
                             output_dir=args.output_dir,

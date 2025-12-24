@@ -41,57 +41,8 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         'sepfpl_topk': 8,
         'rdp_p': 0.2,
     },
-    'EXPERIMENT_2_ABLATION': {
-        'exp_name': 'exp2-ablation',
-        'seed_list': [1],
-        'dataset_list': ['caltech-101', 'stanford_dogs', 'oxford_flowers', 'food-101'],
-        'factorization_list': ['dpfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse', 'sepfpl'],
-        'noise_list': [0.4, 0.1, 0.01],
-        'rank_list': [8],
-        'num_users_list': [10],
-        'round': 40,
-        'sepfpl_topk': 8,
-        'rdp_p': 0.2,
-    },
-    # 实验3系列：敏感性分析
-    'EXPERIMENT_3_RANK': {
-        'exp_name': 'exp3-sens-rank',
-        'seed_list': [1],
-        'dataset_list': ['stanford_dogs', 'oxford_flowers'],
-        'factorization_list': ['sepfpl'],
-        'noise_list': [0, 0.4, 0.1, 0.01],
-        'rank_list': [1, 2, 4, 8, 16],
-        'num_users_list': [10],
-        'round': 20,
-        'sepfpl_topk': 8,
-        'rdp_p': 0.2,
-    },
-    'EXPERIMENT_3_TOPK': {
-        'exp_name': 'exp3-sens-topk',
-        'seed_list': [1],
-        'dataset_list': ['stanford_dogs', 'oxford_flowers'],
-        'factorization_list': ['sepfpl'],
-        'noise_list': [0, 0.4, 0.1, 0.01],
-        'rank_list': [8],
-        'num_users_list': [10],
-        'round': 20,
-        'sepfpl_topk_list': [2, 4, 6, 8], # 特殊列表参数
-        'rdp_p': 0.2,
-    },
-    'EXPERIMENT_3_RDP_P': {
-        'exp_name': 'exp3-sens-rdpp',
-        'seed_list': [1],
-        'dataset_list': ['stanford_dogs', 'oxford_flowers'],
-        'factorization_list': ['sepfpl'],
-        'noise_list': [0.4, 0.1, 0.01],
-        'rank_list': [8],
-        'num_users_list': [10],
-        'round': 20,
-        'sepfpl_topk': 8,
-        'rdp_p_list': [0, 0.2, 0.5, 1], # 特殊列表参数
-    },
-    'EXPERIMENT_4_MIA': {
-        'exp_name': 'exp4-mia',
+    'EXPERIMENT_2_MIA': {
+        'exp_name': 'exp2-mia',
         'seed_list': list(range(11, 15)),
         'dataset_list': ['caltech-101', 'stanford_dogs', 'oxford_flowers', 'food-101'],
         'factorization_list': ['sepfpl'],
@@ -103,29 +54,11 @@ EXPERIMENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         'rdp_p': 0.2,
         'shadow_sample_ratio_list': [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
     },
-    'EXPERIMENT_5_GRADIENT_CLUSTERING': {
-        'exp_name': 'exp5-gradient-clustering',
-        'seed_list': [1],
-        'dataset_list': ['cifar-100'], # 'stanford_dogs', 'food-101', 
-        'factorization_list': ['sepfpl'],
-        'noise_list': [0.0, 0.1, 0.01], 
-        'rank_list': [8],
-        'num_users_list': [400],
-        'round': 10,
-        'sepfpl_topk': 8,
-        'rdp_p': 0.2,
-    },
 }
 
 EXP_ARG_MAP = {
     'exp1': (['EXPERIMENT_1_STANDARD', 'EXPERIMENT_1_EXTENSION'], "实验1 (Standard + Extension)"),
-    'exp2': (['EXPERIMENT_2_ABLATION'], "实验2 (机制消融)"),
-    'exp3': (['EXPERIMENT_3_RANK', 'EXPERIMENT_3_TOPK', 'EXPERIMENT_3_RDP_P'], "实验3 (敏感性分析 - 全部合并)"),
-    'exp3_rank': (['EXPERIMENT_3_RANK'], "实验3.1 (Rank)"),
-    'exp3_topk': (['EXPERIMENT_3_TOPK'], "实验3.2 (TopK)"),
-    'exp3_rdp_p': (['EXPERIMENT_3_RDP_P'], "实验3.3 (RDP P)"),
-    'exp4': (['EXPERIMENT_4_MIA'], "实验4 (MIA)"),
-    'exp5': (['EXPERIMENT_5_GRADIENT_CLUSTERING'], "实验5 (梯度聚类可视化)"),
+    'exp2': (['EXPERIMENT_2_MIA'], "实验2 (MIA)"),
 }
 
 # ==============================================================================
@@ -404,9 +337,6 @@ def generate_tasks_for_config(
 
     # --- 标准实验逻辑 ---
     else:
-        # 检查是否是梯度聚类实验，如果是则跳过测试
-        is_gradient_clustering = 'GRADIENT_CLUSTERING' in config_key
-        
         for idx, comb in enumerate(combinations, 1):
             seed, ds, u, r, n, fact, topk, rdpp, _ = comb
             gpu = gpu_pool[(idx - 1) % len(gpu_pool)] if gpu_pool else None
@@ -416,10 +346,6 @@ def generate_tasks_for_config(
             else: extra.append('""')
             if rdpp is not None: extra.append(str(rdpp))
             else: extra.append('""')
-            
-            # 梯度聚类实验跳过测试以加快训练速度
-            if is_gradient_clustering:
-                extra.append('--skip-test')
 
             cmd = CommandBuilder.build(
                 'srun_main.sh', ds, u, fact, r, n, seed, config.get('round', 40),
@@ -815,8 +741,6 @@ def main():
     script_name = "batch_run.sh"
     if len(configs_to_run) == 1:
         script_name = f"run_{EXPERIMENT_CONFIGS[configs_to_run[0]]['exp_name']}.sh"
-    elif "EXPERIMENT_3_RANK" in configs_to_run: # 简单的启发式命名
-        script_name = "run_exp3_merged.sh"
         
     out_path = os.path.join("scripts", script_name)
     os.makedirs("scripts", exist_ok=True)
