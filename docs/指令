@@ -1,1 +1,0 @@
-python run_main.py --exp4 --generate-shadow --attack-train --attack-test --num-parallel-threads 8
