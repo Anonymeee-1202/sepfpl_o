@@ -6,7 +6,7 @@ This repository contains the official implementation of the paper **"SepFPL: Str
 
 This codebase is built on top of several open-source projects:
 
-- **Dassl Toolbox**: The code structure and framework are based on the [Dassl.pytorch](https://github.com/KaiyangZhou/CoOp/tree/main) toolbox from the CoOp project. We thank the authors for providing this excellent foundation.
+- **Dassl Toolbox**: The code structure and framework are based on the [Dassl](https://github.com/KaiyangZhou/CoOp/tree/main) toolbox from the CoOp project. We thank the authors for providing this excellent foundation.
 
 - **Baseline Methods**: The implementations of baseline methods (DP-FPL, PromptFL, FedOTP, FedPGP) are adapted from [DP-FPL](https://github.com/linhhtran/DP-FPL). We acknowledge the original authors for their contributions.
 
@@ -16,15 +16,7 @@ This codebase is built on top of several open-source projects:
 
 1. Install PyTorch following the [official instructions](https://pytorch.org/).
 
-2. Install the Dassl environment:
-   ```bash
-   # Clone Dassl repository
-   git clone https://github.com/KaiyangZhou/Dassl.pytorch.git
-   cd Dassl.pytorch
-   pip install -e .
-   ```
-
-3. Install additional dependencies:
+2. Install additional dependencies:
    ```bash
    pip install -r requirements.txt
    ```
@@ -145,19 +137,6 @@ sepfpl_o/
 ├── datasets/             # Dataset utilities
 ├── trainers/             # Training modules
 └── utils/                # Utility functions
-```
-
-## Citation
-
-If you use this code in your research, please cite:
-
-```bibtex
-@article{sepfl2024,
-    title={SepFPL: Structural Entropy Enhanced Privacy Preserving Personalized Federated Prompt Learning},
-    author={Your Name and Co-authors},
-    journal={Journal Name},
-    year={2024}
-}
 ```
 
 ## License
