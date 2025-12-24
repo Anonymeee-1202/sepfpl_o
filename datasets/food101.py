@@ -22,7 +22,7 @@ class Food101(DatasetBase):
             self.save_split(train, val, test, self.split_path, self.image_dir)
 
         federated_train_x, federated_test_x = self.prepare_federated_data(
-            train, test, cfg, train_sample_ratio=0.05, test_sample_ratio=0.05
+            train, test, cfg, train_sample_ratio=0.2, test_sample_ratio=0.2
         )
 
         super().__init__(total_train_x=train, federated_train_x=federated_train_x, federated_test_x=federated_test_x)

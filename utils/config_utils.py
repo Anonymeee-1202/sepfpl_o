@@ -24,7 +24,10 @@ def extend_cfg(cfg, args, mode: str = 'basic'):
     cfg.SEED = args.seed  # 随机种子
     # MIA 相关配置（可通过配置文件设置，不通过 args）
     if not hasattr(cfg, 'MIA'):
-        cfg.MIA = True  # 默认关闭 MIA 模式
+        cfg.MIA = False  # 默认关闭 MIA 模式
+    
+    if not hasattr(cfg, 'GRADIENT_CLUSTERING'):
+        cfg.GRADIENT_CLUSTERING = True  # 默认关闭 Gradient Clustering 模式
     
     # 模型与 CLIP 路径相关配置
     cfg.MODEL.BACKBONE.PRETRAINED = True

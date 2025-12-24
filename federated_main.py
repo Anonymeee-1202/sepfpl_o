@@ -368,7 +368,7 @@ def aggregate_gradients_with_hcse(cluster_grads, global_gradients, idxs_users,
         adj_matrix = sim_proc.detach().cpu().numpy()
         # 基于相似度图构建编码树
         tree = PartitionTree(adj_matrix)
-        tree.build_encoding_tree(k=2, mode='v2')
+        tree.build_encoding_tree(k=4, mode='v2')
         
         # 沿编码树聚合 cluster_ctx 梯度
         aggregated_cluster_grads = aggregate_gradients_by_encoding_tree(
@@ -381,10 +381,257 @@ def aggregate_gradients_with_hcse(cluster_grads, global_gradients, idxs_users,
             for i in idxs_users
             if aggregated_cluster_grads[i] is not None
         }
+        
+        # 返回编码树和邻接矩阵用于梯度聚类可视化
+        return avg_global_gradient, cluster_gradients_to_apply, tree, adj_matrix
     except Exception as e:
         logger.warning(f"[HCSE] 聚类与聚合出现异常，跳过本步: {e}")
+        tree = None
+        adj_matrix = None
     
-    return avg_global_gradient, cluster_gradients_to_apply
+    return avg_global_gradient, cluster_gradients_to_apply, tree, adj_matrix
+
+
+def visualize_encoding_tree(tree, adj_matrix, output_dir, epoch, args, logger):
+    """
+    Visualize encoding tree structure and save as PDF.
+    
+    Args:
+        tree: PartitionTree object
+        adj_matrix: Adjacency matrix used to build the tree
+        output_dir: Output directory path
+        epoch: Current epoch number
+        args: Command line arguments
+        logger: Logger object
+        
+    Returns:
+        bool: True if visualization succeeded, False otherwise
+    """
+    if tree is None or adj_matrix is None:
+        return False
+    
+    try:
+        from hcse.visualization import EncodingTreeVisualizer
+        import matplotlib
+        matplotlib.use('Agg')  # Use non-interactive backend to avoid plt.show() blocking
+        import matplotlib.pyplot as plt
+        
+        # Create visualizer
+        visualizer = EncodingTreeVisualizer(tree, adj_matrix)
+        filename_suffix = build_filename_suffix(args, prefix='')
+        tree_save_path = output_dir / f'encoding_tree_e{epoch+1}_{filename_suffix}.pdf'
+        
+        # Create visualization figure and save as PDF
+        # Note: visualize_tree_structure will call plt.show(), but it won't display with Agg backend
+        fig = visualizer.visualize_tree_structure(
+            figsize=(100, 150),
+            save_path=str(tree_save_path)  # Save as PDF (format auto-detected by extension)
+        )
+        if fig is not None:
+            # Ensure file is saved (visualize_tree_structure saves internally, but save again for safety)
+            if not tree_save_path.exists() or tree_save_path.stat().st_size == 0:
+                fig.savefig(tree_save_path, format='pdf', dpi=300, bbox_inches='tight')
+            plt.close(fig)  # Close figure to release memory
+            logger.info(f"✅ Encoding tree visualization saved: {tree_save_path}")
+            return True
+        return False
+    except Exception as e:
+        logger.warning(f"⚠️ Encoding tree visualization failed: {e}")
+        return False
+
+
+def collect_gradient_clustering_data(cluster_grads, idxs_users, local_trainer, tree, cfg, epoch, logger=None):
+    """
+    收集梯度聚类可视化所需的数据
+    
+    Args:
+        cluster_grads: 簇级梯度列表，每个元素是 torch.Tensor（cluster_ctx 的梯度）
+        idxs_users: 客户端索引列表
+        local_trainer: 本地训练器
+        tree: 编码树对象（可能为 None），用于获取社区划分
+        cfg: 配置对象
+        epoch: 当前轮次（0-indexed）
+        logger: 日志记录器（可选），如果为 None 则使用默认的 logger
+        
+    Returns:
+        dict: 包含以下键的字典：
+            - 'gradient_vectors': list[numpy.ndarray] - 每个客户端的梯度向量（flatten后）
+            - 'client_labels': list[int] - 每个客户端数据中占主导地位的类别ID
+            - 'client_classnames': list[str] - 每个客户端数据中占主导地位的类别名称
+            - 'community_ids': list[int] - 每个客户端所属的社区ID（-1表示未分配）
+            - 'client_ids': list[int] - 客户端ID列表
+            
+        注意: gradient_vectors 和 client_ids 只包含 cluster_grads[idx] 不为 None 的客户端
+    """
+    if logger is None:
+        import logging
+        logger = logging.getLogger(__name__)
+    
+    if not cfg.GRADIENT_CLUSTERING:
+        logger.debug("❌ 梯度聚类未启用: cfg.GRADIENT_CLUSTERING=False")
+        return None
+    
+    # 修改：每个 epoch 都收集数据，而不是只在最后一轮
+    # 如果需要只在特定轮次收集，可以通过配置控制
+    # target_epoch = cfg.OPTIM.ROUND - 1  # 最后一轮（0-indexed）
+    # if epoch != target_epoch:
+    #     return None
+    
+    logger.debug(f"🔍 收集梯度聚类数据: epoch={epoch}, cfg.OPTIM.ROUND={cfg.OPTIM.ROUND}")
+    
+    data = {
+        'gradient_vectors': [],
+        'client_labels': [],
+        'client_classnames': [],
+        'community_ids': [],
+        'client_ids': []
+    }
+    
+    # 1. 收集梯度向量（flatten）
+    for idx in idxs_users:
+        if cluster_grads[idx] is not None:
+            grad_vec = cluster_grads[idx].detach().cpu().flatten().numpy()
+            data['gradient_vectors'].append(grad_vec)
+            data['client_ids'].append(idx)
+        else:
+            continue
+    
+    # 2. 收集客户端数据类别标签（占主导地位的类别）
+    for idx in idxs_users:
+        try:
+            # 获取客户端的数据集
+            dataset_wrapper = local_trainer.fed_train_loader_x_dict[idx].dataset
+            # DatasetWrapper 有一个 data_source 属性，包含原始的 Datum 对象列表
+            if hasattr(dataset_wrapper, 'data_source'):
+                data_source = dataset_wrapper.data_source
+            elif hasattr(dataset_wrapper, 'dataset') and hasattr(dataset_wrapper.dataset, 'data_source'):
+                data_source = dataset_wrapper.dataset.data_source
+            else:
+                # 尝试直接访问
+                data_source = dataset_wrapper
+            
+            # 统计类别分布
+            from collections import Counter
+            labels = [item.label for item in data_source]
+            if len(labels) == 0:
+                raise ValueError(f"客户端 {idx} 的数据源为空")
+            label_counter = Counter(labels)
+            # 获取占主导地位的类别
+            dominant_label = label_counter.most_common(1)[0][0]
+            data['client_labels'].append(dominant_label)
+            
+            # 获取占主导地位的类别对应的 classname
+            # 找到第一个具有 dominant_label 的 item
+            dominant_classname = None
+            for item in data_source:
+                if item.label == dominant_label:
+                    dominant_classname = item.classname
+                    break
+            data['client_classnames'].append(dominant_classname if dominant_classname else "")
+        except Exception as e:
+            # 如果无法获取，使用 -1 作为默认值
+            logger.debug(f"⚠️ 客户端 {idx} 无法获取标签: {e}")
+            data['client_labels'].append(-1)
+            data['client_classnames'].append("")
+    
+    # 3. 收集社区ID（从编码树中获取）
+    if tree is not None:
+        try:
+            # 获取编码树的簇划分
+            # 下潜到叶节点：每个叶节点的父节点所包含的所有叶节点，组成一个cluster
+            clusters = []
+            if tree.root_id is not None:
+                # 找到所有叶节点（没有子节点或子节点为空的节点）
+                leaf_nodes = []
+                for node_id, node in tree.tree_node.items():
+                    if not node.children or len(node.children) == 0:
+                        leaf_nodes.append(node_id)
+                
+                # 根据叶节点的父节点进行分组
+                parent_to_leaves = {}
+                for leaf_id in leaf_nodes:
+                    leaf_node = tree.tree_node[leaf_id]
+                    parent_id = leaf_node.parent
+                    if parent_id is not None:
+                        if parent_id not in parent_to_leaves:
+                            parent_to_leaves[parent_id] = []
+                        # 叶节点的 partition 只包含一个原始图节点
+                        parent_to_leaves[parent_id].extend(leaf_node.partition)
+                
+                # 每个父节点下的所有叶节点组成一个cluster
+                clusters = [list(leaves) for leaves in parent_to_leaves.values() if leaves]
+            
+            # 为每个客户端分配社区ID
+            client_to_community = {}
+            for comm_id, cluster in enumerate(clusters):
+                for client_idx in cluster:
+                    client_to_community[client_idx] = comm_id
+            
+            # 按照 idxs_users 的顺序获取社区ID
+            for idx in idxs_users:
+                comm_id = client_to_community.get(idx, -1)
+                data['community_ids'].append(comm_id)
+        except Exception as e:
+            # 如果无法获取，使用 -1 作为默认值
+            data['community_ids'] = [-1] * len(idxs_users)
+    else:
+        data['community_ids'] = [-1] * len(idxs_users)
+    
+    # 使用 PrettyTable 输出数据
+    # 表格结构：第1列是community_ids（递增），第2列是client_ids，第3列是client_labels，第4列是client_classnames
+    logger.debug(f"数据收集完成: community_ids数量={len(data['community_ids'])}, client_ids数量={len(data['client_ids'])}")
+    if len(data['client_ids']) > 0:
+        # 创建客户端数据列表，每个元素包含 (community_id, client_id, client_label, client_classname)
+        client_data_list = []
+        
+        # 获取 client_ids 对应的索引在原始 idxs_users 中的位置
+        for i, client_id in enumerate(data['client_ids']):
+            # 找到这个 client_id 在原始 idxs_users 中的位置
+            if client_id in idxs_users:
+                idx_pos = idxs_users.index(client_id)
+                # 获取对应的 community_id
+                if idx_pos < len(data['community_ids']):
+                    comm_id = data['community_ids'][idx_pos]
+                else:
+                    comm_id = -1
+                
+                # 获取对应的 client_label 和 client_classname
+                if idx_pos < len(data['client_labels']):
+                    client_label = data['client_labels'][idx_pos]
+                else:
+                    client_label = -1
+                
+                if idx_pos < len(data['client_classnames']):
+                    client_classname = data['client_classnames'][idx_pos]
+                else:
+                    client_classname = ""
+                
+                client_data_list.append((comm_id, client_id, client_label, client_classname))
+            else:
+                # 如果找不到，使用默认值
+                client_data_list.append((-1, client_id, -1, ""))
+        
+        # 按 community_id 排序（第一列，递增）
+        client_data_list.sort(key=lambda x: x[0])
+        
+        # 创建表格
+        table = PrettyTable()
+        table.field_names = ['community_id', 'client_id', 'client_label', 'client_classname']
+        table.align = "l"
+        
+        # 为每个客户端添加一行
+        for comm_id, client_id, client_label, client_classname in client_data_list:
+            table.add_row([comm_id, client_id, client_label, client_classname])
+        
+        # 使用 print 确保表格能直接输出，同时也使用 logger
+        print(f"\n梯度聚类数据汇总 (epoch={epoch}):\n{table}")
+        logger.info(f"\n梯度聚类数据汇总 (epoch={epoch}):\n{table}")
+    else:
+        warning_msg = "⚠️ 没有收集到任何数据"
+        print(warning_msg)
+        logger.warning(warning_msg)
+    
+    return data
 
 
 def apply_differential_privacy_noise(avg_global_gradient, cluster_gradients_to_apply, std):
@@ -867,14 +1114,37 @@ def main(args):
             train_acc_count += batch_acc_count
             
             # ====== 聚合梯度 ======
+            tree = None
+            adj_matrix = None
             if use_hcse_flag:
-                avg_global_gradient, cluster_gradients_to_apply = aggregate_gradients_with_hcse(
+                avg_global_gradient, cluster_gradients_to_apply, tree, adj_matrix = aggregate_gradients_with_hcse(
                     cluster_grads, global_gradients, idxs_users, local_trainer, args, logger
                 )
             else:
                 # 无 HCSE 时，直接对 global_gradients 取简单平均
                 avg_global_gradient = sum(global_gradients) / cfg.DATASET.USERS
                 cluster_gradients_to_apply = None
+            
+            # ====== 收集梯度聚类数据（每个epoch收集一次，在最后一个batch收集） ======
+            if cfg.GRADIENT_CLUSTERING and batch == max_batches_per_epoch - 1:
+                # 注意：这里收集的是HCSE聚合之前的原始梯度（cluster_grads）
+                # tree 是从 aggregate_gradients_with_hcse 中获取的编码树，用于获取社区ID
+                clustering_data = collect_gradient_clustering_data(
+                    cluster_grads, idxs_users, local_trainer, tree, cfg, epoch, logger=logger
+                )
+                if clustering_data is not None:
+                    # 保存数据到文件
+                    from pathlib import Path
+                    output_dir = Path(get_output_dir(args))
+                    output_dir.mkdir(parents=True, exist_ok=True)
+                    filename_suffix = build_filename_suffix(args, prefix='')
+                    save_path = output_dir / f'gc_e{epoch+1}_{filename_suffix}.pkl'
+                    with open(save_path, 'wb') as f:
+                        pickle.dump(clustering_data, f)
+                    logger.info(f"✅ 梯度聚类数据已保存: {save_path}")
+                
+                # Visualize encoding tree and save as PDF
+                # visualize_encoding_tree(tree, adj_matrix, output_dir, epoch, args, logger)
             
             # ====== 应用差分隐私噪声 ======
             if std is not None:
@@ -970,7 +1240,7 @@ if __name__ == "__main__":
                         help='差分隐私高斯噪声尺度（标准差）')
     parser.add_argument('--rdp-alpha', type=float, default=2.0,
                         help='RDP（Rényi DP）阶数 α')
-    parser.add_argument('--rdp-p', type=float, default=1.01,
+    parser.add_argument('--rdp-p', type=float, default=0.2,
                         help='sepfpl 中时间自适应隐私预算分配的幂次 p')
 
     # ====== 数据集相关参数 ======
@@ -989,9 +1259,9 @@ if __name__ == "__main__":
     )
     # cifar10, cifar100 等
     parser.add_argument(
-        '--partition', type=str, default='noniid-labeldir',
+        '--partition', type=str, default='noniid-coarsegroup-iid',
         help='cifar10/cifar100 的数据划分策略：'
-             '"homo, noniid-labeluni, noniid-labeldir, noniid-labeldir100"'
+             '"homo, noniid-labeluni, noniid-labeldir, noniid-labeldir100, noniid-coarsegroup-iid"'
     )
     parser.add_argument(
         '--beta', type=float, default=0.3,

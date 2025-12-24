@@ -1035,6 +1035,330 @@ class MiaAnalysisPlotter:
         plt.close()
 
 
+# ================= 梯度聚类可视化绘图类 =================
+class GradientClusteringPlotter:
+    """梯度聚类 t-SNE 可视化绘图类"""
+    
+    def __init__(self, output_dir: Path = DEFAULT_OUTPUT_DIR, 
+                 fig_dir: Path = DEFAULT_FIG_DIR):
+        self.output_dir = output_dir
+        self.fig_dir = fig_dir
+        
+        plt.rcParams.update({
+            'font.family': 'serif',
+            'font.serif': ['Times New Roman', 'DejaVu Serif', 'Liberation Serif', 'serif'],
+            'mathtext.fontset': 'stix',
+            'font.size': 14,
+            'axes.labelsize': 16,
+            'axes.titlesize': 18,
+            'xtick.labelsize': 14,
+            'ytick.labelsize': 14,
+            'legend.fontsize': 14,
+            'axes.linewidth': 1.5,
+            'grid.linewidth': 0.8,
+            'lines.linewidth': 2,
+            'lines.markersize': 8,
+        })
+    
+    def _load_clustering_data(self, exp_name: str, dataset: str, epoch: int = 40, 
+                             config: Optional[Dict[str, Any]] = None, noise: Optional[float] = None):
+        """加载梯度聚类数据文件（仅精确匹配）"""
+        if config is None:
+            print(f"⚠️  警告: 未提供配置信息，无法进行精确匹配")
+            return None
+        
+        base_dir = self.output_dir / exp_name / dataset
+        factorization = config.get('factorization_list', ['sepfpl'])[0]
+        rank = config.get('rank_list', [8])[0]
+        noise_value = noise if noise is not None else config.get('noise_list', [0])[0]
+        seed = config.get('seed_list', [1])[0]
+        num_users = config.get('num_users_list', [50])[0]
+        noise_str = str(noise_value)
+        
+        if factorization in ['sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']:
+            topk = config.get('sepfpl_topk', 25)
+            rdp_p = config.get('rdp_p', 0.2)
+            filename_pattern = f'gc_e{epoch}_sepfpl_{rank}_{noise_str}_{seed}_{topk}_{str(rdp_p)}_{num_users}.pkl'
+        else:
+            filename_pattern = f'gc_e{epoch}_{factorization}_{rank}_{noise_str}_{seed}_{num_users}.pkl'
+        
+        data_file = base_dir / filename_pattern
+        if not data_file.exists():
+            print(f"⚠️  警告: 数据文件不存在: {data_file}")
+            return None
+        
+        try:
+            with open(data_file, 'rb') as f:
+                return pickle.load(f)
+        except Exception as e:
+            print(f"❌ 错误: 无法读取数据文件 {data_file}: {e}")
+            return None
+    
+    def plot(self, exp_name: str = "exp5-gradient-clustering", epoch: Optional[int] = None):
+        """生成梯度聚类 t-SNE 可视化图"""
+        try:
+            from sklearn.manifold import TSNE
+        except ImportError:
+            print("❌ 错误: 需要安装 scikit-learn 库: pip install scikit-learn")
+            return
+        
+        if 'EXPERIMENT_5_GRADIENT_CLUSTERING' not in EXPERIMENT_CONFIGS:
+            print("❌ 错误: 找不到 EXPERIMENT_5_GRADIENT_CLUSTERING 配置")
+            return
+        
+        config = EXPERIMENT_CONFIGS['EXPERIMENT_5_GRADIENT_CLUSTERING']
+        datasets = config.get('dataset_list', [])
+        total_rounds = config.get('round', 10)
+        noise_list = config.get('noise_list', [0.0])
+        # 每2个epoch绘制一次（2, 4, 6, 8, 10...）
+        epochs_to_plot = [10]
+        
+        self.fig_dir.mkdir(parents=True, exist_ok=True)
+        
+        # CIFAR-100 粗类别映射（100个细类别 -> 20个粗类别）
+        cifar100_coarse_labels = np.array([
+            4, 1, 14, 8, 0, 6, 7, 7, 18, 3, 3, 14, 9, 18, 7, 11, 3, 9, 7, 11,
+            6, 11, 5, 10, 7, 6, 13, 15, 3, 15, 0, 11, 1, 10, 12, 14, 16, 9, 11, 5,
+            5, 19, 8, 8, 15, 13, 14, 17, 18, 10, 16, 4, 17, 4, 2, 0, 17, 4, 18, 17,
+            10, 3, 2, 12, 12, 16, 12, 1, 9, 19, 2, 10, 0, 1, 16, 12, 9, 13, 15, 13,
+            16, 19, 2, 4, 6, 19, 5, 5, 8, 19, 18, 1, 2, 15, 6, 0, 17, 8, 14, 13
+        ])
+
+        food101_coarse_labels = np.array([
+            0, 1, 0, 1, 1, 5, 0, 3, 0, 4, 6, 5, 0, 5, 0, 2, 6, 0, 1, 1,
+            0, 0, 0, 7, 4, 2, 0, 4, 0, 6, 0, 3, 5, 7, 6, 6, 1, 6, 1, 6,
+            7, 7, 2, 3, 0, 6, 3, 5, 4, 2, 5, 3, 4, 7, 4, 6, 0, 3, 2, 4,
+            3, 0, 7, 2, 6, 7, 6, 2, 3, 3, 0, 0, 1, 3, 3, 1, 6, 1, 4, 3,
+            3, 0, 3, 6, 2, 2, 5, 2, 3, 3, 5, 1, 0, 2, 4, 6, 0, 2, 0, 7, 7
+        ])
+
+        # Mapping from 120 Stanford Dogs classes to 8 visual coarse labels
+        # Indices correspond to the standard alphabetical sorting of n0... folder names
+        stanford_dogs_coarse_labels = np.array([
+            # 0-9: Chihuahua to Afghan
+            0, 4, 3, 3, 3, 4, 0, 0, 2, 3, 
+            # 10-19: Basset to Irish Wolfhound
+            0, 0, 5, 5, 2, 0, 0, 2, 3, 5, 
+            # 20-29: Italian Greyhound to Am. Staffordshire
+            2, 2, 2, 1, 5, 3, 5, 2, 0, 0, 
+            # 30-39: Bedlington to Sealyham
+            7, 5, 7, 5, 4, 4, 3, 5, 4, 6, 
+            # 40-49: Airedale to Tibetan Terrier
+            5, 5, 4, 4, 0, 6, 7, 7, 5, 7, 
+            # 50-59: Silky to German Short-haired
+            3, 7, 6, 3, 1, 7, 5, 2, 2, 2, 
+            # 60-69: Vizsla to Sussex
+            2, 6, 5, 5, 6, 6, 6, 6, 5, 4, 
+            # 70-79: Irish Water to Shetland
+            7, 6, 0, 1, 2, 7, 2, 7, 6, 1, 
+            # 80-89: Collie to Appenzeller
+            1, 6, 7, 2, 2, 2, 0, 2, 1, 2, 
+            # 90-99: Entlebucher to Siberian Husky
+            2, 0, 0, 1, 0, 2, 1, 1, 1, 1, 
+            # 100-109: Affenpinscher to Keeshond
+            0, 0, 0, 1, 1, 6, 6, 1, 1, 1, 
+            # 110-119: Brabancon to African Hunting Dog
+            0, 0, 0, 7, 7, 7, 2, 2, 2, 6 
+        ])
+
+        # Label Names for Reference
+        coarse_label_names = {
+            0: "Small_Smooth_Common",
+            1: "Giant_Fluffy",
+            2: "Athletic_Medium",
+            3: "Long_Silky",
+            4: "Spaniels_Small",
+            5: "Hounds_Rough",
+            6: "White_Spotted",
+            7: "Curly_Textured"
+        }
+        
+        # 未填充标记（不支持 edgecolors）
+        unfilled_markers = {'1', '2', '3', '4', '+', 'x', '|', '_', '.', ',', '0'}
+        markers = ['o', 's', '^', 'D', 'v', '<', '>', 'p', '*', 'h', 'X', 'P', 'd', 'H', 
+                  '8', '1', '2', '3', '4', '+', 'x', '|', '_', '.', ',', '1', '2', '3', '4']
+        
+        for dataset in datasets:
+            for noise in noise_list:
+                for epoch in epochs_to_plot:
+                    print(f"\n📊 正在处理数据集 {dataset}, Noise {noise}, Epoch {epoch}...")
+                    data = self._load_clustering_data(exp_name, dataset, epoch, config=config, noise=noise)
+                    if data is None:
+                        print(f"⚠️  警告: 数据集 {dataset} (Noise {noise}) 在 Epoch {epoch} 没有数据，跳过")
+                        continue
+                    
+                    gradient_vectors = np.array(data['gradient_vectors'])
+                    all_client_labels = np.array(data['client_labels'])
+                    all_community_ids = np.array(data['community_ids'])
+                    client_ids = np.array(data['client_ids'])
+                    # 获取类别名称（如果存在）
+                    all_client_classnames = data.get('client_classnames', [])
+                    
+                    if len(gradient_vectors) == 0:
+                        print(f"⚠️  警告: 数据集 {dataset} (Epoch {epoch}) 没有梯度数据")
+                        continue
+                    
+                    # L2 归一化
+                    norms = np.linalg.norm(gradient_vectors, axis=1, keepdims=True)
+                    norms = np.where(norms == 0, 1, norms)
+                    gradient_vectors = gradient_vectors / norms
+                    
+                    # 获取对应的标签和社区ID
+                    client_labels = all_client_labels[client_ids]
+                    community_ids = all_community_ids[client_ids]
+                    
+                    # 细类别映射到粗类别（仅对 CIFAR-100）
+                    if dataset.lower() in ['cifar-100', 'cifar100', 'cifar_100']:
+                        client_labels = np.array([
+                            cifar100_coarse_labels[label] if 0 <= label < len(cifar100_coarse_labels) else label
+                            for label in client_labels
+                        ])
+                    # food101 和 Stanford Dogs 不需要粗粒度映射，保持原始标签
+                    
+                    # t-SNE 降维
+                    print(f"📊 正在对 {dataset} (Epoch {epoch}) 进行 t-SNE 降维...")
+                    n_samples = len(gradient_vectors)
+                    max_perplexity = min(50, max(5, (n_samples - 1) // 3))
+                    perplexity = min(30, max_perplexity)
+                    
+                    tsne = TSNE(
+                        n_components=2,
+                        random_state=42,
+                        perplexity=perplexity,
+                        max_iter=1000,
+                        learning_rate=200,
+                        early_exaggeration=12,
+                        min_grad_norm=1e-7,
+                        metric='euclidean',
+                        init='random'
+                    )
+                    embeddings = tsne.fit_transform(gradient_vectors)
+                    
+                    # 创建图形
+                    fig, ax = plt.subplots(figsize=(6, 6))
+                    unique_labels = np.unique(client_labels)
+                    unique_communities = np.unique(community_ids)
+                    
+                    # 分配颜色给社区（Cluster）- 根据社区数量选择不同的颜色方案
+                    n_communities = len(unique_communities)
+                    if n_communities <= 10:
+                        colors = plt.cm.tab10(np.linspace(0, 1, 10))[:n_communities]
+                    elif n_communities <= 20:
+                        colors = plt.cm.tab20(np.linspace(0, 1, 20))[:n_communities]
+                    else:
+                        colors = plt.cm.tab20(np.linspace(0, 1, n_communities))
+                    
+                    community_to_color = {comm: colors[i] for i, comm in enumerate(sorted(unique_communities))}
+                    
+                    # 对于 food101 和 Stanford Dogs，不使用 marker 区分 label，只用颜色区分 Cluster
+                    # 对于 CIFAR-100，使用 marker 区分粗粒度标签
+                    use_marker_for_labels = dataset.lower() in ['cifar-100', 'cifar100', 'cifar_100']
+                    
+                    if use_marker_for_labels:
+                        # 分配标记给粗粒度标签（仅 CIFAR-100）
+                        label_to_marker = {label: markers[i % len(markers)] for i, label in enumerate(sorted(unique_labels))}
+                    
+                    # 绘制散点图
+                    for i in range(len(embeddings)):
+                        color = community_to_color[community_ids[i]]  # 颜色表示社区
+                        if use_marker_for_labels:
+                            marker = label_to_marker[client_labels[i]]   # 标记表示粗粒度标签（仅 CIFAR-100）
+                            scatter_kwargs = {'c': [color], 'marker': marker, 's': 100, 'alpha': 0.7}
+                            if marker not in unfilled_markers:
+                                scatter_kwargs.update({'edgecolors': 'black', 'linewidths': 1.5})
+                        else:
+                            # food101 和 Stanford Dogs：统一使用圆形标记
+                            scatter_kwargs = {'c': [color], 'marker': 'o', 's': 100, 'alpha': 0.7, 
+                                            'edgecolors': 'black', 'linewidths': 1.5}
+                        ax.scatter(embeddings[i, 0], embeddings[i, 1], **scatter_kwargs)
+                    
+                    # 暂时不需要图例
+                    # # 添加图例
+                    # from matplotlib.patches import Patch
+                    # 
+                    # # 社区图例（颜色）
+                    # community_legend_elements = []
+                    # for comm in sorted(unique_communities):
+                    #     community_legend_elements.append(
+                    #         Patch(facecolor=community_to_color[comm], label=f'Cluster {comm}', edgecolor='black', linewidth=1)
+                    #     )
+                    # 
+                    # # 粗粒度类别图例（标记）- 仅对 CIFAR-100
+                    # label_legend_elements = []
+                    # if use_marker_for_labels:
+                    #     for label in sorted(unique_labels):
+                    #         marker = label_to_marker[label]
+                    #         label_legend_elements.append(
+                    #             plt.Line2D([0], [0], marker=marker, color='w', label=f'Group {label}',
+                    #                      markerfacecolor='gray', markeredgecolor='black', markersize=10, linestyle='None')
+                    #         )
+                    
+                    # # 设置标签和标题
+                    # ax.set_xlabel('t-SNE Dimension 1', fontweight='bold', fontsize=14)
+                    # ax.set_ylabel('t-SNE Dimension 2', fontweight='bold', fontsize=14)
+                    # dataset_display_name = {
+                    #     'stanford_dogs': 'Stanford Dogs',
+                    #     'food-101': 'Food-101',
+                    #     'food101': 'Food-101',
+                    #     'food_101': 'Food-101'
+                    # }.get(dataset.lower(), dataset)
+                    # ax.set_title(f'{dataset_display_name} - Gradient Clustering (Epoch {epoch}, Noise={noise})', 
+                    #            fontweight='bold', pad=15, fontsize=16)
+                    
+                    # 美化
+                    ax.grid(True, linestyle='--', alpha=0.3, color='gray')
+                    ax.spines['right'].set_visible(False)
+                    ax.spines['top'].set_visible(False)
+                    ax.spines['left'].set_linewidth(1.5)
+                    ax.spines['bottom'].set_linewidth(1.5)
+                    
+                    # # 创建图例并放在图片外
+                    # has_community_legend = len(community_legend_elements) > 0
+                    # has_label_legend = use_marker_for_labels and len(label_legend_elements) > 0 and len(unique_labels) <= 15
+                    # 
+                    # if has_community_legend and has_label_legend:
+                    #     # 两个图例：左侧和右侧（仅 CIFAR-100）
+                    #     legend1 = fig.legend(handles=community_legend_elements, 
+                    #                        loc='center left', bbox_to_anchor=(0, 0.5),
+                    #                        title='Clusters', frameon=True, 
+                    #                        fancybox=True, shadow=True, fontsize=10, title_fontsize=11)
+                    #     legend2 = fig.legend(handles=label_legend_elements, 
+                    #                        loc='center right', bbox_to_anchor=(1, 0.5),
+                    #                        title='Coarse Groups', frameon=True,
+                    #                        fancybox=True, shadow=True, fontsize=10, title_fontsize=11, ncol=1)
+                    #     # 调整布局为图例留出空间
+                    #     plt.subplots_adjust(left=0.15, right=0.85)
+                    # elif has_community_legend:
+                    #     # 只有一个图例：放在右侧（food101 和 Stanford Dogs）
+                    #     legend1 = fig.legend(handles=community_legend_elements, 
+                    #                        loc='center right', bbox_to_anchor=(1, 0.5),
+                    #                        title='Clusters', frameon=True, 
+                    #                        fancybox=True, shadow=True, fontsize=10, title_fontsize=11)
+                    #     plt.subplots_adjust(right=0.85)
+                    
+                    plt.tight_layout()
+                    
+                    # 保存图片
+                    dataset_short = dataset.replace('-', '_').replace(' ', '_').lower()
+                    factorization = config.get('factorization_list', ['sepfpl'])[0]
+                    rank = config.get('rank_list', [8])[0]
+                    seed = config.get('seed_list', [1])[0]
+                    num_users = config.get('num_users_list', [50])[0]
+                    noise_str = str(noise)
+                    
+                    if factorization in ['sepfpl', 'sepfpl_time_adaptive', 'sepfpl_hcse']:
+                        topk = config.get('sepfpl_topk', 25)
+                        rdp_p = config.get('rdp_p', 0.2)
+                        filename = f'gc_{dataset_short}_e{epoch}_{factorization}_{rank}_{noise_str}_{seed}_{topk}_{str(rdp_p)}_{num_users}.pdf'
+                    else:
+                        filename = f'gc_{dataset_short}_e{epoch}_{factorization}_{rank}_{noise_str}_{seed}_{num_users}.pdf'
+                    
+                    save_path = self.fig_dir / filename
+                    plt.savefig(save_path, bbox_inches='tight', dpi=300)
+                    print(f"✅ 梯度聚类可视化图已保存: {save_path}")
+                    plt.close()
+
+
 # ========== 主函数 ==========
 
 def main():
@@ -1045,9 +1369,10 @@ def main():
     parser.add_argument("--fig-dir", type=Path, default=DEFAULT_FIG_DIR, help="图片保存目录")
     
     parser.add_argument("-a", "--all", action="store_true", help="绘制所有图片")
-    parser.add_argument("--ablation", action="store_true", help="绘制消融实验分组柱状图")
-    parser.add_argument("--sensitivity", action="store_true", help="绘制参数敏感性分析折线图")
-    parser.add_argument("--mia-analysis", action="store_true", help="绘制MIA综合分析图（包含3个子图：Local Accuracy, Neighbor Accuracy, MIA Attack Success Rate）")
+    parser.add_argument("-b", "--ablation", action="store_true", help="绘制消融实验分组柱状图")
+    parser.add_argument("-s", "--sensitivity", action="store_true", help="绘制参数敏感性分析折线图")
+    parser.add_argument("-m", "--mia-analysis", action="store_true", help="绘制MIA综合分析图（包含3个子图：Local Accuracy, Neighbor Accuracy, MIA Attack Success Rate）")
+    parser.add_argument("-g", "--gradient-clustering", action="store_true", help="绘制梯度聚类可视化图（t-SNE降维）")
     
     args = parser.parse_args()
     
@@ -1056,9 +1381,10 @@ def main():
         args.ablation = True
         args.sensitivity = True
         args.mia_analysis = True
+        args.gradient_clustering = True
     
-    if not (args.ablation or args.sensitivity or args.mia_analysis):
-        print("⚠️  未指定要绘制的图表，使用 --ablation 绘制消融实验图，或使用 --sensitivity 绘制敏感性分析图，或使用 --mia-analysis 绘制MIA综合分析图，或使用 -a/--all 绘制所有图片")
+    if not (args.ablation or args.sensitivity or args.mia_analysis or args.gradient_clustering):
+        print("⚠️  未指定要绘制的图表，使用 --ablation 绘制消融实验图，或使用 --sensitivity 绘制敏感性分析图，或使用 --mia-analysis 绘制MIA综合分析图，或使用 --gradient-clustering 绘制梯度聚类可视化图，或使用 -a/--all 绘制所有图片")
         args.mia_analysis = True
     
     if args.ablation:
@@ -1074,7 +1400,12 @@ def main():
         plotter = MiaAnalysisPlotter(args.output_dir, args.tail_epochs, args.fig_dir)
         plotter.plot()
     
-    if args.ablation or args.sensitivity or args.mia_analysis:
+    if args.gradient_clustering:
+        print("\n📊 正在绘制梯度聚类可视化图...")
+        plotter = GradientClusteringPlotter(args.output_dir, args.fig_dir)
+        plotter.plot()
+    
+    if args.ablation or args.sensitivity or args.mia_analysis or args.gradient_clustering:
         print(f"\n✅ 所有图表已保存到: {args.fig_dir}")
 
 

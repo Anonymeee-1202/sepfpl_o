@@ -210,7 +210,7 @@ class EncodingTreeVisualizer:
         self._draw_nodes(ax)
         
         # 设置图形属性
-        ax.set_title('编码树结构可视化', fontsize=16, fontweight='bold', pad=20)
+        ax.set_title('Encoding Tree Structure', fontsize=16, fontweight='bold', pad=20)
         ax.axis('off')
         
         # 添加图例
@@ -315,7 +315,7 @@ class EncodingTreeVisualizer:
             
             # 添加节点标签
             if not node.children or len(node.children) == 0:
-                label = f"节点{node.partition[0]}"
+                label = f"Node {node.partition[0]}"
             else:
                 partition_str = ','.join(map(str, node.partition[:3]))
                 if len(node.partition) > 3:
@@ -335,11 +335,11 @@ class EncodingTreeVisualizer:
         """
         legend_elements = [
             plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='#FF6B6B', 
-                      markersize=10, label='根节点'),
+                      markersize=10, label='Root Node'),
             plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='#4ECDC4', 
-                      markersize=8, label='叶子节点'),
+                      markersize=8, label='Leaf Node'),
             plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='#45B7D1', 
-                      markersize=9, label='内部节点')
+                      markersize=9, label='Internal Node')
         ]
         ax.legend(handles=legend_elements, loc='upper right', bbox_to_anchor=(1, 1))
     

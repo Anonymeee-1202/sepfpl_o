@@ -1,10 +1,13 @@
 import os
 import random
 import numpy as np
+from collections import defaultdict
+from prettytable import PrettyTable
 
 # from Dassl.dassl.data.datasets import DATASET_REGISTRY, Datum, DatasetBase
 # from Dassl.dassl.data.datasets import DatasetBase
 from datasplit import partition_data, load_cifar100_data
+from utils.logger import require_global_logger
 
 # @DATASET_REGISTRY.register()
 class Cifar100():
@@ -15,7 +18,7 @@ class Cifar100():
 
         # ========== 按类别内样本比例采样（保持类别集合不变）==========
         # 手动设置采样比例，可根据需要修改此值
-        sample_ratio = 0.2
+        sample_ratio = 0.4
         
         # 加载原始数据
         X_train, y_train, X_test, y_test, data_train, data_test, lab2cname, classnames = load_cifar100_data(self.dataset_dir)
@@ -59,5 +62,46 @@ class Cifar100():
         self.federated_test_x = federated_test_x
         self.lab2cname = lab2cname
         self.classnames = classnames
+        
+        # 输出数据划分结果表格
+        logger = require_global_logger()
+        if federated_train_x:
+            # 统计每个客户端的类别分布
+            user_class_dict = defaultdict(set)
+            user_class_samples = defaultdict(lambda: defaultdict(int))
+            
+            for net_id in range(cfg.DATASET.USERS):
+                for item in federated_train_x[net_id]:
+                    # CIFAR100_truncated 数据项的 label 属性
+                    label = item.label
+                    user_class_dict[net_id].add(label)
+                    user_class_samples[net_id][label] += 1
+            
+            # 创建表格
+            table = PrettyTable()
+            table.field_names = ["用户ID", "类别数", "类别详情 (类别ID(样本数))", "总样本数"]
+            table.align = "l"
+            
+            for idx in sorted(range(cfg.DATASET.USERS)):
+                classes = sorted(user_class_dict[idx])
+                # 构建类别详情字符串，格式：类别ID(样本数)
+                class_details = []
+                for cls in classes:
+                    sample_count = user_class_samples[idx].get(cls, 0)
+                    class_details.append(f"{cls}({sample_count})")
+                classes_str = ", ".join(class_details)
+                # 如果类别太多，截断显示
+                if len(classes_str) > 100:
+                    classes_str = classes_str[:97] + "..."
+                
+                total_samples = len(federated_train_x[idx])
+                table.add_row([
+                    f"User {idx}",
+                    len(classes),
+                    classes_str,
+                    total_samples
+                ])
+            
+            logger.info(f"\nCIFAR-100 训练数据划分结果:\n{table}")
 
 

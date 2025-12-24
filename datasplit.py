@@ -425,6 +425,119 @@ def partition_data(dataset, datadir, partition, n_parties, beta=0.4,
                 data_class_idx_train[c] = data_class_idx_train[c][end_idx_train:]
                 data_class_idx_test[c] = data_class_idx_test[c][end_idx_test:]
 
+    elif partition == "noniid-coarsegroup-iid":
+        """
+        新的划分方式：基于 Coarse Labels 分组的 Non-IID 划分
+        - 将客户端分成若干组
+        - 每组客户端独占一组或几组 Coarse Labels
+        - 组内的客户端 IID 分布（拥有该组所有 Coarse Labels 的所有 Fine Labels，数据均匀分布）
+        """
+        if dataset != "cifar100":
+            raise ValueError(f"noniid-coarsegroup-iid 划分方式仅支持 CIFAR-100 数据集，当前数据集: {dataset}")
+        
+        n_fine_labels = 100
+        n_coarse_labels = 20
+        coarse_labels = \
+            np.array([
+                4, 1, 14, 8, 0, 6, 7, 7, 18, 3,
+                3, 14, 9, 18, 7, 11, 3, 9, 7, 11,
+                6, 11, 5, 10, 7, 6, 13, 15, 3, 15,
+                0, 11, 1, 10, 12, 14, 16, 9, 11, 5,
+                5, 19, 8, 8, 15, 13, 14, 17, 18, 10,
+                16, 4, 17, 4, 2, 0, 17, 4, 18, 17,
+                10, 3, 2, 12, 12, 16, 12, 1, 9, 19,
+                2, 10, 0, 1, 16, 12, 9, 13, 15, 13,
+                16, 19, 2, 4, 6, 19, 5, 5, 8, 19,
+                18, 1, 2, 15, 6, 0, 17, 8, 14, 13
+            ])
+        
+        # 计算每组客户端数量和每组分配的 Coarse Labels 数量
+        # 默认：每组分配 1 个 Coarse Label，每组包含多个客户端
+        # 如果客户端数量不能被 Coarse Labels 数量整除，则调整分组策略
+        coarse_labels_per_group = 1  # 每组分配的 Coarse Labels 数量（可调整）
+        n_groups = (n_coarse_labels + coarse_labels_per_group - 1) // coarse_labels_per_group  # 向上取整
+        clients_per_group = n_parties // n_groups  # 每组客户端数量
+        remaining_clients = n_parties % n_groups  # 剩余的客户端
+        
+        # 构建 Fine Labels 到 Coarse Labels 的映射
+        fine_labels_by_coarse_labels = {k: list() for k in range(n_coarse_labels)}
+        for fine_label, coarse_label in enumerate(coarse_labels):
+            fine_labels_by_coarse_labels[coarse_label].append(fine_label)
+        
+        # 按 Coarse Label 组织训练和测试数据索引
+        indices_by_coarse_labels_train = {k: list() for k in range(n_coarse_labels)}
+        indices_by_coarse_labels_test = {k: list() for k in range(n_coarse_labels)}
+        
+        for idx in range(len(y_train)):
+            fine_label = y_train[idx]
+            coarse_label = coarse_labels[fine_label]
+            indices_by_coarse_labels_train[coarse_label].append(idx)
+        
+        for idx in range(len(y_test)):
+            fine_label = y_test[idx]
+            coarse_label = coarse_labels[fine_label]
+            indices_by_coarse_labels_test[coarse_label].append(idx)
+        
+        # 打乱每个 Coarse Label 的数据
+        for coarse_label in range(n_coarse_labels):
+            random.shuffle(indices_by_coarse_labels_train[coarse_label])
+            random.shuffle(indices_by_coarse_labels_test[coarse_label])
+        
+        # 初始化客户端数据索引映射
+        net_dataidx_map_train = {i: np.ndarray(0, dtype=np.int64) for i in range(n_parties)}
+        net_dataidx_map_test = {i: np.ndarray(0, dtype=np.int64) for i in range(n_parties)}
+        
+        # 为每个组分配 Coarse Labels 和数据
+        client_idx = 0
+        for group_id in range(n_groups):
+            # 计算该组分配的 Coarse Labels
+            start_coarse = group_id * coarse_labels_per_group
+            end_coarse = min(start_coarse + coarse_labels_per_group, n_coarse_labels)
+            group_coarse_labels = list(range(start_coarse, end_coarse))
+            
+            # 收集该组所有 Coarse Labels 的所有 Fine Labels 的数据
+            group_train_indices = []
+            group_test_indices = []
+            
+            for coarse_label in group_coarse_labels:
+                group_train_indices.extend(indices_by_coarse_labels_train[coarse_label])
+                group_test_indices.extend(indices_by_coarse_labels_test[coarse_label])
+            
+            # 计算该组的客户端数量（前几个组可能多分配一个客户端）
+            group_size = clients_per_group + (1 if group_id < remaining_clients else 0)
+            
+            # 组内客户端 IID 分布：均匀分配该组的所有数据
+            n_train_samples = len(group_train_indices)
+            n_test_samples = len(group_test_indices)
+            
+            # 将训练数据均匀分配给组内客户端
+            train_samples_per_client = n_train_samples // group_size
+            train_remainder = n_train_samples % group_size
+            
+            # 将测试数据均匀分配给组内客户端
+            test_samples_per_client = n_test_samples // group_size
+            test_remainder = n_test_samples % group_size
+            
+            for i in range(group_size):
+                # 计算该客户端在组内的数据范围
+                train_start = i * train_samples_per_client + min(i, train_remainder)
+                train_end = train_start + train_samples_per_client + (1 if i < train_remainder else 0)
+                
+                test_start = i * test_samples_per_client + min(i, test_remainder)
+                test_end = test_start + test_samples_per_client + (1 if i < test_remainder else 0)
+                
+                # 分配数据
+                net_dataidx_map_train[client_idx] = np.array(group_train_indices[train_start:train_end], dtype=np.int64)
+                net_dataidx_map_test[client_idx] = np.array(group_test_indices[test_start:test_end], dtype=np.int64)
+                
+                client_idx += 1
+                
+                if client_idx >= n_parties:
+                    break
+            
+            if client_idx >= n_parties:
+                break
+
     elif partition == "noniid-labeldir":
         min_size = 0
         min_require_size = 10

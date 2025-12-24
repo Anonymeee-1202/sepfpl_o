@@ -390,10 +390,110 @@ class DatasetBase:
         logger.info(f"正在创建 Baseline 联邦{dataset_type}数据集")
         output_dict = defaultdict(list)
         user_class_dict = defaultdict(list)
+        user_class_samples = defaultdict(dict)  # 记录每个用户每个类别的样本数 {user_id: {label: count}}
         sample_per_user = defaultdict(int)  # 每个类别分给每个用户的样本数
         sample_order = defaultdict(list)    # 记录每个类别样本的分配顺序索引
 
         class_num = self.get_num_classes(data_sources[0])
+        
+        # 特殊处理：当 num_users > class_num 时，将用户分成 class_num 个组，每个组对应一个类别，组内 IID 分配
+        if num_users > class_num:
+            logger.info(f"用户数 ({num_users}) 大于类别数 ({class_num})，将用户分成 {class_num} 个组，每组对应一个类别")
+            
+            # 将用户分成 class_num 个组
+            users_per_class = num_users // class_num  # 每个类别组的基础用户数
+            extra_users = num_users % class_num  # 需要额外分配的用户数
+            
+            class_list = list(range(0, class_num))
+            random.seed(2023)
+            random.shuffle(class_list)
+            
+            user_list = list(range(0, num_users))
+            random.shuffle(user_list)
+            
+            # 为每个类别分配用户组
+            class_to_users = defaultdict(list)  # {class_id: [user_ids]}
+            user_idx = 0
+            for class_idx, class_id in enumerate(class_list):
+                # 计算这个类别组应该有多少用户
+                num_users_for_class = users_per_class + (1 if class_idx < extra_users else 0)
+                # 分配用户到这个类别组
+                class_to_users[class_id] = user_list[user_idx:user_idx + num_users_for_class]
+                user_idx += num_users_for_class
+            
+            # 为每个用户分配类别和数据
+            for data_source in data_sources:
+                tracker = self.split_dataset_by_label(data_source)
+                
+                for class_id, user_ids in class_to_users.items():
+                    if class_id not in tracker:
+                        continue
+                    
+                    items = tracker[class_id]
+                    num_users_in_group = len(user_ids)
+                    
+                    # 组内 IID 分配：将该类别的数据平均分配给组内用户
+                    if class_id not in sample_order:
+                        sample_order[class_id] = list(range(0, len(items)))
+                        random.shuffle(sample_order[class_id])
+                    samples_per_user = len(items) // num_users_in_group
+                    
+                    for group_user_idx, user_id in enumerate(user_ids):
+                        if user_id not in user_class_dict:
+                            user_class_dict[user_id] = []
+                        if class_id not in user_class_dict[user_id]:
+                            user_class_dict[user_id].append(class_id)
+                        
+                        # 计算该用户应该分到的数据切片
+                        start_idx = group_user_idx * samples_per_user
+                        if group_user_idx == num_users_in_group - 1:
+                            # 最后一个用户拿走剩余的所有数据
+                            end_idx = len(items)
+                        else:
+                            end_idx = (group_user_idx + 1) * samples_per_user
+                        
+                        selected_indices = sample_order[class_id][start_idx:end_idx]
+                        sampled_items = [items[i] for i in selected_indices]
+                        
+                        # 合并多个数据源的数据
+                        if user_id not in output_dict:
+                            output_dict[user_id] = []
+                        output_dict[user_id].extend(sampled_items)
+                        
+                        # 更新样本计数
+                        if user_id not in user_class_samples:
+                            user_class_samples[user_id] = {}
+                        if class_id not in user_class_samples[user_id]:
+                            user_class_samples[user_id][class_id] = 0
+                        user_class_samples[user_id][class_id] += len(sampled_items)
+            
+            # 输出表格
+            if output_dict:
+                table = PrettyTable()
+                table.field_names = ["用户ID", "类别数", "类别详情 (类别ID(样本数))", "总样本数"]
+                table.align = "l"
+                for idx in sorted(output_dict.keys()):
+                    classes = sorted(user_class_dict[idx]) if idx in user_class_dict else []
+                    # 构建类别详情字符串，格式：类别ID(样本数)
+                    class_details = []
+                    for cls in classes:
+                        sample_count = user_class_samples[idx].get(cls, 0)
+                        class_details.append(f"{cls}({sample_count})")
+                    classes_str = ", ".join(class_details)
+                    # 如果类别太多，截断显示
+                    if len(classes_str) > 100:
+                        classes_str = classes_str[:97] + "..."
+                    
+                    total_samples = len(output_dict[idx])
+                    table.add_row([
+                        f"User {idx}",
+                        len(classes),
+                        classes_str,
+                        total_samples
+                    ])
+                logger.info(f"\n{dataset_type}数据划分 (Baseline):\n{table}")
+            
+            return output_dict
         
         class_per_user = int(round(class_num / num_users))
         class_list = list(range(0, class_num))
@@ -440,50 +540,79 @@ class DatasetBase:
                 if repeat_rate > 0 and fold > 0:
                     sample_per_user[label] = int(round(len(items) / (num_users / fold)))
 
-            # --- 步骤 2: 为每个用户分配类别和数据 ---
-            for idx in range(num_users):
-                # 2.1 确定用户拥有的类别 ID (逻辑同 generate_federated_fewshot_dataset)
-                if is_iid:
-                    user_class_dict[idx] = list(range(0, class_num))
-                else:
-                    if repeat_rate == 0.0:
-                        # 无重叠：严格切分类别列表
-                        if idx == num_users - 1:
-                            user_class_dict[idx] = class_list[idx * class_per_user:class_num]
-                        else:
-                            end_idx = (idx + 1) * class_per_user
-                            user_class_dict[idx] = class_list[idx * class_per_user:end_idx]
+            # --- 步骤 2: 为每个用户分配类别（均匀分配，差值不超过1）---
+            # 首先为所有用户分配共享类别（如果有）
+            if repeat_rate > 0 and not is_iid:
+                # 预先分配共享类别
+                for idx in range(num_users):
+                    user_class_dict[idx] = []
+                    if fold > 0:
+                        for k, v in client_idx_fold.items():
+                            if idx in v:  # 找到当前用户所在的 fold
+                                if k == len(client_idx_fold) - 1:
+                                    user_class_dict[idx].extend(
+                                        class_repeat_list[k * repeat_per_fold:repeat_num]
+                                    )
+                                else:
+                                    end_idx = (k + 1) * repeat_per_fold
+                                    user_class_dict[idx].extend(
+                                        class_repeat_list[k * repeat_per_fold:end_idx]
+                                    )
                     else:
-                        # 有重叠 (repeat_rate > 0)
-                        user_class_dict[idx] = []
-
-                        # 2.1.1 添加共享(重复)部分
-                        if fold > 0:
-                            for k, v in client_idx_fold.items():
-                                if idx in v:  # 找到当前用户所在的 fold
-                                    if k == len(client_idx_fold) - 1:
-                                        user_class_dict[idx].extend(
-                                            class_repeat_list[k * repeat_per_fold:repeat_num]
-                                        )
-                                    else:
-                                        end_idx = (k + 1) * repeat_per_fold
-                                        user_class_dict[idx].extend(
-                                            class_repeat_list[k * repeat_per_fold:end_idx]
-                                        )
+                        user_class_dict[idx].extend(class_repeat_list)
+                
+                # 计算每个用户已分配的共享类别数
+                shared_class_counts = [len(user_class_dict[idx]) for idx in range(num_users)]
+                
+                # 计算每个用户应该分配的总类别数（均匀分配，差值不超过1）
+                total_classes_to_assign = class_num  # 总类别数
+                # 计算平均每个用户应该有的类别数
+                avg_classes_per_user = total_classes_to_assign / num_users
+                base_classes = int(avg_classes_per_user)  # 基础类别数
+                extra_classes = total_classes_to_assign - base_classes * num_users  # 需要额外分配的类别数
+                
+                # 计算每个用户还需要分配的私有类别数
+                private_class_counts = []
+                for idx in range(num_users):
+                    target_total = base_classes + (1 if idx < extra_classes else 0)
+                    needed_private = max(0, target_total - shared_class_counts[idx])
+                    private_class_counts.append(needed_private)
+                
+                # 均匀分配私有类别
+                private_class_idx = 0
+                for idx in range(num_users):
+                    if private_class_counts[idx] > 0:
+                        end_idx = private_class_idx + private_class_counts[idx]
+                        user_class_dict[idx].extend(
+                            class_norepeat_list[private_class_idx:end_idx]
+                        )
+                        private_class_idx = end_idx
+            else:
+                # 无重叠或IID情况：均匀分配所有类别
+                for idx in range(num_users):
+                    if is_iid:
+                        user_class_dict[idx] = list(range(0, class_num))
+                    else:
+                        # 无重叠：均匀切分类别列表
+                        # 计算每个用户应该分配的类别数（差值不超过1）
+                        avg_classes = class_num / num_users
+                        base_classes = int(avg_classes)
+                        extra_classes = class_num - base_classes * num_users
+                        
+                        if idx < extra_classes:
+                            num_classes_for_user = base_classes + 1
                         else:
-                            user_class_dict[idx].extend(class_repeat_list)
+                            num_classes_for_user = base_classes
+                        
+                        start_idx = sum(
+                            base_classes + (1 if i < extra_classes else 0) 
+                            for i in range(idx)
+                        )
+                        end_idx = start_idx + num_classes_for_user
+                        user_class_dict[idx] = class_list[start_idx:end_idx]
 
-                        # 2.1.2 添加私有(不重复)部分
-                        if idx == num_users - 1:
-                            segment = class_norepeat_list[
-                                idx * class_per_user:(class_num - repeat_num)
-                            ]
-                            user_class_dict[idx].extend(segment)
-                        else:
-                            end_idx = (idx + 1) * class_per_user
-                            segment = class_norepeat_list[idx * class_per_user:end_idx]
-                            user_class_dict[idx].extend(segment)
-
+            # --- 步骤 3: 为每个用户分配数据 ---
+            for idx in range(num_users):
                 # 2.2 根据 sample_order 和 sample_per_user 进行切片分配
                 # 先按 label 收集数据，然后交错排列
                 label_data_dict = {}  # {label: [items]}
@@ -525,6 +654,10 @@ class DatasetBase:
                                 # 是独占类：拿走所有数据
                                 label_data_dict[label] = items
 
+                # 记录每个类别的样本数
+                for label, items in label_data_dict.items():
+                    user_class_samples[idx][label] = len(items)
+                
                 # 使用 round-robin 方式交错排列不同 label 的数据
                 dataset = []
                 if label_data_dict:
@@ -546,16 +679,26 @@ class DatasetBase:
         # 输出表格
         if output_dict:
             table = PrettyTable()
-            table.field_names = ["用户ID", "类别数", "类别列表", "样本数"]
+            table.field_names = ["用户ID", "类别数", "类别详情 (类别ID(样本数))", "总样本数"]
             table.align = "l"
             for idx in sorted(output_dict.keys()):
                 classes = sorted(user_class_dict[idx]) if idx in user_class_dict else []
-                classes_str = str(classes) if len(classes) <= 20 else str(classes[:20]) + "..."
+                # 构建类别详情字符串，格式：类别ID(样本数)
+                class_details = []
+                for cls in classes:
+                    sample_count = user_class_samples[idx].get(cls, 0)
+                    class_details.append(f"{cls}({sample_count})")
+                classes_str = ", ".join(class_details)
+                # 如果类别太多，截断显示
+                if len(classes_str) > 100:
+                    classes_str = classes_str[:97] + "..."
+                
+                total_samples = len(output_dict[idx])
                 table.add_row([
                     f"User {idx}",
                     len(classes),
                     classes_str,
-                    len(output_dict[idx])
+                    total_samples
                 ])
             logger.info(f"\n{dataset_type}数据划分 (Baseline):\n{table}")
 
@@ -811,10 +954,12 @@ class DatasetBase:
             test = self.per_class_downsample(test, test_sample_ratio, rng)
 
         # 根据用户数量决定是否使用类别重叠
-        if cfg.DATASET.USERS >= 20:
-            repeat_rate = 0.1
-        else:
-            repeat_rate = 0
+        # if cfg.DATASET.USERS >= 20:
+        #     repeat_rate = 0.1
+        # else:
+        #     repeat_rate = 0
+
+        repeat_rate = 0.0
 
         # 生成联邦数据集
         if cfg.DATASET.USEALL:

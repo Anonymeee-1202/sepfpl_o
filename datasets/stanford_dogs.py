@@ -22,7 +22,7 @@ class StanfordDogs(DatasetBase):
         self.image_dir = os.path.join(self.dataset_dir, "Images")
         self.anno_dir = os.path.join(self.dataset_dir, "Annotation")
         self.split_path = os.path.join(self.dataset_dir, "split_StanfordDogs.json")
-
+        
         # 检查是否存在预定义的分割文件
         if os.path.exists(self.split_path):
             train, val, test = self.read_split(self.split_path, self.image_dir)
@@ -44,7 +44,7 @@ class StanfordDogs(DatasetBase):
 
         # ========== 按类别内样本比例采样（保持类别集合不变） ==========
         rng = random.Random(getattr(cfg, 'SEED', 1))
-        train, test = self.per_class_downsample(train, 0.2, rng), self.per_class_downsample(test, 0.2, rng)
+        train, test = self.per_class_downsample(train, 0.5, rng), self.per_class_downsample(test, 0.5, rng)
         federated_train_x, federated_test_x = self.prepare_federated_data(train, test, cfg, train_sample_ratio=None, test_sample_ratio=None)
 
         super().__init__(

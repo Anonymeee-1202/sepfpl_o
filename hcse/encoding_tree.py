@@ -604,7 +604,9 @@ class PartitionTree:
             
             # 更新邻接表
             self.adj_table[new_id] = self.adj_table[id1].union(self.adj_table[id2])
-            for i in self.adj_table[new_id]:
+            # 创建副本避免在迭代时修改集合
+            neighbors = list(self.adj_table[new_id])
+            for i in neighbors:
                 self.adj_table[i].add(new_id)
             
             # 计算压缩操作的收益
@@ -730,9 +732,11 @@ class PartitionTree:
         node_dict[new_id] = grow_node
         node_dict[new_id].child_h = node_dict[node_id].child_h + 1
         
-        # 更新邻接表
-        self.adj_table[new_id] = self.adj_table[node_id]
-        for i in self.adj_table[node_id]:
+        # 更新邻接表（创建副本避免引用同一个集合对象）
+        self.adj_table[new_id] = self.adj_table[node_id].copy()
+        # 创建副本避免在迭代时修改集合
+        neighbors = list(self.adj_table[node_id])
+        for i in neighbors:
             self.adj_table[i].add(new_id)
 
     def _root_down_delta(self) -> Tuple[float, Optional[NodeId], Optional[NodeDict]]:
