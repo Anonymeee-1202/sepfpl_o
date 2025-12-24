@@ -137,7 +137,7 @@ def setup_cfg(args, mode: str = 'basic'):
     if hasattr(args, 'dataset_config_file') and args.dataset_config_file:
         cfg.merge_from_file(args.dataset_config_file)
 
-    # 2) 算法 / 模型配置文件（如 configs/trainers/DP-FPL/vit_b16.yaml）
+    # 2) 算法 / 模型配置文件（如 configs/trainers/vit_b16.yaml）
     # 仅在完整模式下需要
     if mode == 'full' and hasattr(args, 'config_file') and args.config_file:
         cfg.merge_from_file(args.config_file)

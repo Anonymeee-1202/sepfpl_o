@@ -1285,7 +1285,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--config-file", type=str,
-        default="configs/trainers/DP-FPL/vit_b16.yaml",
+        default="configs/trainers/vit_b16.yaml",
         help="训练器 / 模型的配置文件路径"
     )
     parser.add_argument(
